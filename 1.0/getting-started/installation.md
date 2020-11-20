@@ -2,6 +2,11 @@
 
 [[toc]]
 
+## Requirements
+
+- PHP: `^7.4`
+- Laravel: `^8.0`
+
 ## Installation
 
 Require this package in the `composer.json` of your Laravel project.
@@ -13,8 +18,8 @@ dependency.
 To install both packages using [Composer](https://getcomposer.org):
 
 ```bash
-$ composer require laravel-json-api/laravel
-$ composer require --dev laravel-json-api/testing
+composer require laravel-json-api/laravel
+composer require --dev laravel-json-api/testing
 ```
 
 The `LaravelJsonApi\Laravel\ServiceProvider` is auto-discovered and registered
