@@ -1,0 +1,1 @@
+# Laravel JSON API Documentation
