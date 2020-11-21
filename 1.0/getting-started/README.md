@@ -1,12 +1,12 @@
 # Introduction
 
-Laravel JSON API helps you easily implement [JSON:API](https://jsonapi.org)
+Laravel JSON:API helps you easily implement [JSON:API](https://jsonapi.org)
 specification-compliant APIs to your Laravel applications.
 
 Full details of the JSON:API specification can be found on their
 [website](https://jsonapi.org).
 
-## Laravel JSON API Features
+## Laravel JSON:API Features
 
 This package provides all the capabilities you need to add JSON:API compliant
 APIs to your Laravel application. We have extensive support for the full
@@ -25,7 +25,7 @@ specification, including:
 - Updating relationships
 - Deleting resources
 - Validation of:
-  - JSON API documents for compliance with the specification; and
+  - JSON:API documents for compliance with the specification; and
   - Query parameters.
 
 This includes full out-of-the box support for querying Eloquent resources,

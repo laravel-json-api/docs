@@ -4,7 +4,7 @@
 
 ## Convention
 
-Laravel JSON API follows the principle of **"Convention is better than configuration"**.
+Laravel JSON:API follows the principle of **"Convention is better than configuration"**.
 The recommended structure is as follows, demonstrated using a server
 named `v1` with `posts` and `users` resources:
 

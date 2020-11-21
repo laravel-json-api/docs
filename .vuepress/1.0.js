@@ -14,6 +14,7 @@ module.exports = [
     collapsable: false,
     children: prefix('servers', [
       '',
+      'events',
     ]),
   },
   {
@@ -21,6 +22,9 @@ module.exports = [
     collapsable: false,
     children: prefix('schemas', [
       '',
+      'identifier',
+      'attributes',
+      'relationships',
     ]),
   }
 ];

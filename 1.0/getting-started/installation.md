@@ -40,11 +40,11 @@ Publish the package configuration using the following Artisan command:
 $ php artisan vendor:publish --provider="LaravelJsonApi\Laravel\ServiceProvider"
 ```
 
-This will create a `config/json-api.php` file.
+This will create a `config/jsonapi.php` file.
 
 ## Exception Handler
 
-To ensure that clients receive a JSON API error response for exceptions
+To ensure that clients receive a JSON:API error response for exceptions
 thrown by your application, you need to add the package exception renderer
 to your application's exception handler.
 

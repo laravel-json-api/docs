@@ -4,18 +4,18 @@
 
 ## Introduction
 
-Schemas describe JSON:API resources that exist within your server.
+Schemas **describe** JSON:API resources that exist within your server.
 For Eloquent models, they also describe how the JSON:API server interacts
 with the database to query, create, read, update and delete resources.
 
 ## Defining Schemas
 
-By default, schemas are stored in a folder relative to where your
-`Server` class is stored. The pluralized form of the JSON:API resource
-type is used as the folder name.
+By default, schemas exist in a namespace relative to the namespace of
+your `Server` class. The pluralized form of the JSON:API resource
+type is used as the namespace.
 
 For example, if the `App\JsonApi\V1\Server` has a resource called
-`posts`, the schema will exist as `App\JsonApi\V1\Server\Posts\PostSchema`.
+`posts`, the schema will exist as `App\JsonApi\V1\Posts\PostSchema`.
 
 You may generate a new schema using the `jsonapi:schema` Artisan command:
 
@@ -77,7 +77,7 @@ class Server extends BaseServer
 
 ::: tip
 We do not support automatic discovery of schemas intentionally.
-Although our directory conventions means it would be possible to detect
+Although our directory conventions mean it would be possible to detect
 schemas, it is inefficient to run discovery code on every HTTP request.
 Manually registering schemas makes your API more efficient.
 :::
@@ -103,7 +103,7 @@ class PostSchema extends Schema
 {
 
     /**
-     * Get the JSON API resource type.
+     * Get the JSON:API resource type.
      *
      * @return string
      */
@@ -111,5 +111,62 @@ class PostSchema extends Schema
     {
         return 'blog_posts';
     }
+}
+```
+
+## Fields
+
+In the JSON:API specification, a resource object's attributes and
+relationships are collectively called its **fields**.
+
+Fields share a common namespace with each other and with the resource
+object's `type` and `id`. This means a resource cannot have an attribute and
+a relationship with the same name, nor can there be an attribute or
+relationship named `type` or `id`.
+
+Each schema contains a `fields` method. This method returns an array
+of fields, which define the ID, attributes and relationships of the
+resource that the schema describes. To add a field to a schema, we simply
+add it to the schema's `fields` method. Typically fields may be created
+using their static `make` method.
+
+Fields are described in more detail in subsequent chapters, but here
+is an example for a `posts` resource:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Eloquent\Fields\DateTime;
+use LaravelJsonApi\Eloquent\Fields\ID;
+use LaravelJsonApi\Eloquent\Fields\Relations\BelongsTo;
+use LaravelJsonApi\Eloquent\Fields\Relations\BelongsToMany;
+use LaravelJsonApi\Eloquent\Fields\Relations\HasMany;
+use LaravelJsonApi\Eloquent\Fields\Str;
+use LaravelJsonApi\Eloquent\Schema;
+
+class PostSchema extends Schema
+{
+
+    // ...
+
+    /**
+     * @inheritDoc
+     */
+    public function fields(): array
+    {
+        return [
+            ID::make(),
+            BelongsTo::make('author')->inverseType('users')->readOnly(),
+            HasMany::make('comments')->readOnly(),
+            Str::make('content'),
+            DateTime::make('createdAt')->sortable()->readOnly(),
+            Str::make('slug'),
+            Str::make('synopsis'),
+            BelongsToMany::make('tags'),
+            Str::make('title')->sortable(),
+            DateTime::make('updatedAt')->sortable()->readOnly(),
+        ];
+    }
+
 }
 ```
