@@ -151,40 +151,96 @@ Str::make('name')->notSparseField()
 ## Attribute Types
 
 Laravel JSON:API ships with a variety of attribute types that match the
-values that can be received in a JSON document:
+values that can be received in a decoded JSON document:
 
 - [Array](#array-field)
 - [Boolean](#boolean-field)
-- [Hash](#hash-field)
 - [Number](#number-field)
 - [String](#string-field)
 
 We also support the following additional attribute types:
 
-- [DateTime](#datetime-field)
-
+- [DateTime](#datetime-field): parses strings containing ISO-8601 date times.
+- [Map](#map-field): maps an associative array to multiple database columns.
 
 ### Array Field
 
-The `Arr` (array) field may be used to represent an attribute that is an
-array list in JSON. Typically your database column will be a JSON column
-in which you store the array.
+The `Arr` (array) field may be used to represent an attribute that is
+an array list or associative array. Typically your database column will be
+a JSON column in which you store the array.
 
-For example, assuming your database has a JSON column called `permissions`,
-you may attach an `Arr` field to your schema like so:
+:::tip
+In JSON there is a distinction between an array list and an object. However,
+Laravel decodes both to PHP arrays - either an array list or an associative
+array. The `Arr` field can be used for both.
+:::
+
+Firstly, assume your database has a JSON column called `permissions`,
+in which you store a list of permission values. You may attach an `Arr` field
+to your schema like so:
 
 ```php
 use LaravelJsonApi\Eloquent\Fields\Arr;
 
-Arr::make('permissions');
+Arr::make('permissions')
 ```
 
+If you want the array values to be sorted before being stored in your database,
+use the `sorted()` method:
+
+```php
+Arr::make('permissions')->sorted()
+```
+
+Secondly, assume your database has a JSON column called `options`, in which
+you store an associative array of option values. Again, you may use the
+`Arr` field:
+
+```php
+Arr::make('options')
+```
+
+If you want the array to be sorted by its keys before being stored in your
+database, use the `sortedKeys()` method:
+
+```php
+Arr::make('options')->sortedKeys()
+```
+
+When storing an associative array in your database, you may also want to
+convert the case of the keys. For example, if your JSON:API resource object
+uses camel-case keys, but you prefer to store associative arrays using
+the Eloquent convention of snake-case keys. You may use the `snake` method
+to recursively convert the keys in the array:
+
+```php
+Arr::make('options')->snake()
+```
+
+We support the following key conversions:
+
+- `camelize()`: convert to camel-case keys.
+- `dasherize()`: convert to dash-case keys.
+- `underscore()` or `snake()`: convert to snake-case (underscored) keys.
+
 :::tip
-In JSON, there is a distinction between an array list and an object.
-Laravel decodes both to PHP arrays, however you should only use the `Arr`
-attribute for an array list. Use the [`Hash`](#hash-field) attribute if
-the expected JSON type is an object hash (PHP associative array).
+If the above key conversions do not fit your use-case, you can use the
+`deserializeUsing` method to fully customise how the input value is
+deserialized.
 :::
+
+### Boolean Field
+
+The `Boolean` field may be used to represent a field that is a boolean
+in the JSON - and typically a "tiny integer" column in your database.
+For example, assuming your database has a boolean column named `active`,
+you may attach a `Boolean` field to your schema like so:
+
+```php
+use LaravelJsonApi\Eloquent\Fields\Boolean;
+
+Boolean::make('active')
+```
 
 ### DateTime Field
 
@@ -220,75 +276,56 @@ If you want to retain the time zone as provided by the client, use the
 DateTime::make('publishedAt')->retainTimezone();
 ```
 
-### Boolean Field
+### Map Field
 
-The `Boolean` field may be used to represent a field that is a boolean
-in the JSON - and typically a "tiny integer" column in your database.
-For example, assuming your database has a boolean column named `active`,
-you may attach a `Boolean` field to your schema like so:
+The `Map` field may be used to map the values of an associative array
+to different columns in your database.
 
-```php
-use LaravelJsonApi\Eloquent\Fields\Boolean;
-
-Boolean::make('active')
-```
-
-### Hash Field
-
-The `Hash` field may be used to represent an attribute that is a JSON
-object. Laravel decodes such objects to PHP associative arrays.
-
-Typically your JSON hash will either be a JSON database column, or
-it may map to multiple columns in your database. Our `Hash` field
-supports both approaches.
-
-Firstly, let's assume that your database has a JSON column named
-`options`. You may attach a `Hash` field to your schema like so:
+For example, assuming you have a resource that has an `options` attribute
+that can contain the keys `foo` and `bar`. If the database stores these
+into the columns `option_foo` and `option_bar`, we can use a `Map` attribute
+as follows:
 
 ```php
-use LaravelJsonApi\Eloquent\Fields\Hash;
-
-Hash::make('options');
-```
-
-When storing a JSON object into your database, you may need to
-convert the case of the keys in the object. For example, if your
-JSON:API resource object uses camel-case keys, but you prefer
-to store objects using snake-case keys to follow the Eloquent
-convention. You may use the `snake` method to convert
-the keys:
-
-```php
-Hash::make('options')->snake()
-```
-
-We support the following key conversions:
-
-- `camelize()`: convert to camel-case keys.
-- `dasherize()`: convert to dash-case keys.
-- `snake()` or `underscore()`: convert to snake-case (underscored) keys.
-
-The second use-case for the `Hash` field is when the JSON object
-represents values that must be mapped to different columns in your
-database. In this case you will need to provide a map as the second
-argument to the `make` method:
-
-```php
-use LaravelJsonApi\Eloquent\Fields\Hash;
+use LaravelJsonApi\Eloquent\Fields\Map;
+use LaravelJsonApi\Eloquent\Fields\Number;
 use LaravelJsonApi\Eloquent\Fields\Str;
 
-Hash::make('options', [
+Map::make('options', [
   Str::make('foo', 'option_foo'),
-  Str::make('bar', 'option_bar'),
-]);
+  Number::make('bar', 'option_bar'),
+])
 ```
 
-:::tip
-Note that the map uses attribute field types, and the column names
-are provided in the `make` method of each field type if needed. Key
-conversion methods described above - e.g. `snake()` - should **not** be
-used in this scenario.
-:::
+As you can see from the example, the `Map` attribute takes an array of
+attributes, constructed using the `make` methods of the relevant classes.
+Each of these sub-attributes defines the name of the expected key in the
+associative array, and the column the value should be mapped to. In our
+example, the `options.foo` value will be mapped to the `option_foo` column
+in our database.
+
+When mapping values, if any keys are missing the column will retain its
+existing values. For example, if the `options` array only had a `foo` key,
+then the `option_foo` column will be updated but the `option_bar` column
+will retain its existing value.
+
+#### Null Values
+
+By default, if the value being mapped is `null` instead of an array, all
+columns will be set to `null`. So in our example, if `options` is `null`,
+then both the `option_foo` and `option_bar` columns will be set to `null`.
+
+If you do not want this default `null` behaviour, you have two options.
+Firstly, because models are only filled with validated values, you
+can use validation rules to reject `options` if it is `null`. Otherwise,
+you can using the `ignoreNull` method on the `Map` attribute:
+
+```php
+Map::make('options', [
+  Str::make('foo', 'option_foo'),
+  Number::make('bar', 'option_bar'),
+])->ignoreNull()
+```
 
 ### Number Field
 
