@@ -2,7 +2,7 @@ module.exports = {
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#title
    */
-  title: 'Laravel JSON API',
+  title: 'Laravel JSON:API',
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#description
    */

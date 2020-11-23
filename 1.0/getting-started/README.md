@@ -1,40 +1,76 @@
-# Introduction
+# Installation
 
-Laravel JSON:API helps you easily implement [JSON:API](https://jsonapi.org)
-specification-compliant APIs to your Laravel applications.
+[[toc]]
 
-Full details of the JSON:API specification can be found on their
-[website](https://jsonapi.org).
+## Requirements
 
-## Laravel JSON:API Features
+- PHP: `^7.4`
+- Laravel: `^8.0`
 
-This package provides all the capabilities you need to add JSON:API compliant
-APIs to your Laravel application. We have extensive support for the full
-specification, including:
+## Installation
 
-- Content negotiation
-- Fetching resources
-- Fetching relationships
-- Inclusion of related resources (compound documents)
-- Sparse field sets
-- Sorting
-- Pagination
-- Filtering
-- Creating resources
-- Updating resources
-- Updating relationships
-- Deleting resources
-- Validation of:
-  - JSON:API documents for compliance with the specification; and
-  - Query parameters.
+Require this package in the `composer.json` of your Laravel project.
+This will download the package and its dependent packages.
 
-This includes full out-of-the box support for querying Eloquent resources,
-with features such as:
+We also recommend you install our testing package as a development
+dependency.
 
-- Automatic eager loading when using JSON:API include paths
-- Simple definition of filters and sort parameters
-- Easy relationship end-points
-- Pagination of resources.
+To install both packages using [Composer](https://getcomposer.org):
 
-And finally, we have an extensive range of test helpers: to make
-test driven development a breeze.
+```bash
+composer require laravel-json-api/laravel
+composer require --dev laravel-json-api/testing
+```
+
+The `LaravelJsonApi\Laravel\ServiceProvider` is auto-discovered and registered
+by default.
+
+### Facades
+
+Two facades are also auto-discovered:
+
+- `LaravelJsonApi\Core\Facades\JsonApi`
+- `LaravelJsonApi\Laravel\Facades\JsonApiRoute`
+
+## Configuration
+
+Publish the package configuration using the following Artisan command:
+
+```bash
+$ php artisan vendor:publish --provider="LaravelJsonApi\Laravel\ServiceProvider"
+```
+
+This will create a `config/jsonapi.php` file.
+
+## Exception Handler
+
+To ensure that clients receive a JSON:API error response for exceptions
+thrown by your application, you need to add the package exception renderer
+to your application's exception handler.
+
+Update the `register()` method on your `\App\Exceptions\Handler` class
+as follows:
+
+```php
+<?php
+
+namespace App\Exceptions;
+
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Throwable;
+
+class Handler extends ExceptionHandler
+{
+    // ...
+
+    /**
+     * Register the exception handling callbacks for the application.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->renderable(\LaravelJsonApi\Exceptions\ExceptionParser::renderer());
+    }
+}
+```
