@@ -107,7 +107,7 @@ Hash::make('coordinates')->fillUsing(static function ($model, $column, $value) {
 });
 ```
 
-## Read Only Fields
+## Read-Only Fields
 
 There are times when you may want to allow the client to only create
 or update certain attributes on the resource. You can do this by using
@@ -308,6 +308,11 @@ When mapping values, if any keys are missing the column will retain its
 existing values. For example, if the `options` array only had a `foo` key,
 then the `option_foo` column will be updated but the `option_bar` column
 will retain its existing value.
+
+:::warning
+The `Map` attribute does not support the `deserializeUsing` or `fillUsing`
+methods, because it delegates filling values to its sub-attributes.
+:::
 
 #### Null Values
 
