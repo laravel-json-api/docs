@@ -37,6 +37,14 @@ module.exports = [
       'links',
     ]),
   },
+  {
+    title: "Routing",
+    collapsable: false,
+    children: prefix('routing', [
+      '',
+      'controllers'
+    ]),
+  }
 ];
 
 function prefix(prefix, children) {
