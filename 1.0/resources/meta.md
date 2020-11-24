@@ -8,7 +8,7 @@ A resource object may have a [meta object](https://jsonapi.org/format/#document-
 containing non-standard meta-information about a resource that cannot be
 represented as an attribute or relationship.
 
-## Defining Meta
+## Resource Meta
 
 To define a resource object's meta, use the `meta` method, and return
 an array of meta information.
@@ -71,5 +71,57 @@ This would result in the following resource object:
     "createdAt": "2020-07-10T12:42:17.000000Z",
     "updatedAt": "2020-07-10T13:53:01.000000Z"
   }
+}
+```
+
+## Identifier Meta
+
+In addition to resource `meta`, a resource identifier may have a `meta`
+member. A resource identifier is used when a resource appears in a relationship.
+
+If you would like a resource to have `meta` when it is serialized as a
+resource identifier, implement the `identifierMeta` method on your
+resource class:
+
+```php
+/**
+ * Get meta for the resource's identifier.
+ *
+ * @return array
+ */
+protected function identifierMeta(): array
+{
+    return ['foo' => 'bar'];
+}
+```
+
+If the resource then appeared in a *to-one* relation, the relationship
+`data` would serialize as follows:
+
+```json
+{
+  "data": {
+    "type": "posts",
+    "id": "123",
+    "meta": {
+      "foo": "bar"
+    }
+  }
+}
+```
+
+And if it appeared in a *to-many* relation:
+
+```json
+{
+  "data": [
+    {
+      "type": "posts",
+      "id": "123",
+      "meta": {
+        "foo": "bar"
+      }
+    }
+  ]
 }
 ```

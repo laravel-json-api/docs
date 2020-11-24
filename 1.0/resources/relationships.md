@@ -194,10 +194,10 @@ $this->relation('blogAuthor')->retainFieldName(),
 ```
 
 Otherwise, if you want to use a different convention, provide the URI
-fragment to the `withUri` method:
+fragment to the `withUriFieldName` method:
 
 ```php
-$this->relation('blogAuthor')->withUri('blog_author'),
+$this->relation('blogAuthor')->withUriFieldName('blog_author'),
 ```
 
 ### Removing Links
