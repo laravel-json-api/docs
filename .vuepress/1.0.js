@@ -25,7 +25,18 @@ module.exports = [
       'attributes',
       'relationships',
     ]),
-  }
+  },
+  {
+    title: 'API Resources',
+    collapsable: false,
+    children: prefix('resources', [
+      '',
+      'attributes',
+      'relationships',
+      'meta',
+      'links',
+    ]),
+  },
 ];
 
 function prefix(prefix, children) {
