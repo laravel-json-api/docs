@@ -45,6 +45,19 @@ module.exports = [
       'controllers',
       'writing-actions',
     ]),
+  },
+  {
+    title: "Requests",
+    collapsable: false,
+    children: prefix('requests', [
+      '',
+      'authorization',
+      'compliance',
+      'resource-validation',
+      'relationship-validation',
+      'query-validation',
+      'rules',
+    ]),
   }
 ];
 
