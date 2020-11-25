@@ -42,7 +42,8 @@ module.exports = [
     collapsable: false,
     children: prefix('routing', [
       '',
-      'controllers'
+      'controllers',
+      'writing-actions',
     ]),
   }
 ];

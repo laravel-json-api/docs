@@ -64,6 +64,9 @@ For example, say we only needed a custom implementation for the `show` route.
 We would remove the `Actions\FetchOne` trait, but leave all the other traits.
 Then we would just need to write our own `show` method on the controller.
 
+See the next chapter for a complete guide to
+[writing your own controller actions.](./writing-actions.md)
+
 ## JSON:API Controller
 
 If you have a resource type that does not need to use any controller hooks,
@@ -109,14 +112,12 @@ These hooks allow you to easily implement application specific actions,
 such as firing events or dispatching jobs. They also allow you to return
 customised responses.
 
-## Actions
+## Resource Hooks
 
-### Fetch-Many (Index)
+### Fetch-Many aka Index
 
 Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\FetchMany` trait
 implements the `index` controller action. This fetches a list of resources.
-
-#### Hooks
 
 This action has two hooks: `searching` and `searched`.
 
@@ -165,56 +166,11 @@ It is therefore likely you will need to check the type before taking
 action within your `searched` hook.
 :::
 
-#### Custom Action
-
-If you want to write your own `index` controller action, remove the
-`FetchMany` trait, and implement the `index` method yourself.
-
-The typical JSON:API flow with this action is to:
-
-1. Validate JSON:API query parameters. This is done by type-hinting
-the query request class (either `PostCollectionQuery` or
-`AnonymousCollectionQuery`).
-2. Use the correct schema (e.g. `PostSchema`) to query models using the
-JSON:API query parameters.
-3. Return a response with the result in the `data` member of the JSON:API
-document.
-
-This is an example custom action:
-
-```php
-use App\JsonApi\V1\Posts\PostCollectionQuery;
-use App\JsonApi\V1\Posts\PostSchema;
-use LaravelJsonApi\Core\Responses\DataResponse;
-
-/**
- * Fetch zero to many JSON API resources.
- *
- * @param PostSchema $schema
- * @param PostCollectionQuery $request
- * @return \Illuminate\Contracts\Support\Responsable|\Illuminate\Http\Response
- */
-public function index(PostSchema $schema, PostCollectionQuery $request)
-{
-  $models = $schema
-    ->repository()
-    ->queryAll()
-    ->using($request)
-    ->paginate($request->page());
-
-  // do something custom...
-
-  return new DataResponse($models);
-}
-```
-
-### Fetch-One (Show)
+### Fetch-One aka Show
 
 Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\FetchOne` trait
 implements the `show` controller action. This fetches a specified
 resource.
-
-#### Hooks
 
 This action has two hooks: `reading` and `read`.
 
@@ -266,56 +222,10 @@ Whatever you do in the `read` hook,
 you should ensure that it handles a `null` value safely.
 :::
 
-#### Custom Action
-
-If you want to write your own `show` controller action, remove the
-`FetchOne` trait, and implement the `show` method yourself.
-
-The typical JSON:API flow with this action is to:
-
-1. Validate JSON:API query parameters. This is done by type-hinting
-the query request class (either `PostQuery` or `AnonymousQuery`).
-2. Use the correct schema (e.g. `PostSchema`) to check whether the
-model the route relates to matches any filter parameters.
-3. Return a response with the result in the `data` member of the JSON:API
-document.
-
-This is an example custom action:
-
-```php
-use App\JsonApi\V1\Posts\PostQuery;
-use App\JsonApi\V1\Posts\PostSchema;
-use App\Models\Post;
-use LaravelJsonApi\Core\Responses\DataResponse;
-
-/**
- * Fetch zero to one JSON API resource by id.
- *
- * @param PostSchema $schema
- * @param PostQuery $request
- * @param Post $post
- * @return \Illuminate\Contracts\Support\Responsable|\Illuminate\Http\Response
- */
-public function show(PostSchema $schema, PostQuery $request, Post $post)
-{
-  $model = $schema
-    ->repository()
-    ->queryOne($post)
-    ->using($request)
-    ->first();
-
-  // do something custom...
-
-  return new DataResponse($model);
-}
-```
-
 ### Store
 
 Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\Store` trait
 implements the `store` controller action. This creates a new resource.
-
-#### Hooks
 
 This action has four hooks: `saving`, `creating`, `created` and `saved`.
 Note that the `saving` and `saved` hooks are also called by the
@@ -392,58 +302,10 @@ the default response created by the `Store` trait. Note that if the
 `saved` hook returns a response, the `created` hook **will not** be
 invoked.
 
-#### Custom Action
-
-If you want to write your own `store` controller action, remove the
-`Store` trait, and implement the `store` method yourself.
-
-The typical JSON:API flow with this action is to:
-
-1. Validate the JSON document to ensure it is valid for the resource
-type being created. This is done by type-hinting the specific
-request class, e.g. `PostRequest`.
-2. Validate JSON:API query parameters. This is done by type-hinting
-the query request class (either `PostQuery` or `AnonymousQuery`).
-3. Use the correct schema (e.g. `PostSchema`) to create a new
-model in the database.
-4. Return a response with the new resource in the `data` member of
-the JSON:API document.
-
-This is an example custom action:
-
-```php
-use App\JsonApi\V1\Posts\PostQuery;
-use App\JsonApi\V1\Posts\PostSchema;
-use LaravelJsonApi\Core\Responses\DataResponse;
-
-/**
- * Create a new resource.
- *
- * @param PostSchema $schema
- * @param PostRequest $request
- * @param PostQuery $query
- * @return \Illuminate\Contracts\Support\Responsable|\Illuminate\Http\Response
- */
-public function show(PostSchema $schema, PostRequest $request, PostQuery $query)
-{
-  $model = $schema
-    ->repository()
-    ->create()
-    ->using($query)
-    ->store($request->validated());
-
-  // do something custom...
-
-  return new DataResponse($model);
-}
-```
-
 ### Update
 
 Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\Update` trait
 implements the `update` controller action. This updates an existing resource.
-
-#### Hooks
 
 This action has four hooks: `saving`, `updating`, `updated` and `saved`.
 Note that the `saving` and `saved` hooks are also called by the
@@ -509,54 +371,458 @@ the default response created by the `Update` trait. Note that if the
 `saved` hook returns a response, the `updated` hook **will not** be
 invoked.
 
-#### Custom Action
+### Destroy
 
-If you want to write your own `update` controller action, remove the
-`Update` trait, and implement the `update` method yourself.
+Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\Destroy` trait
+implements the `destroy` controller action. This deletes an existing resource.
 
-The typical JSON:API flow with this action is to:
+This action has two hooks: `deleting` and `deleted`. These hooks
+will be called with two arguments:
 
-1. Validate the JSON document to ensure it is valid for the resource
-type being updated. This is done by type-hinting the specific
-request class, e.g. `PostRequest`.
-2. Validate JSON:API query parameters. This is done by type-hinting
-the query request class (either `PostQuery` or `AnonymousQuery`).
-3. Use the correct schema (e.g. `PostSchema`) to update the model
-with the validated data.
-4. Return a response with the updated resource in the `data` member of
-the JSON:API document.
+1. The model that is being deleted.
+2. The JSON:API request class for the resource, which will validated
+the delete request, e.g. `PostRequest`.
 
-This is an example custom action:
+For example:
 
 ```php
-use App\JsonApi\V1\Posts\PostQuery;
-use App\JsonApi\V1\Posts\PostSchema;
+use App\JsonApi\V1\Posts\PostRequest;
 use App\Models\Post;
-use LaravelJsonApi\Core\Responses\DataResponse;
 
-/**
- * Update an existing resource.
- *
- * @param PostSchema $schema
- * @param PostRequest $request
- * @param PostQuery $query
- * @param Post $post
- * @return \Illuminate\Contracts\Support\Responsable|\Illuminate\Http\Response
- */
-public function update(
-  PostSchema $schema,
-  PostRequest $request,
-  PostQuery $query,
-  Post $post
-) {
-  $model = $schema
-    ->repository()
-    ->update($post)
-    ->using($query)
-    ->store($request->validated());
+public function deleting(Post $post, PostRequest $request): void
+{
+  // do something...
+}
 
-  // do something custom...
-
-  return new DataResponse($model);
+public function deleted(Post $post, PostRequest $request): void
+{
+  // do something...
 }
 ```
+
+:::tip
+The `PostRequest` class extends from Laravel's `FormRequest` class.
+More details are available in the [Requests](../requests/) chapters.
+:::
+
+The default response returned by the `Destroy` trait is a
+`204 No Content` response. The `deleted` hook can return a response to
+override this default response.
+
+## Relationship Hooks
+
+### Concept
+
+An important concept to highlight with relationship actions is that the
+JSON:API query parameters relate to the resource type *returned* by the
+relationship, not the resource type on which the relationship exists.
+
+The type of query parameters class is also determined by whether the
+relation is a *to-one* or *to-many* relationship.
+
+For *to-one*, the query class will be for a zero-to-one response.
+For example, if we have an `author` relationship on a `posts` resource,
+that returns zero-to-one `users` resources. The query class will
+either be the `UserQuery` class if it exists, or our
+`LaravelJsonApi\Laravel\Http\Requests\AnonymousQuery` class.
+
+For *to-many*, the query class will be for a zero-to-many response.
+For example, if we have a `tags` relationship on a `posts` resource,
+that returns zero-to-many `tags` resource. The query class will
+either be the `TagCollectionQuery` class if it exists, or our
+`LaravelJsonApi\Laravel\Http\Requests\AnonymousCollectionQuery` class.
+
+### Fetch-Related aka Show-Related
+
+Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\FetchRelated` trait
+implements the `showRelated` controller action. This fetches the
+related resource(s) for a relationship.
+
+This action has two hooks: `readingRelated{Field}` and `readRelated{Field}`.
+The field is the field-name for the relationship.
+
+The `readingRelated{Field}` hook receives two arguments:
+
+1. The model on which the relationship exists.
+2. The query class for the resource type returned by the relationship.
+
+For example if a `posts` resource has a *to-one* `author` relationship,
+and a *to-many* `tags` relationship, the following `readingRelated` hooks
+can exist:
+
+```php
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\JsonApi\V1\Users\UserQuery;
+use App\Models\Post;
+
+public function readingRelatedAuthor(Post $post, UserQuery $query): void
+{
+  // do something...
+}
+
+public function readingRelatedTags(Post $post, TagCollectionQuery $query): void
+{
+  // do something...
+}
+```
+
+:::tip
+Both the `AnonymousQuery`, `AnonymousCollectionQuery` and specific classes
+(e.g. `UserQuery` and `TagCollectionQuery`) extend Laravel's `FormRequest`
+class. More details are available in the [Requests](../requests/) chapters.
+:::
+
+The `readRelated{Field}` hook recieves three arguments:
+
+1. The model on which the relationship exists.
+2. The data returned by the relationship. For a *to-one* relation, this will
+be the related model or `null`. For a *to-many*, this will be of mixed type
+depending on the request filter and page parameters.
+3. The query class for the resource type returned by the relationship.
+
+Using our example of an `author` and a `tags` relation on a `posts` resource:
+
+```php
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\JsonApi\V1\Users\UserQuery;
+use App\Models\Post;
+use App\Models\User;
+
+public function readRelatedAuthor(Post $post, ?User $user, UserQuery $query): void
+{
+  // do something...
+}
+
+public function readRelatedTags(Post $post, $data, TagCollectionQuery $query): void
+{
+  // do something...
+}
+```
+
+The `readRelated{Field}` hook can return a response to override the default
+response created by the `FetchRelationship` trait.
+
+:::warning
+The `$user` argument provided to the `readRelatedAuthor` hook is
+`nullable` for a reason. If the client provides filter query parameters,
+the model may not match the filters and therefore the result of retrieving
+the relation it from the database will be `null`.
+
+For *to-many* relations, the `$data` argument provided to the `readRelatedTags`
+hook will be of mixed type. It could be an Eloquent collection or a JSON:API
+page object - or even a model or null if a singular filter was used.
+You will need to check the type before taking action with it.
+:::
+
+### Fetch-Relationship aka Show-Relationship
+
+Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\FetchRelationship` trait
+implements the `showRelationship` controller action. This fetches the
+related resource(s) for a relationship and returns their resource identifiers.
+
+This action has two hooks: `reading{Field}` and
+`read{Field}`. The field is the field-name for the relationship.
+
+The `reading{Field}` hook receives two arguments:
+
+1. The model on which the relationship exists.
+2. The query class for the resource type returned by the relationship.
+
+For example if a `posts` resource has a *to-one* `author` relationship,
+and a *to-many* `tags` relationship, the following hooks can exist:
+
+```php
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\JsonApi\V1\Users\UserQuery;
+use App\Models\Post;
+
+public function readingAuthor(Post $post, UserQuery $query): void
+{
+  // do something...
+}
+
+public function readingTags(Post $post, TagCollectionQuery $query): void
+{
+  // do something...
+}
+```
+
+:::tip
+Both the `AnonymousQuery`, `AnonymousCollectionQuery` and specific classes
+(e.g. `UserQuery` and `TagCollectionQuery`) extend Laravel's `FormRequest`
+class. More details are available in the [Requests](../requests/) chapters.
+:::
+
+The `read{Field}` hook receives three arguments:
+
+1. The model on which the relationship exists.
+2. The data returned by the relationship. For a *to-one* relation, this will
+be the related model or `null`. For a *to-many*, this will be of mixed type
+depending on the request filter and page parameters.
+3. The query class for the resource type returned by the relationship.
+
+Using our example of an `author` and a `tags` relation on a `posts` resource:
+
+```php
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\JsonApi\V1\Users\UserQuery;
+use App\Models\Post;
+use App\Models\User;
+
+public function readAuthorRelationship(Post $post, ?User $user, UserQuery $query): void
+{
+  // do something...
+}
+
+public function readTagsRelationship(Post $post, $data, TagCollectionQuery $query): void
+{
+  // do something...
+}
+```
+
+The `read{Field}` hook can return a response to override the default
+response created by the `FetchRelationship` trait.
+
+:::warning
+The `$user` argument provided to the `readAuthor` hook is `nullable` for
+a reason. If the client provides filter query parameters,
+the model may not match the filters and therefore the result of retrieving
+the relation it from the database will be `null`.
+
+For *to-many* relations, the `$data` argument provided to the
+`readTags` hook will be of mixed type. It could be an Eloquent
+collection or a JSON:API page object - or even a model or null if a singular
+filter was used. You will need to check the type before taking action with it.
+:::
+
+### Update-Relationship
+
+Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\UpdateRelationship` trait
+implements the `updateRelationship` controller action. This completely
+replaces the contents of a relationship, and then returns the
+resource identifiers of the new relationship value.
+
+This action has two hooks: `updating{Field}` and
+`updated{Field}`. The field is the field-name for the relationship.
+
+The `updating{Field}` hook receives three arguments:
+
+1. The model on which the relationship exists.
+2. The JSON:API request class for the resource that is having its relationship
+updated, e.g. `PostRequest` when updating a `posts` `author` relationship.
+3. The query class for the resource type returned by the relationship.
+
+For example if a `posts` resource has a *to-one* `author` relationship,
+and a *to-many* `tags` relationship, the following hooks can exist:
+
+```php
+use App\JsonApi\V1\Posts\PostRequest;
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\JsonApi\V1\Users\UserQuery;
+use App\Models\Post;
+
+public function updatingAuthor(
+  Post $post,
+  PostRequest $request,
+  UserQuery $query
+): void
+{
+  // do something...
+}
+
+public function updatingTags(
+  Post $post,
+  PostRequest $request,
+  TagCollectionQuery $query
+): void
+{
+  // do something...
+}
+```
+
+:::tip
+Both the `AnonymousQuery`, `AnonymousCollectionQuery` and specific classes
+(e.g. `UserQuery` and `TagCollectionQuery`) extend Laravel's `FormRequest`
+class. More details are available in the [Requests](../requests/) chapters.
+:::
+
+The `updated{Field}` hook receives four arguments:
+
+1. The model on which the relationship exists.
+2. The data that replaced the relationship. For a *to-one* relation, this will
+be the related model or `null`. For a *to-many*, this will typically
+be an Eloquent collection.
+3. The JSON:API request class for the resource that had its relationship
+updated.
+4. The query class for the resource type returned by the relationship.
+
+Using our example of an `author` and a `tags` relation on a `posts` resource:
+
+```php
+use App\JsonApi\V1\Posts\PostRequest;
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\JsonApi\V1\Users\UserQuery;
+use App\Models\Post;
+use App\Models\User;
+
+public function updatedAuthor(
+  Post $post,
+  ?User $user,
+  PostRequest $request,
+  UserQuery $query
+): void
+{
+  // do something...
+}
+
+public function updatedTags(
+  Post $post,
+  $tags,
+  PostRequest $request,
+  TagCollectionQuery $query
+): void
+{
+  // do something...
+}
+```
+
+The `updated{Field}` hook can return a response to override the default
+response created by the `UpdateRelationship` trait.
+
+### Attach-Relationship
+
+Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\AttachRelationship` trait
+implements the `attachRelationship` controller action. This action
+attaches models to a *to-many* relationship.
+
+This action has two hooks: `attaching{Field}` and `attached{Field}`.
+The field is the field-name for the relationship.
+
+The `attaching{Field}` hook receives three arguments:
+
+1. The model on which the relationship exists.
+2. The JSON:API request class for the resource that is having its relationship
+updated, e.g. `PostRequest` when updating a `posts` `tags` relationship.
+3. The query class for the resource type returned by the relationship.
+
+For example if a `posts` resource has *to-many* `tags` relationship,
+the `attachingTags` hook can exist:
+
+```php
+use App\JsonApi\V1\Posts\PostRequest;
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\Models\Post;
+
+public function attachingTags(
+  Post $post,
+  PostRequest $request,
+  TagCollectionQuery $query
+): void
+{
+  // do something...
+}
+```
+
+:::tip
+Both the `AnonymousCollectionQuery` and specific classes
+(e.g. `TagCollectionQuery`) extend Laravel's `FormRequest`
+class. More details are available in the [Requests](../requests/) chapters.
+:::
+
+The `attached{Field}` hook receives four arguments:
+
+1. The model on which the relationship exists.
+2. The data that was attached to the relationship, as an Eloquent collection.
+3. The JSON:API request class for the resource that had its relationship
+updated.
+4. The query class for the resource type returned by the relationship.
+
+Using our example of a `tags` relation on a `posts` resource:
+
+```php
+use App\JsonApi\V1\Posts\PostRequest;
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\Models\Post;
+
+public function attachedTags(
+  Post $post,
+  $tags,
+  PostRequest $request,
+  TagCollectionQuery $query
+): void
+{
+  // do something...
+}
+```
+
+The `attached{Field}` hook can return a response to override the default
+`204 No Content` created by the `AttachRelationship` trait.
+
+### Detach-Relationship
+
+Our `LaravelJsonApi\Laravel\Http\Controllers\Actions\DetachRelationship` trait
+implements the `detachRelationship` controller action. This action
+detaches models from a *to-many* relationship.
+
+This action has two hooks: `detaching{Field}` and `detached{Field}`.
+The field is the field-name for the relationship.
+
+The `detaching{Field}` hook receives three arguments:
+
+1. The model on which the relationship exists.
+2. The JSON:API request class for the resource that is having its relationship
+updated, e.g. `PostRequest` when updating a `posts` `tags` relationship.
+3. The query class for the resource type returned by the relationship.
+
+For example if a `posts` resource has *to-many* `tags` relationship,
+the `detachingTags` hook can exist:
+
+```php
+use App\JsonApi\V1\Posts\PostRequest;
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\Models\Post;
+
+public function detachingTags(
+  Post $post,
+  PostRequest $request,
+  TagCollectionQuery $query
+): void
+{
+  // do something...
+}
+```
+
+:::tip
+Both the `AnonymousCollectionQuery` and specific classes
+(e.g. `TagCollectionQuery`) extend Laravel's `FormRequest`
+class. More details are available in the [Requests](../requests/) chapters.
+:::
+
+The `detached{Field}` hook receives four arguments:
+
+1. The model on which the relationship exists.
+2. The data that was detached from the relationship, as an Eloquent collection.
+3. The JSON:API request class for the resource that had its relationship
+updated.
+4. The query class for the resource type returned by the relationship.
+
+Using our example of a `tags` relation on a `posts` resource:
+
+```php
+use App\JsonApi\V1\Posts\PostRequest;
+use App\JsonApi\V1\Tags\TagCollectionQuery;
+use App\Models\Post;
+
+public function detachedTags(
+  Post $post,
+  $tags,
+  PostRequest $request,
+  TagCollectionQuery $query
+): void
+{
+  // do something...
+}
+```
+
+The `detached{Field}` hook can return a response to override the default
+`204 No Content` created by the `DetachRelationship` trait.

@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
 }
 ```
 
-## HTTP-Only Events
+## API-Only Events
 
 If you would like to attach a listener or observer **only during** JSON:API
 related HTTP requests, you may register them using your server's `serving()`
@@ -70,6 +70,37 @@ class Server extends BaseServer
     public function serving(): void
     {
         User::observe(UserObserver::class);
+    }
+
+}
+```
+
+## Controller Events
+
+If you need to dispatch events, but do not want them dispatched as model events,
+you can use our [Controller Hooks](../routing/controllers.md#controller-hooks)
+to dispatch custom events.
+
+More details are contained in the linked chapter, but here is an example
+of a custom event dispatched by a controller hook:
+
+```php
+namespace App\Http\Controllers\Api\V1;
+
+use App\Events\AuthorCreatedPost;
+use App\Models\Post;
+use LaravelJsonApi\Laravel\Http\Controllers\Actions;
+
+class PostController
+{
+
+    use Actions\Store;
+
+    // ...other actions
+
+    public function created(Post $post): void
+    {
+        AuthorCreatedPost::dispatch($post->author, $post);
     }
 
 }
