@@ -251,6 +251,35 @@ public function destroy(PostRequest $request, Post $post)
 
 ## Relationship Actions
 
+### Concept
+
+The logic required to parse generic relationships is complex. We do not
+therefore recommend implementing your own generic relationship actions.
+
+Instead, we allow you to register actions for specific relationships. You
+can do this via the `ownAction` and `ownActions` methods when registering
+relationship routes:
+
+```php
+$relationships->hasOne('author')->ownAction('show', 'update');
+$relationships->hasMany('tags')->ownActions();
+```
+
+The `ownAction` method allows you to register specific actions that should
+be routed to their own controller action. Use our action short-hands of
+`related`, `show`, `update`, `attach` and `detach`.
+
+The `ownActions` method is a short-hand to specify that all routes for the
+relationship should be routed to their own controller actions.
+
+In the above example, the `author` relationship would have its own
+`showAuthor` and `updateAuthor` actions. However the `related` route
+would still use our generic action of `showRelated`.
+
+As the `tags` relationship has called the `ownActions` method, all of its
+actions will be specific. I.e. it will route to `showRelatedTags`,
+`showTags`, `updateTags`, `attachTags` and `detachTags`.
+
 ### Fetch-Related aka Show-Related
 
 The logic required to parse generic relationships is complex, and we do not
