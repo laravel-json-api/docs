@@ -37,18 +37,98 @@ configuration array.
 The object returned by the `JsonApiRoute::server()` method allows a number
 of typical Laravel routing methods to be called. In the example above,
 we call `prefix` and `namespace` to set the URL prefix for the server,
-and the controller namespace. The available methods are:
-
-- `domain`: set the domain for the server.
-- `middleware`: set middleware for the server [(see below)](#server-middleware).
-- `name`: set the route name prefix [(see below)](#server-route-names).
-- `namespace`: set the controller namespace.
-- `prefix`: set the URL prefix.
+and the controller namespace. The other available methods are described
+below.
 
 After calling any of these methods, we finish with a call to the `resources`
 method. This receives a `Closure` in which we register the routes for each
 resource type in our server. This is similar to a
 [Laravel routing group.](https://laravel.com/docs/routing#route-groups)
+
+### Controllers and Namespaces
+
+Laravel's route groups have traditionally allowed controller namespaces
+to be set via groups. In the following example, the `namespace` method
+is called, instructing Laravel that controllers for our server are
+in the `App\Http\Controllers\Api\V1` namespace:
+
+```php
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->namespace('Api\V1')
+    ->resources(function ($server) {
+        $server->resource('posts');
+    });
+```
+
+This will work if the `$namespace` property is set on your
+`App\Providers\RouteServiceProvider`. In this case, we do not need to
+specify a controller when registering a resource type using the `resource`
+method. The controller is assumed to be the singular form of the resource
+type. For example, the `blog-posts` resource type would be expected to have
+a `BlogPostController` in the specified namespace.
+
+If your controller does not conform to this convention, provide the
+controller name as the second argument to the `resource` method:
+
+```php
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->namespace('Api\V1')
+    ->resources(function ($server) {
+        $server->resource('blog-posts', 'PostController');
+    });
+```
+
+**If you are not using namespacing**, i.e. the `$namespace` property is not
+set on your `App\Providers\RouteServiceProvider`, you will **always** need
+to provide the fully-qualified controller class name to the `resource`
+method. For example:
+
+```php
+use App\Http\Controllers\Api\V1\PostController;
+use App\Http\Controllers\Api\V1\TagController;
+
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->resources(function ($server) {
+        $server->resource('posts', PostController::class);
+        $server->resources('tags', TagController::class);
+    });
+```
+
+:::tip
+As explained in the [Controllers chapter](./controllers.md), it is also
+possible to use a default `JsonApiController`. This can be used when
+you do not need to customise any of our default action implementations.
+:::
+
+### Server Domain
+
+If you need to set a domain for your server, use the `domain` method.
+For example:
+
+```php
+JsonApiRoute::server('v1')
+    ->domain('api.myapp.com')
+    ->resources(function ($server) {
+        $server->resource('posts');
+        $server->resource('tags');
+        $server->resource('users');
+    });
+```
+
+Or if you had wildcard sub-domains:
+
+```php
+JsonApiRoute::server('v1')
+    ->domain('{account}.myapp.com')
+    ->resources(function ($server) {
+        $server->resource('posts');
+        $server->resource('tags');
+        $server->resource('users');
+    });
+```
 
 ### Server Middleware
 

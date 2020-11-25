@@ -239,9 +239,12 @@ keys:
 - `dasherize`: recursively dash-case all keys in the provided array.
 - `underscore`: recursively convert camel-case and dash-case keys to underscore (snake) case.
 
-> The `underscore` method differs from Laravel's `snake` case, in that it will
-> convert both camel-cased and dasherized strings to snake case with
-> a `_` delimiter.
+:::tip
+The `underscore` method differs from Laravel's `snake` case, in that it will
+convert both camel-cased and dasherized strings to snake case with
+a `_` delimiter.
+:::
 
 Our `Arr` helper also forwards calls to the `Illuminate\Support\Arr` class,
-meaning you do not need to import both classes if you want to methods on both.
+meaning you do not need to import both classes if you want to use methods
+on both.

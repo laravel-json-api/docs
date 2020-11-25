@@ -161,5 +161,8 @@ class PostResource extends JsonApiResource
 }
 ```
 
-> If you're using a different column than the route key for your resource
-> `id`, don't forget to also update the `ID` object on your resource schema.
+:::tip
+If you're using a different column than the route key for your resource
+`id`, don't forget to also update the `ID` object on your
+[resource schema.](../schemas/identifier.md#column-name)
+:::
