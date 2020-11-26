@@ -369,3 +369,210 @@ and instead use Laravel's
 [`auth` middleware](https://laravel.com/docs/8.x/authentication#protecting-routes)
 to protect the entire API.
 :::
+
+## Hiding Resources
+
+There may be times when you need to hide certain resources when a user
+accesses your API. This is easily achieved using
+[global scopes](https://laravel.com/docs/eloquent#global-scopes) that
+are applied to your server.
+
+To illustrate this we will use an example of a blog application that has
+a `posts` resource in its API. All published posts should be visible to
+guests and authenticated users. However, draft posts should only be
+visible to the author of the post.
+
+To achieve this, we will use the following global scope:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Support\Facades\Auth;
+
+class PostScope implements Scope
+{
+
+    /**
+     * @inheritDoc
+     */
+    public function apply(Builder $builder, Model $model)
+    {
+        /**
+         * If there is no authenticated user, then we just
+         * need to ensure only published posts are returned.
+         */
+        if (Auth::guest()) {
+            $builder->whereNotNull(
+                $model->qualifyColumn('published_at')
+            );
+            return;
+        }
+
+        /**
+         * If there is an authenticated user, then they
+         * can see either published posts OR posts
+         * where they are the author.
+         */
+        $builder->where(function ($query) use ($model) {
+            return $query
+                ->whereNotNull($model->qualifyColumn('published_at'))
+                ->orWhere($model->qualifyColumn('author_id'), Auth::id());
+        });
+    }
+
+}
+```
+
+To add this scope to our API, we use the `serving` method on our `Server`
+class:
+
+```php
+namespace App\JsonApi\V1;
+
+use App\JsonApi\V1\Posts\PostScope;
+use App\Models\Post;
+use Illuminate\Support\Facades\Auth;
+use LaravelJsonApi\Core\Server\Server as BaseServer;
+
+class Server extends BaseServer
+{
+
+    // ...
+
+    /**
+     * Bootstrap the server when it is handling an HTTP request.
+     *
+     * @return void
+     */
+    public function serving(): void
+    {
+        Post::addGlobalScope(new PostScope());
+
+        Post::creating(static function (Post $post) {
+            $post->author()->associate(Auth::user());
+        });
+    }
+
+}
+```
+
+:::tip
+Notice that we also attach a `creating` event to our `Post` class.
+This will automatically add the authenticated user as the author
+of a post.
+:::
+
+As a result, draft `posts` are now hidden from users, unless they
+are the author of the post. If a guest or user attempts to
+access a draft `posts` resource for which they are not the author,
+they will receive a `404 Not Found` response. Also, when they view
+lists of `posts` resources (e.g. by requesting
+`GET /api/v1/posts`), they will not see any draft `posts` for which
+they are not the author.
+
+## Customising Authorization
+
+Our authorization implementation is designed to be customised if needed.
+You can either customise it for a specific resource type or types,
+or override the entire implementation.
+
+For both, you will need to write an `Authorizer` class, that implements
+our `LaravelJsonApi\Contracts\Auth\Authorizer` interface. The interface
+is self-explanatory: it has a method to authorize each JSON:API controller
+action.
+
+To generate an authorizer, use the `jsonapi:authorizer` Artisan command.
+You will need to specify if you are generating a per-resource `Authorizer`
+or a general use `Authorizer`.
+
+For a per-resource authorizer:
+
+```bash
+php artisan jsonapi:authorizer posts --resource --server=v1
+```
+
+This will generate an authorizer for our `posts` resource. It will be
+placed in the same namespace as the `PostSchema` and will be called
+`PostAuthorizer`.
+
+For a general-use authorizer:
+
+```bash
+php artisan jsonapi:authorizer blog --server=v1
+```
+
+This will generate a `BlogAuthorizer` in the following namespace:
+`App\JsonApi\Authorizers`.
+
+:::tip
+In both examples, you do not need to use the `--server` option if you only
+have one server.
+:::
+
+### Per-Resource Customisation
+
+If you want to fully customise the authorization logic for a specific
+resource type, create an `Authorizer` class in the same namespace as the
+resource's `Schema`.
+
+For example, if our `posts` resource's schema is
+`App\JsonApi\V1\Posts\PostSchema`, create an authorizer as
+`App\JsonApi\V1\Posts\PostAuthorizer`. This class will be automatically
+detected, and used instead of our default implementation to authorize
+`posts` requests.
+
+### Multi-Resource Customisation
+
+If you want to customise the authorization logic for a group of resources,
+create an `Authorizer` class containing the logic. You will then
+need to register it as the class for the specific resource types.
+
+To do this, use the `register` method in your `AuthServiceProvider`.
+For example, if we have generated a `App\JsonApi\Authorizers\BlogAuthorizer`,
+we can register it for multiple resource types as follows:
+
+```php
+use App\JsonApi\Authorizers\BlogAuthorizer;
+use LaravelJsonApi\LaravelJsonApi;
+
+public function register(): void
+{
+    LaravelJsonApi::registerAuthorizer(BlogAuthorizer::class, [
+      \App\JsonApi\V1\Posts\PostSchema::class,
+      \App\JsonApi\V1\Tags\TagSchema::class,
+    ]);
+}
+```
+
+As you can see from the example, the first argument is the fully-qualified
+class of the `Authorizer` we are registering. The second argument is an array
+of the `Schema` classes that the authorizer should be used for.
+
+### Full Customisation
+
+If you want to entirely replace our default implementation, register
+a default `Authorizer` class. This will be used as the default implementation
+for all resources, unless you've used the per-resource and multi-resource
+customisation described above.
+
+To register your default implementation, use the `register` method of your
+`AuthServiceProvider`. For example:
+
+```php
+use App\JsonApi\Authorizers\DefaultAuthorizer;
+use LaravelJsonApi\LaravelJsonApi;
+
+public function register(): void
+{
+    LaravelJsonApi::defaultAuthorizer(DefaultAuthorizer::class);
+}
+```
+
+:::tip
+If you have multiple APIs, and need a different default authorizer for each,
+then use the `serving` method on the `Server` class to register the
+correct authorizer class for the server.
+:::
