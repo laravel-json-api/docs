@@ -1,3 +1,0 @@
-# Query Validation
-
-[[toc]]

@@ -1,6 +1,6 @@
 module.exports = [
   {
-    title: "Getting Started",
+    title: 'Getting Started',
     collapsable: false,
     children: prefix('getting-started', [
       '',
@@ -9,7 +9,7 @@ module.exports = [
     ]),
   },
   {
-    title: "Servers",
+    title: 'Servers',
     collapsable: false,
     children: prefix('servers', [
       '',
@@ -17,7 +17,7 @@ module.exports = [
     ]),
   },
   {
-    title: "Schemas",
+    title: 'Schemas',
     collapsable: false,
     children: prefix('schemas', [
       '',
@@ -38,7 +38,7 @@ module.exports = [
     ]),
   },
   {
-    title: "Routing",
+    title: 'Routing',
     collapsable: false,
     children: prefix('routing', [
       '',
@@ -47,16 +47,14 @@ module.exports = [
     ]),
   },
   {
-    title: "Requests",
+    title: 'Requests',
     collapsable: false,
     children: prefix('requests', [
       '',
       'authorization',
       'compliance',
-      'resource-validation',
-      'relationship-validation',
-      'query-validation',
-      'rules',
+      'resources',
+      'query-parameters',
     ]),
   }
 ];
