@@ -48,8 +48,8 @@ that is subject of the request, for example:
 ```php
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Post;
+use App\Models\User;
 
 class PostPolicy
 {
@@ -97,8 +97,8 @@ subject of the request. For example:
 ```php
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Post;
+use App\Models\User;
 
 class PostPolicy
 {
@@ -124,8 +124,8 @@ relationship is being changed to. For example:
 ```php
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Post;
+use App\Models\User;
 use LaravelJsonApi\Core\Store\LazyRelation;
 
 class PostPolicy
@@ -213,8 +213,9 @@ check the value provided by the client. For example:
 ```php
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Post;
+use App\Models\Tag;
+use App\Models\User;
 use LaravelJsonApi\Core\Store\LazyRelation;
 
 class PostPolicy
@@ -236,7 +237,7 @@ class PostPolicy
     {
         $check = $relation
             ->collect()
-            ->every(fn ($tag) => $tag->bloggable);
+            ->every(fn (Tag $tag) => $tag->bloggable);
 
         return $user->is($post->author) && $check;
     }
