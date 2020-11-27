@@ -137,22 +137,3 @@ Content-Type: application/vnd.api+json
   }
 }
 ```
-
-### Localisation
-
-All our specification compliance errors can be localised if desired.
-Simply publish the spec compliance translation files, using the
-following Artisan command:
-
-```bash
-php artisan vendor:publish --provider="LaravelJsonApi\Spec\ServiceProvider"
-```
-
-This will publish the translation files to
-`/resources/lang/vendor/jsonapi-spec`.
-
-:::tip
-We will accept pull requests to add language translations to our
-compliance parsing package. Just create a PR in the
-[`laravel-json-api/spec` repository.](https://github.com/laravel-json-api/spec)
-:::

@@ -56,6 +56,13 @@ module.exports = [
       'resources',
       'query-parameters',
     ]),
+  },
+  {
+    title: 'Digging Deeper',
+    collapsable: false,
+    children: prefix('digging-deeper', [
+      'localisation',
+    ]),
   }
 ];
 
