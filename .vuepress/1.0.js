@@ -58,6 +58,14 @@ module.exports = [
     ]),
   },
   {
+    title: 'Responses',
+    collapsable: false,
+    children: prefix('responses', [
+      '',
+      'errors',
+    ]),
+  },
+  {
     title: 'Digging Deeper',
     collapsable: false,
     children: prefix('digging-deeper', [
