@@ -94,7 +94,7 @@ use the `cannotEagerLoad` method:
 BelongsTo::make('author')->cannotEagerLoad()
 ```
 
-For more detail, see the [Include Paths chapter.](./include-paths.md)
+For more detail, see the [Eager Loading chapter.](./eager-loading.md)
 
 ## Sparse Fields
 
