@@ -394,9 +394,11 @@ BelongsToMany::make('roles')->fields(static fn($parent, $related) => [
 ]);
 ```
 
-> The callback receives two arguments: the parent of the relationship, and
-> the models that are being attached. In this example, the parent would be
-> the `User` model, and the related models would be `Role` models.
+:::tip
+The callback receives two arguments: the parent of the relationship, and
+the models that are being attached. In this example, the parent would be
+the `User` model, and the related models would be `Role` models.
+:::
 
 To provide values that require no calculation, pass an `array` to the `fields`
 method:

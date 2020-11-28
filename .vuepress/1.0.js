@@ -24,6 +24,7 @@ module.exports = [
       'identifier',
       'attributes',
       'relationships',
+      'filters',
     ]),
   },
   {
