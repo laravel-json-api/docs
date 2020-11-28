@@ -94,6 +94,8 @@ use the `cannotEagerLoad` method:
 BelongsTo::make('author')->cannotEagerLoad()
 ```
 
+For more detail, see the [Include Paths chapter.](./include-paths.md)
+
 ## Sparse Fields
 
 By default, all relationship field types are allowed as

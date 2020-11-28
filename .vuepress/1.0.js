@@ -25,6 +25,7 @@ module.exports = [
       'attributes',
       'relationships',
       'filters',
+      'include-paths',
     ]),
   },
   {
