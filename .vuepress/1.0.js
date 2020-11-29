@@ -73,6 +73,15 @@ module.exports = [
     children: prefix('digging-deeper', [
       'localisation',
     ]),
+  },
+  {
+    title: 'Testing',
+    collapsable: false,
+    children: prefix('testing', [
+      '',
+      'resources',
+      'relationships',
+    ]),
   }
 ];
 

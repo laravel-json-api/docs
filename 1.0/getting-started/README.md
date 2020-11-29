@@ -13,7 +13,8 @@ Require this package in the `composer.json` of your Laravel project.
 This will download the package and its dependent packages.
 
 We also recommend you install our testing package as a development
-dependency.
+dependency. This adds test helpers as described in the
+[Testing Chapter.](../testing/)
 
 To install both packages using [Composer](https://getcomposer.org):
 
