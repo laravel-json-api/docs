@@ -81,6 +81,7 @@ module.exports = [
       '',
       'resources',
       'relationships',
+      'requests',
     ]),
   }
 ];
