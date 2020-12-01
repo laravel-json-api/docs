@@ -230,7 +230,7 @@ public function test(): void
         ->withData($data)
         ->patch('/api/v1/posts' . $post->getRouteKey());
 
-    $response->assertUpdated($expected);
+    $response->assertFetchedOne($expected);
 
     $this->assertDatabaseHas('posts', [
         'id' => $post->getKey(),
@@ -260,7 +260,7 @@ public function test(): void
 
 In this test, we create an existing `post` and a JSON:API document that will
 change both the `posts` resource and its associated `tags`. The
-`assertUpdated` method checks that the response was a success, and contains
+`assertFetchedOne` method checks that the response was a success and contains
 a JSON:API document that matches the provided data. We then use database
 assertions to ensure that the updated data has been stored in the database.
 
@@ -280,7 +280,7 @@ public function test(): void
         ->jsonApi()
         ->delete('/api/v1/posts' . $post->getRouteKey());
 
-    $response->assertDeleted();
+    $response->assertNoContent();
 
     $this->assertDatabaseMissing('posts', [
         'id' => $post->getKey(),
@@ -288,6 +288,17 @@ public function test(): void
 }
 ```
 
-In this example, the `assertDeleted` method checks that we have received
-a `204 No Content` response. We then check that the `Post` model no longer
-exists in the database.
+In this example, we assert that we have received a `204 No Content` response.
+We then check that the `Post` model no longer exists in the database.
+
+:::tip
+The JSON:API specification says that:
+
+- A server MUST return a 204 No Content status code if a deletion request is
+successful and no content is returned.
+- A server MUST return a 200 OK status code if a deletion request is
+successful and the server responds with only top-level meta data.
+
+Therefore you should use either `assertNoContent` or `assertMetaWithoutData`
+in your delete test.
+:::
