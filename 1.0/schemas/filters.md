@@ -503,8 +503,8 @@ there can only be *zero-to-one* matching resources. For example, if the
 client provided the value `"hello-world"` for the `slug` filter, either
 a post exists with that slug or it does not.
 
-Without marking the filter as singular, the client would receive either one
-of these responses (depending on whether there was a post matching the
+**Without marking the filter as singular,** the client would receive either
+one of these responses (depending on whether there was a post matching the
 supplied slug):
 
 ```json
@@ -534,7 +534,7 @@ Or:
 This would mean that on the client-side, the client would need to check
 the length of the received `data` array to determine if a post matched
 the provided `slug` filter. Instead we can define that the `slug` filter
-will return a *zero-to-one* response by marking it as singular:
+will return a *zero-to-one* response by **marking it as singular:**
 
 ```php
 Where::make('slug')->singular()
@@ -570,6 +570,19 @@ The existence of a singular filter will only alter the response to a
 *zero-to-one* resource response when the singular filter is provided
 by the client. If the client does not use the singular filter, they
 will receive the normal resource collection (*zero-to-many*) response.
+:::
+
+:::warning
+There are a few cases where the presence of a singular filter **will not**
+change the response to a *zero-to-one* document.
+
+Firstly, if the request is to a *to-many* relationship endpoint, then the
+client will always receive a resource collection or collection of resource
+identifiers.
+
+Secondly, if the client provides `page` query parameters, then they will
+receive a *zero-to-many* document even if they use a singular filter. This
+is because a page by its nature must have a resource collection.
 :::
 
 ## Writing Filters
