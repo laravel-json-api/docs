@@ -18,7 +18,7 @@ is so that we can generate a controller that has all the actions
 required for JSON:API routing. For example:
 
 ```bash
-php artisan jsonapi:controller Api\V1\PostController
+php artisan jsonapi:controller Api/V1/PostController
 ```
 
 This will generate a controller at
@@ -30,9 +30,10 @@ The generated controller will look like this:
 ```php
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Controller;
 use LaravelJsonApi\Laravel\Http\Controllers\Actions;
 
-class PostController
+class PostController extends Controller
 {
 
     use Actions\FetchMany;

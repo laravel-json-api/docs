@@ -71,6 +71,7 @@ module.exports = [
     title: 'Digging Deeper',
     collapsable: false,
     children: prefix('digging-deeper', [
+      'artisan',
       'localisation',
     ]),
   },

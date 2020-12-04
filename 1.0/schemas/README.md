@@ -40,6 +40,15 @@ corresponds to:
 public static string $model = \App\Models\Post::class;
 ```
 
+When generating your schema, we set the `$model` property for you.
+The model class is assumed to be the name of the schema - i.e. the
+`Post` model for the `PostSchema` class. If you need to use a different
+model class, use the `--model` option with the generator:
+
+```bash
+php artisan jsonapi:schema posts --server=v1 --model=BlogPost
+```
+
 Freshly created schemas only contain `id`, `createdAt` and `updatedAt`
 fields. Don't worry, we'll add more fields to our schema soon.
 
