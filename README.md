@@ -1,4 +1,4 @@
-# Laravel JSON API Documentation
+# Laravel JSON:API Documentation
 
 ## Versions
 
