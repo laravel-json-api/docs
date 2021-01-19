@@ -446,6 +446,18 @@ This will result in the following:
 }
 ```
 
+### Removing Meta
+
+If you do not want page meta added to your response document, use the
+`withoutMeta` method:
+
+```php
+public function pagination(): ?Paginator
+{
+    return PagePagination::make()->withoutMeta();
+}
+```
+
 ## Default Customisation
 
 If you want to override the defaults for many resource types, then you can
@@ -526,6 +538,46 @@ class PostSchema extends Schema
             'start' => now()->subMonth(),
             'end' => now(),
         ];
+    }
+
+}
+```
+
+### To-Many Relationships
+
+When you set default pagination on a schema, the default values will also
+be used when querying the resource in a *to-many* relationship.
+
+There may be times when you do not want the default pagination to be used
+on a specific relationship. For example, imagine you have a `comments`
+resource. When querying all the `comments` resource, you may want to force
+pagination as your API could contain hundreds of comments. However, when
+retrieving a `posts` resource's `comments` relationship, you may not
+want the `comments` resource to be paginated, as a single `post` may not
+be expected to have a lot of related `comments`.
+
+In this scenario, you can remove default pagination from the relationship
+by calling the relationship's `withoutDefaultPagination` method.
+We would configure this scenario with the following on our `posts` schema:
+
+```php
+class PostSchema extends Schema
+{
+
+    protected array $defaultPagination = ['number' => 1];
+
+    public function fields(): iterable
+    {
+        return [
+            // ...other fields
+
+            HasMany::make('comments')->withoutDefaultPagination(),
+        ];
+    }
+
+    public function pagination(): ?Paginator
+    {
+        return PagePagination::make();
     }
 
 }
