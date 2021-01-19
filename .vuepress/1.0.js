@@ -24,8 +24,9 @@ module.exports = [
       'identifier',
       'attributes',
       'relationships',
-      'filters',
       'eager-loading',
+      'pagination',
+      'filters',
     ]),
   },
   {
