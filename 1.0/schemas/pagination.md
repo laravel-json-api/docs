@@ -322,12 +322,44 @@ class PostCollectionQuery extends ResourceQuery
 }
 ```
 
+## Page Size
+
+Both the page-based and cursor-based pagination approaches have a page
+size, i.e. the maximum number of resources that can appear on each page.
+For the page-based approach, this is controlled via the `size` parameter;
+for the cursor-based approach the `limit` parameter is used.
+
+If no page size is provided by an API client, the page size will default
+to the per-page value specified on the Eloquent model. This is set on
+the `Model::$perPage` property, and returned from the
+`Model::getPerPage()` method.
+
+**By default, Laravel sets this value to 15.**
+
+If you want to override this default value, both the page-based and
+cursor-based paginators have a `withDefaultPerPage` method. For example,
+to change the default to 25 per-page:
+
+```php
+public function pagination(): ?Paginator
+{
+    return PagePagination::make()->withDefaultPerPage(25);
+}
+```
+
+:::tip
+Generally you will want to limit the maximum number of resources a client
+can request per-page, so that they do not request too many resources in one
+request. Use the `between` validation rule when validating the `page.size`
+or `page.limit` query parameters. For example, `between:1,100`.
+:::
+
+
 ## Page Meta
 
-As shown in the example HTTP responses in this chapter, the both the page-based
-and cursor-based approaches add page information to the `page` key of the
-response's top-level `meta` member. By default the meta keys are camel-cased -
-e.g. `perPage`.
+Both the page-based and cursor-based pagination approaches add information
+about the page to the response document's top-level `meta` member. This
+is useful for API clients to understand the properties of the page.
 
 ### Key Case
 
