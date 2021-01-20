@@ -386,6 +386,43 @@ the correct *type* of resource.
 Remember you **must** validate every relationship that you expect to be
 filled into your model.
 
+### Client-Generated IDs
+
+If your resource accepts
+[client-generated IDs](../schemas/identifier.md#client-generated-ids)
+you must add validation rules for the `id` field, for example:
+
+```php
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+public function rules(): array
+{
+    return [
+        'id' => ['required', JsonApiRule::clientId()],
+        // ... other rules
+    ];
+}
+```
+
+The client ID rule ensures that the ID provided matches the
+[identifier pattern](../schemas/identifier.md#pattern) set in your schema.
+There is therefore no need to use Laravel's `regex` validation rule.
+
+If you *always* expect a client to provide an `id`, use Laravel's `required`
+rule as shown in the example above. If your server handles the client
+*not* providing an ID (for example, if you automatically generate a random
+UUID if one is not provided), then use the `nullable` rule
+instead of `required`.
+
+:::tip
+As shown in the example, there is no need to use the `exists` rule to check
+whether the client-generated ID already exists. This is because the JSON:API
+specification defines that servers should send a `409 Conflict` response
+when creating a resource with a client-generated ID that already exists.
+We therefore reject this scenario when checking if the
+[document complies with the specification.](./compliance.md#document-compliance)
+:::
+
 ### Accessing the Model
 
 If you need to access the model when determining your validation rules,

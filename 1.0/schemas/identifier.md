@@ -41,11 +41,12 @@ ID::make('uuid')
 
 ## Sorting
 
-When attached the `ID` field to a schema, you may use the `sortable` method
-to indicate that the resource can be sorted by its `id`:
+When attaching the `ID` field to a schema, we assume that you want to allow
+an API client to sort your resource by the `id`. If this is not the case,
+use the `notSortable` method to remove sorting:
 
 ```php
-ID::make()->sortable()
+ID::make()->notSortable()
 ```
 
 ## Pattern
@@ -76,3 +77,22 @@ matching, call the `matchCase` method:
 ```php
 ID::make()->matchAs('[a-z]+')->matchCase()
 ```
+
+## Client-Generated IDs
+
+The JSON:API specification allows servers to accept
+[client-generated IDs](https://jsonapi.org/format/#crud-creating-client-ids)
+along with a request to create a resource.
+
+To enable client-generated IDs for a resource type, use the `clientIds`
+method on the `ID` field. For example:
+
+```php
+ID::make()->clientIds()
+```
+
+:::warning
+If you enable client-generated IDs for a resource, make sure you always
+add [validation rules](../requests/resources.md#client-generated-ids)
+for the `id` field to your resource request class.
+:::
