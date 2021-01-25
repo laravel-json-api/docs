@@ -4,7 +4,7 @@
 
 ## Convention
 
-Laravel JSON API follows the principle of **"Convention is better than configuration"**.
+Laravel JSON:API follows the principle of **"Convention is better than configuration"**.
 The recommended structure is as follows, demonstrated using a server
 named `v1` with `posts` and `users` resources:
 
@@ -17,6 +17,8 @@ named `v1` with `posts` and `users` resources:
 |   |   |   |   |   ├── PostController.php
 |   |   |   |   |   ├── UserController.php
 |   ├── JsonApi
+|   |   ├── Filters
+|   |   |   ├── CustomFilter
 |   |   ├── V1
 |   |   |   ├── Posts
 |   |   |   |   ├── PostCollectionQuery.php (optional)
@@ -42,3 +44,28 @@ additional classes to be in the same namespace as the `Schema` class.
 In the above example, the fully qualified class name for the `posts`
 schema is `App\JsonApi\V1\Posts\PostSchema`. The package will therefore
 auto-discover the resource class as `App\JsonApi\V1\Posts\PostResource`.
+
+## Customising the Root Namespace
+
+In the above example, the root namespace for JSON:API classes is
+`App\JsonApi`. You can customise this namespace by setting the `namespace`
+option in your `config/jsonapi.php` file:
+
+```php
+// config/jsonapi.php
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Root Namespace
+    |--------------------------------------------------------------------------
+    |
+    | The root JSON:API namespace, within your application's namespace.
+    | This is used when generating any class that does not sit *within*
+    | a server's namespace. For example, new servers and filters.
+    |
+    | By default this is set to `JsonApi` which means the root namespace
+    | will be `\App\JsonApi`, if your application's namespace is `App`.
+    */
+    'namespace' => 'JsonApi',
+];
+```

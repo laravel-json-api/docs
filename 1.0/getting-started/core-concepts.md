@@ -48,9 +48,9 @@ is inspired by the [Laravel Nova](https://nova.laravel.com/docs) approach.
 
 ## Requests
 
-Laravel JSON API makes extensive use of Laravel
+Laravel JSON:API makes extensive use of Laravel
 [Form Requests](https://laravel.com/docs/validation#form-request-validation)
-to process client requests in accordance with the JSON API specification.
+to process client requests in accordance with the JSON:API specification.
 
 Our request classes take care of:
 

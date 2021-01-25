@@ -1,9 +1,12 @@
 {
   "scripts": {
+    "start": "npm run docs:dev",
     "docs:dev": "vuepress dev",
     "docs:build": "vuepress build"
   },
   "dependencies": {
+    "@vuepress/plugin-back-to-top": "^1.7.1",
+    "@vuepress/plugin-medium-zoom": "^1.7.1",
     "vuepress": "^1.5.3"
   }
 }
