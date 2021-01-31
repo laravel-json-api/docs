@@ -22,12 +22,11 @@ named `v1` with `posts` and `users` resources:
 |   |   ├── V1
 |   |   |   ├── Posts
 |   |   |   |   ├── PostCollectionQuery.php (optional)
-|   |   |   |   ├── PostQuery.php (optional)
-|   |   |   |   ├── PostRequest.php (required if writable)
-|   |   |   |   ├── PostResource.php
+|   |   |   |   ├── PostQuery.php           (optional)
+|   |   |   |   ├── PostRequest.php         (required if writable)
+|   |   |   |   ├── PostResource.php        (optional)
 |   |   |   |   ├── PostSchema.php
 |   |   |   ├── Users
-|   |   |   |   ├── UserResource.php
 |   |   |   |   ├── UserSchema.php
 |   |   |   ├── Server.php
 ```
@@ -43,7 +42,7 @@ additional classes to be in the same namespace as the `Schema` class.
 
 In the above example, the fully qualified class name for the `posts`
 schema is `App\JsonApi\V1\Posts\PostSchema`. The package will therefore
-auto-discover the resource class as `App\JsonApi\V1\Posts\PostResource`.
+auto-discover the request class as `App\JsonApi\V1\Posts\PostRequest`.
 
 ## Customising the Root Namespace
 

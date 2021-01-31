@@ -134,9 +134,10 @@ use LaravelJsonApi\Core\Document\Links;
 /**
  * Get the resource's links.
  *
+ * @param \Illuminate\Http\Request|null $request
  * @return Links
  */
-public function links(): Links
+public function links($request): Links
 {
     return new Links(
       $this->selfLink(),

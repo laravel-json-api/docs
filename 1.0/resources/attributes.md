@@ -47,9 +47,10 @@ class PostResource extends JsonApiResource
     /**
      * Get the resource's attributes.
      *
+     * @param \Illuminate\Http\Request|null $request
      * @return iterable
      */
-    public function attributes(): iterable
+    public function attributes($request): iterable
     {
         return [
             'content' => $this->content,
@@ -83,13 +84,13 @@ be serialized in the `attributes` of a `users` resource if the
 authenticated user's `isAdmin` method returns `true`:
 
 ```php
-public function attributes(): iterable
+public function attributes($request): iterable
 {
     return [
         'createdAt' => $this->created_at,
         'email' => $this->email,
         'name' => $this->name,
-        'secret' => $this->when(\Auth::user()->isAdmin(), 'secret-value'),
+        'secret' => $this->when($request->user()->isAdmin(), 'secret-value'),
         'updatedAt' => $this->updated_at,
     ];
 }
@@ -99,7 +100,7 @@ The `when` method also accepts a `Closure` as its second argument, allowing
 you to only calculate the resulting value if the given condition is `true`:
 
 ```php
-'secret' => $this->when(Auth::user()->isAdmin(), fn() => 'secret-value'),
+'secret' => $this->when($request->user()->isAdmin(), fn() => 'secret-value'),
 ```
 
 ### Merging Conditional Attributes
@@ -110,13 +111,13 @@ you may use the `mergeWhen` method to include the attributes
 only when the given condition is `true`:
 
 ```php
-public function attributes(): iterable
+public function attributes($request): iterable
 {
     return [
         'createdAt' => $this->created_at,
         'email' => $this->email,
         'name' => $this->name,
-        $this->mergeWhen(\Auth::user()->isAdmin(), [
+        $this->mergeWhen($request->user()->isAdmin(), [
             'firstSecret' => 'value',
             'secondSecret' => 'value',
         ]),
@@ -133,7 +134,7 @@ you to only calculate values if they will be in the serialized resource
 object:
 
 ```php
-$this->mergeWhen(\Auth::user()->isAdmin(), [
+$this->mergeWhen($request->user()->isAdmin(), [
     'firstSecret' => fn() => 'value',
     'secondSecret' => 'value',
 ]),
@@ -143,7 +144,7 @@ And finally, the `mergeWhen` method also accepts a `Closure` as its
 second argument:
 
 ```php
-$this->mergeWhen(\Auth::user()->isAdmin(), fn() => [
+$this->mergeWhen($request->user()->isAdmin(), fn() => [
     'firstSecret' => 'value',
     'secondSecret' => 'value',
 ]),
@@ -237,7 +238,8 @@ keys:
 
 - `camelize`: recursively camel-case all keys in the provided array.
 - `dasherize`: recursively dash-case all keys in the provided array.
-- `underscore`: recursively convert camel-case and dash-case keys to underscore (snake) case.
+- `underscore`: recursively convert camel-case and dash-case keys to
+underscore (snake) case.
 
 :::tip
 The `underscore` method differs from Laravel's `snake` case, in that it will

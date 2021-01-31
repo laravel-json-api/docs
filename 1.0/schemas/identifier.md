@@ -42,7 +42,7 @@ ID::make('uuid')
 ## Sorting
 
 When attaching the `ID` field to a schema, we assume that you want to allow
-an API client to sort your resource by the `id`. If this is not the case,
+an API client to sort your resources by the `id`. If this is not the case,
 use the `notSortable` method to remove sorting:
 
 ```php

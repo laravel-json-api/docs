@@ -7,7 +7,7 @@
 Your Laravel application can have any number of JSON:API compliant
 APIs. We refer to each API as a **Server**.
 
-You do not have to use multiple servers: a simple application
+You may not use multiple servers: a simple application
 may only have one server. However, there are a number of use cases where
 you may decide to implement multiple servers. For example:
 
@@ -25,26 +25,30 @@ For example, a blog application may have `posts`, `comments` and `users`
 resources to represent the blog posts, comments on those posts, and the
 users who have authored posts or comments.
 
-For each resource in your server, you will have two PHP classes -
-a `Resource` class and a `Schema` class. For example, the `posts` resource
-would have a `PostResource` and a `PostSchema` class.
-
-### API Resources
-
-**`PostResource`** defines how a `Post` model is serialized to a JSON:API
-[resource object](https://jsonapi.org/format/#document-resource-objects).
-
-These are the JSON:API equivalent of Laravel's
-[Eloquent API Resources](https://laravel.com/docs/eloquent-resources).
-
 ### Schemas
 
-**`PostSchema`** describes the structure of the `PostResource` and
+For each resource in your server, you will have a `Schema` class.
+For example, the `posts` resource would have a `PostSchema` class.
+
+The `PostSchema` describes the structure of the `posts` resource and
 translates JSON:API requests into database queries to create, read,
 update and delete `Post` models.
 
-The design of the `Schema` classes
-is inspired by the [Laravel Nova](https://nova.laravel.com/docs) approach.
+The design of `Schema` classes is inspired by the
+[Laravel Nova](https://nova.laravel.com/docs) approach.
+
+### API Resources
+
+By default, we use the `PostSchema` to serialize a `Post` model to a
+JSON:API resource object.
+
+If you need full control over the serialization of a model to JSON,
+you can use a `Resource` class to define the JSON structure.
+
+For example, your `posts` resource could have a `PostResource` class
+defining the serialization. These resource classes are the JSON:API
+equivalent of Laravel's
+[Eloquent API Resources](https://laravel.com/docs/eloquent-resources).
 
 ## Requests
 
@@ -64,13 +68,13 @@ specific validation logic.
 A resource can have up to three request classes. Using the `posts` resource
 as an example, the three classes would be:
 
-- **`PostQuery`**: parses query parameters for when the server will respond with
-zero-to-one `posts` resources.
-- **`PostCollectionQuery`**: parses query parameters for when the server will
-response with zero-to-many `posts` resources.
 - **`PostRequest`**: parses the JSON content of a request to create, update,
 or delete a `posts` resource. This includes parsing requests to modify
 any of the relationships of the `posts` resource.
+- **`PostQuery`**: parses query parameters for when the server will respond with
+zero-to-one `posts` resources.
+- **`PostCollectionQuery`**: parses query parameters for when the server will
+respond with zero-to-many `posts` resources.
 
 :::tip
 Not all resources will use all three request classes: it depends on what

@@ -107,20 +107,27 @@ Hash::make('coordinates')->fillUsing(static function ($model, $column, $value) {
 });
 ```
 
-## Read-Only Fields
+### Read-Only Fields
 
 There are times when you may want to allow the client to only create
-or update certain attributes on the resource. You can do this by using
-the `readOnly` method on the attribute, which will prevent the field
-from being filled in certain circumstances.
+or update certain attributes on the resource. Or you may want a field
+to always be read-only.
 
-Pass a closure to the `readOnly()` method. It will receive the current
-request as the first argument:
+To ensure an attribute never gets filled, use the `readOnly` method,
+which will prevent the field from being filled:
+
+```php
+Str::make('name')->readOnly()
+```
+
+To make a field read only in certain circumstances, pass a closure to the
+`readOnly` method. It will receive the current request as the first
+argument:
 
 ```php
 Str::make('name')->readOnly(
     static fn($request) => !$request->user()->isAdmin()
-);
+)
 ```
 
 If you only want to set the attribute to read only when creating or
@@ -128,14 +135,69 @@ updating resources, you may use the `readOnlyOnCreate` or
 `readOnlyOnUpdate` methods:
 
 ```php
-Str::make('name')->readOnlyOnUpdate();
+Str::make('name')->readOnlyOnCreate()
+Str::make('name')->readOnlyOnUpdate()
 ```
 
-## Nullable Fields
+### Nullable Fields
 
 It is not necessary to mark fields as nullable. This is because we only
 fill validated data into the model. If a field does not support a `null`
 value, you should ensure that the value is rejected when it is validated.
+
+## Attribute Serialization
+
+Schemas are used to convert models to JSON:API resource objects.
+Each attribute field you define will use the value returned by the model
+as the value that appears in the serialized JSON.
+
+If you want to perform any conversion on the value before it appears
+in the JSON, you can use the `serializeUsing` method:
+
+```php
+Str::make('name')->serializeUsing(
+  static fn($value) => strtolower($value)
+);
+```
+
+:::tip
+If you need complete control over how a model is serialized to a
+JSON:API resource object, you should use a
+[`Resource` class.](../resources/) When a model has a resource
+class, the schema attributes will **NOT** be used when serializing
+the model.
+:::
+
+### Hiding Fields
+
+When serializing attributes to JSON, you may want to omit a field from
+the JSON. To do this, use the `hidden` method:
+
+```php
+Str::make('password')->hidden()
+```
+
+To only hide the field in certain circumstances, provide a closure to
+the `hidden` method. It will receive the current request as the first
+argument:
+
+```php
+Str::make('secret')->hidden(
+  static fn($request) => !$request->user()->isAdmin()
+)
+```
+
+Note that if you use JSON:API resources outside of HTTP requests -
+for example, queued broadcasting - then your closure should handle
+the `$request` parameter being `null`.
+
+:::tip
+If you have complex logic for determining what attributes should
+appear in the resource's JSON, you should use our
+[resource classes](../resources/) which give
+you complete control over the serialization. This includes supporting
+[conditional attributes.](../resources/attributes.md#conditional-attributes)
+:::
 
 ## Sparse Fields
 

@@ -27,9 +27,10 @@ class PostResource extends JsonApiResource
     /**
      * Get the resource's attributes.
      *
+     * @param \Illuminate\Http\Request|null $request
      * @return iterable
      */
-    public function attributes(): iterable
+    public function attributes($request): iterable
     {
         return [
             'content' => $this->content,
@@ -42,9 +43,10 @@ class PostResource extends JsonApiResource
     /**
      * Get the resource's meta.
      *
-     * @return array
+     * @param \Illuminate\Http\Request|null $request
+     * @return iterable
      */
-    public function meta(): array
+    public function meta($request): iterable
     {
         return [
             'createdAt' => $this->created_at,
@@ -71,6 +73,26 @@ This would result in the following resource object:
     "createdAt": "2020-07-10T12:42:17.000000Z",
     "updatedAt": "2020-07-10T13:53:01.000000Z"
   }
+}
+```
+
+### Conditional Meta
+
+Sometimes you may wish to only include certain meta in a resource response
+if a given condition is met. For example, you may wish to only include
+a value if the current user is an "administrator". The meta method therefore
+supports using the `when()` and `mergeWhen()` methods to add conditional
+meta - in exactly the same way as
+[conditional attributes.](./attributes.md#conditional-attributes)
+
+For example:
+
+```php
+public function meta($request): iterable
+{
+    return [
+        'secret' => $this->when($request->user()->isAdmin(), 'secret-value'),
+    ];
 }
 ```
 

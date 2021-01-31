@@ -30,17 +30,6 @@ module.exports = [
     ]),
   },
   {
-    title: 'API Resources',
-    collapsable: false,
-    children: prefix('resources', [
-      '',
-      'attributes',
-      'relationships',
-      'meta',
-      'links',
-    ]),
-  },
-  {
     title: 'Routing',
     collapsable: false,
     children: prefix('routing', [
@@ -66,6 +55,17 @@ module.exports = [
     children: prefix('responses', [
       '',
       'errors',
+    ]),
+  },
+  {
+    title: 'API Resources',
+    collapsable: false,
+    children: prefix('resources', [
+      '',
+      'attributes',
+      'relationships',
+      'meta',
+      'links',
     ]),
   },
   {
