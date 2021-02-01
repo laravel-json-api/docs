@@ -463,7 +463,7 @@ Use the [`HasOne` field](#has-one) for an Eloquent `morphOne` relation.
 
 ### Morph Many
 
-Use the [`Has Many` field](#has-many) for an Eloquent `morphMany` relation.
+Use the [`HasMany` field](#has-many) for an Eloquent `morphMany` relation.
 
 ### Morph To
 
@@ -491,5 +491,5 @@ MorphTo::make('commentable', 'items')
 
 ### Morph To Many
 
-Use the [`Belongs To Many` field](#belongs-to-many)  for an Eloquent
+Use the [`BelongsToMany` field](#belongs-to-many)  for an Eloquent
 `morphToMany` relation.
