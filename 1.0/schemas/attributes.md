@@ -225,65 +225,84 @@ We also support the following additional attribute types:
 - [DateTime](#datetime-field): parses strings containing ISO-8601 date times.
 - [Map](#map-field): maps an associative array to multiple database columns.
 
-### Array Field
+### Array Fields
 
-The `Arr` (array) field may be used to represent an attribute that is
-an array list or associative array. Typically your database column will be
-a JSON column in which you store the array.
+The `ArrayList` and `ArrayHash` fields may be used to represent an attribute
+that is a PHP array. Typically your database column will be a JSON column in
+which you store the array.
 
-:::tip
-In JSON there is a distinction between an array list and an object. However,
-Laravel decodes both to PHP arrays - either an array list or an associative
-array. The `Arr` field can be used for both.
-:::
+You must use `ArrayList` when the value in JSON is a zero-indexed array.
+For example, `["a", "b", "c"]` or an empty value of `[]`.
 
-Firstly, assume your database has a JSON column called `permissions`,
-in which you store a list of permission values. You may attach an `Arr` field
-to your schema like so:
+You must use `ArrayHash` when the value is a JSON object - i.e. a PHP
+associative array. For example `{"foo": "bar"}` or `null` for an empty
+value.
 
-```php
-use LaravelJsonApi\Eloquent\Fields\Arr;
+#### Array Lists
 
-Arr::make('permissions')
-```
-
-If you want the array values to be sorted before being stored in your database,
-use the `sorted()` method:
+Assume your database has a JSON column called `permissions`,
+in which you store a list of permission values. You may attach an
+`ArrayList` field to your schema like so:
 
 ```php
-Arr::make('permissions')->sorted()
+use LaravelJsonApi\Eloquent\Fields\ArrayList;
+
+ArrayList::make('permissions')
 ```
 
-Secondly, assume your database has a JSON column called `options`, in which
-you store an associative array of option values. Again, you may use the
-`Arr` field:
+If you want the array values to always be in a sorted order, use the
+`sorted()` method:
 
 ```php
-Arr::make('options')
+ArrayList::make('permissions')->sorted()
 ```
 
-If you want the array to be sorted by its keys before being stored in your
-database, use the `sortedKeys()` method:
+#### Associative Arrays
+
+Assume your database has a JSON column called `options`, in which
+you store an associative array of option values. You may attach an
+`ArrayHash` field to your schema like so:
 
 ```php
-Arr::make('options')->sortedKeys()
+use LaravelJsonApi\Eloquent\Fields\ArrayHash;
+
+ArrayHash::make('options')
 ```
 
-When storing an associative array in your database, you may also want to
-convert the case of the keys. For example, if your JSON:API resource object
+If you want the array to always be sorted by its keys, use the
+`sortKeys()` method:
+
+```php
+ArrHash::make('options')->sortKeys()
+```
+
+Alternatively, if you want the array to always be sorted by its
+values, use the `sorted()` method:
+
+```php
+ArrHash::make('options')->sorted()
+```
+
+When working with associative arrays, you may find you need to convert
+the case of the keys. For example, if your JSON:API resource object
 uses camel-case keys, but you prefer to store associative arrays using
-the Eloquent convention of snake-case keys. You may use the `snake` method
-to recursively convert the keys in the array:
+the Eloquent convention of snake-case keys. In this scenario we would
+use the `camelizeFields()` and `snakeKeys()` methods to indicate the
+JSON:API field case and the database key case respectively:
 
 ```php
-Arr::make('options')->snake()
+ArrayHash::make('options')
+  ->camelizeFields()
+  ->snakeKeys()
 ```
 
-We support the following key conversions:
+We support the following conversions, with `*Fields` methods indicating
+the JSON:API field case, and `*Keys` indicating the model case:
 
-- `camelize()`: convert to camel-case keys.
-- `dasherize()`: convert to dash-case keys.
-- `underscore()` or `snake()`: convert to snake-case (underscored) keys.
+- `camelizeFields()` and `camelizeKeys()`: convert to camel-case.
+- `dasherizeFields()` and `dasherizeKeys()`: convert to dash-case.
+- `snakeFields()` or `snakeKeys()`: convert to snake-case (underscored).
+- `underscoreFields()` and `underscoreKeys()`: convert to underscored (snake).
 
 :::tip
 If the above key conversions do not fit your use-case, you can use the
