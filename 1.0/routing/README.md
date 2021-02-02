@@ -253,26 +253,22 @@ $server->resource('posts')->readOnly();
 
 ### Resource URI and Parameter
 
-When registering the resource URIs, we use the resource type to work out
-the URI and the parameter name.
-
-For the URI, we use the dash-case form of the resource type. Therefore
-`blogPosts` or `blog_posts` will be `/blog-posts`. This follows our
-default convention of dash-casing URLs.
+When registering the resource URIs, we use the dash-case form of the
+resource type by default. If you need to use something else,
+you can override this on your [resource's schema.](../schemas/#uri-type)
 
 For the parameter, Laravel does not allow dashes for parameter names.
 We therefore underscore (snake-case) the singular form of the resource
 type for the parameter name. E.g. `blog-posts` will become `blog_post`.
 
-Both the URI and the parameter can be customised. Use the `uri` method
-for the former, and the `parameter` method for the latter:
+The parameter can be customised using the `parameter` method:
 
 ```php
-$server->resource('blogPosts')->uri('blog_posts')->parameter('post');
+$server->resource('blogPosts')->parameter('post');
 ```
 
-The above example would register routes using `/blog_posts` and
-`/blog_posts/{post}`.
+The above example would register routes using `/blog-posts` and
+`/blog-posts/{post}`.
 
 ### ID Constraints
 
@@ -376,16 +372,11 @@ $relationships->hasMany('comments')->readOnly();
 
 When registering relationship routes, we use the relationship field name
 to work out the URI. We follow our convention of dash-casing relationships
-field names in URIs.
+field names in URIs. So if the relationship is called `blogPost`,
+the URI will be `blog-post`.
 
-So if the relationship is called `blogPost`, the URI will be `blog-post`.
-
-To override this behaviour, use the `uri` method. For example, if we wanted
-the `blogPost` field to be `blog_post` in our URIs:
-
-```php
-$relationships->hasOne('blogPost')->uri('blog_post');
-```
+If you need to use something else, you can configure this on the
+[relation field in the resource's schema.](../schemas/relationships.md#uri-name)
 
 ### Naming Relationship Routes
 
