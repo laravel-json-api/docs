@@ -8,6 +8,10 @@ Schemas **describe** JSON:API resources that exist within your server.
 For Eloquent models, they also describe how the JSON:API server interacts
 with the database to query, create, read, update and delete resources.
 
+Schemas are also used to automatically serialize models to JSON:API
+resource objects, unless you define your own serialization using our
+[resource classes.](../resources/)
+
 ## Defining Schemas
 
 By default, schemas exist in a namespace relative to the namespace of
@@ -92,8 +96,8 @@ Manually registering schemas makes your API more efficient.
 :::
 
 Once your schema class is registered, your server is able to auto-discover
-the additional `Resource` and `Request` classes for the schema's resource
-type.
+any additional classes for the resource - for example, `Request` or
+`Resource` classes.
 
 ## Resource Type
 
