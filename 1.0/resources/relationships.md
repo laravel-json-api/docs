@@ -46,9 +46,10 @@ class PostResource extends JsonApiResource
     /**
      * Get the resource's relationships.
      *
+     * @param \Illuminate\Http\Request|null $request
      * @return iterable
      */
-    public function relationships(): iterable
+    public function relationships($request): iterable
     {
         return [
             $this->relation('author'),
@@ -81,7 +82,7 @@ but the relationship on the model was `user`, we would define our relation
 as follows:
 
 ```php
-$this->relation('author', 'user'),
+$this->relation('author', 'user')
 ```
 
 ## Default Serialization
@@ -173,32 +174,12 @@ relationship object. The URL is calculated by appending the either
 The resource's `self` URL is calculated on the resource class, i.e.
 `PostResource` in our example. See the [Links Chapter](./links.md)
 if you need to customise the URL.
+
+The relationship's URL field name is obtained from the schema
+field. By default, we dash-case the field name when using it in
+URLs.
+[You can override this on your schema if needed.](../schemas/relationships.md#uri-name)
 :::
-
-By default we dasherize the JSON:API field name for the relationship URLs.
-For example, if the field name was `blogAuthor`, the links would be:
-
-```json
-{
-  "links": {
-    "self": "http://localhost/api/v1/posts/123/relationships/blog-author",
-    "related": "http://localhost/api/v1/posts/123/blog-author"
-  }
-}
-```
-
-If you wanted to keep `blogAuthor` as-is, use the `retainFieldName` method:
-
-```php
-$this->relation('blogAuthor')->retainFieldName(),
-```
-
-Otherwise, if you want to use a different convention, provide the URI
-fragment to the `withUriFieldName` method:
-
-```php
-$this->relation('blogAuthor')->withUriFieldName('blog_author'),
-```
 
 ### Removing Links
 
@@ -206,21 +187,21 @@ If you do not want the relationship object to have a `self` link,
 use the `withoutSelfLink` method:
 
 ```php
-$this->relation('author')->withoutSelfLink(),
+$this->relation('author')->withoutSelfLink()
 ```
 
 Likewise, if you do not want the relationship object to have a `related`
 link, use the `withoutRelatedLink` method:
 
 ```php
-$this->relation('author')->withoutRelatedLink(),
+$this->relation('author')->withoutRelatedLink()
 ```
 
 If you want to remove both the `self` and `related` links, you can use the
 `withoutLinks` method:
 
 ```php
-$this->relation('author')->withoutLinks(),
+$this->relation('author')->withoutLinks()
 ```
 
 ## Data
@@ -246,7 +227,7 @@ the `data` member of the relationship. If you need the data to be something
 else, use the `withData` method:
 
 ```php
-$this->relation('author')->withData($this->someOtherValue),
+$this->relation('author')->withData($this->someOtherValue)
 ```
 
 Typically you would probably want to defer the calculation of data,
@@ -254,11 +235,11 @@ so that it is only calculated if it will be serialized in the relationship.
 To do this, provide a `Closure` to the `withData` method:
 
 ```php
-$this->relation('author')->withData(fn() => $this->someOtherValue),
+$this->relation('author')->withData(fn() => $this->someOtherValue)
 ```
 
 :::tip
-Realtionship `data` may be omitted if the client has not requested it
+Relationship `data` may be omitted if the client has not requested it
 via an include path. Additionally, a relationship may not be serialized if
 a client requests
 [Sparse Fieldsets](https://jsonapi.org/format/#fetching-sparse-fieldsets)
@@ -284,20 +265,12 @@ In this scenario we can show the eager loaded `data` by using the
 `showDataIfLoaded` method:
 
 ```php
-$this->relation('author')->showDataIfLoaded(),
+$this->relation('author')->showDataIfLoaded()
 ```
 
 Note that this will not include the related resource in the `included`
 member of the JSON:API document. The `included` resources are always
 determined by the include path query parameter.
-
-:::warning
-Although this is a convenient approach to show already eager-loaded
-relationships, by using it you are removing the capability of the client
-to determine the contents of the JSON:API document via include paths.
-I.e. the server is deciding to include `data` when the
-client may have no intent to use it.
-:::
 
 ### Always Including Data
 
@@ -312,16 +285,11 @@ Note that this will not include the related resource in the `included`
 member of the JSON:API document. The `included` resources are always
 determined by the include path query parameter.
 
-If you are using the `alwaysShowData` member, you will need to consider
-adding default eager load paths to your schema to avoid "N+1"
-database query problems.
-
-:::danger
-Although we provide the ability to always show the data, we strongly
-recommend this is **NOT** used. By using it, you are removing the capability
-of the client to determine the contents of the JSON:API document via
-the include paths. I.e. the server is deciding to include `data` when the
-client may have no intent to use it.
+:::warning
+If you are using the `alwaysShowData` method, you will need to ensure
+that the relation is always eager loaded to avoid "N+1" database query
+problems. See the [Eager Loading chapter](../schemas/eager-loading.md)
+for details.
 :::
 
 ## Meta
@@ -333,7 +301,7 @@ To add `meta` to the relationship object, use the `withMeta` method to
 provide an array:
 
 ```php
-$this->relation('author')->withMeta(['foo' => 'bar']),
+$this->relation('author')->withMeta(['foo' => 'bar'])
 ```
 
 If the meta needs to be calculated, it is best to provide a `Closure` so
@@ -341,7 +309,7 @@ that the calculation is only incurred if the relationship is being
 serialized:
 
 ```php
-$this->relation('author')->withMeta(fn() => ['foo' => 'bar']),
+$this->relation('author')->withMeta(fn() => ['foo' => 'bar'])
 ```
 
 :::tip

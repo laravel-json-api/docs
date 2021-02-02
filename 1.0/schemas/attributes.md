@@ -107,20 +107,27 @@ Hash::make('coordinates')->fillUsing(static function ($model, $column, $value) {
 });
 ```
 
-## Read-Only Fields
+### Read-Only Fields
 
 There are times when you may want to allow the client to only create
-or update certain attributes on the resource. You can do this by using
-the `readOnly` method on the attribute, which will prevent the field
-from being filled in certain circumstances.
+or update certain attributes on the resource. Or you may want a field
+to always be read-only.
 
-Pass a closure to the `readOnly()` method. It will receive the current
-request as the first argument:
+To ensure an attribute never gets filled, use the `readOnly` method,
+which will prevent the field from being filled:
+
+```php
+Str::make('name')->readOnly()
+```
+
+To make a field read only in certain circumstances, pass a closure to the
+`readOnly` method. It will receive the current request as the first
+argument:
 
 ```php
 Str::make('name')->readOnly(
     static fn($request) => !$request->user()->isAdmin()
-);
+)
 ```
 
 If you only want to set the attribute to read only when creating or
@@ -128,14 +135,69 @@ updating resources, you may use the `readOnlyOnCreate` or
 `readOnlyOnUpdate` methods:
 
 ```php
-Str::make('name')->readOnlyOnUpdate();
+Str::make('name')->readOnlyOnCreate()
+Str::make('name')->readOnlyOnUpdate()
 ```
 
-## Nullable Fields
+### Nullable Fields
 
 It is not necessary to mark fields as nullable. This is because we only
 fill validated data into the model. If a field does not support a `null`
 value, you should ensure that the value is rejected when it is validated.
+
+## Attribute Serialization
+
+Schemas are used to convert models to JSON:API resource objects.
+Each attribute field you define will use the value returned by the model
+as the value that appears in the serialized JSON.
+
+If you want to perform any conversion on the value before it appears
+in the JSON, you can use the `serializeUsing` method:
+
+```php
+Str::make('name')->serializeUsing(
+  static fn($value) => strtolower($value)
+);
+```
+
+:::tip
+If you need complete control over how a model is serialized to a
+JSON:API resource object, you should use a
+[`Resource` class.](../resources/) When a model has a resource
+class, the schema attributes will **NOT** be used when serializing
+the model.
+:::
+
+### Hiding Fields
+
+When serializing attributes to JSON, you may want to omit a field from
+the JSON. To do this, use the `hidden` method:
+
+```php
+Str::make('password')->hidden()
+```
+
+To only hide the field in certain circumstances, provide a closure to
+the `hidden` method. It will receive the current request as the first
+argument:
+
+```php
+Str::make('secret')->hidden(
+  static fn($request) => !$request->user()->isAdmin()
+)
+```
+
+Note that if you use JSON:API resources outside of HTTP requests -
+for example, queued broadcasting - then your closure should handle
+the `$request` parameter being `null`.
+
+:::tip
+If you have complex logic for determining what attributes should
+appear in the resource's JSON, you should use our
+[resource classes](../resources/) which give
+you complete control over the serialization. This includes supporting
+[conditional attributes.](../resources/attributes.md#conditional-attributes)
+:::
 
 ## Sparse Fields
 
@@ -163,65 +225,84 @@ We also support the following additional attribute types:
 - [DateTime](#datetime-field): parses strings containing ISO-8601 date times.
 - [Map](#map-field): maps an associative array to multiple database columns.
 
-### Array Field
+### Array Fields
 
-The `Arr` (array) field may be used to represent an attribute that is
-an array list or associative array. Typically your database column will be
-a JSON column in which you store the array.
+The `ArrayList` and `ArrayHash` fields may be used to represent an attribute
+that is a PHP array. Typically your database column will be a JSON column in
+which you store the array.
 
-:::tip
-In JSON there is a distinction between an array list and an object. However,
-Laravel decodes both to PHP arrays - either an array list or an associative
-array. The `Arr` field can be used for both.
-:::
+You must use `ArrayList` when the value in JSON is a zero-indexed array.
+For example, `["a", "b", "c"]` or an empty value of `[]`.
 
-Firstly, assume your database has a JSON column called `permissions`,
-in which you store a list of permission values. You may attach an `Arr` field
-to your schema like so:
+You must use `ArrayHash` when the value is a JSON object - i.e. a PHP
+associative array. For example `{"foo": "bar"}` or `null` for an empty
+value.
 
-```php
-use LaravelJsonApi\Eloquent\Fields\Arr;
+#### Array Lists
 
-Arr::make('permissions')
-```
-
-If you want the array values to be sorted before being stored in your database,
-use the `sorted()` method:
+Assume your database has a JSON column called `permissions`,
+in which you store a list of permission values. You may attach an
+`ArrayList` field to your schema like so:
 
 ```php
-Arr::make('permissions')->sorted()
+use LaravelJsonApi\Eloquent\Fields\ArrayList;
+
+ArrayList::make('permissions')
 ```
 
-Secondly, assume your database has a JSON column called `options`, in which
-you store an associative array of option values. Again, you may use the
-`Arr` field:
+If you want the array values to always be in a sorted order, use the
+`sorted()` method:
 
 ```php
-Arr::make('options')
+ArrayList::make('permissions')->sorted()
 ```
 
-If you want the array to be sorted by its keys before being stored in your
-database, use the `sortedKeys()` method:
+#### Associative Arrays
+
+Assume your database has a JSON column called `options`, in which
+you store an associative array of option values. You may attach an
+`ArrayHash` field to your schema like so:
 
 ```php
-Arr::make('options')->sortedKeys()
+use LaravelJsonApi\Eloquent\Fields\ArrayHash;
+
+ArrayHash::make('options')
 ```
 
-When storing an associative array in your database, you may also want to
-convert the case of the keys. For example, if your JSON:API resource object
+If you want the array to always be sorted by its keys, use the
+`sortKeys()` method:
+
+```php
+ArrHash::make('options')->sortKeys()
+```
+
+Alternatively, if you want the array to always be sorted by its
+values, use the `sorted()` method:
+
+```php
+ArrHash::make('options')->sorted()
+```
+
+When working with associative arrays, you may find you need to convert
+the case of the keys. For example, if your JSON:API resource object
 uses camel-case keys, but you prefer to store associative arrays using
-the Eloquent convention of snake-case keys. You may use the `snake` method
-to recursively convert the keys in the array:
+the Eloquent convention of snake-case keys. In this scenario we would
+use the `camelizeFields()` and `snakeKeys()` methods to indicate the
+JSON:API field case and the database key case respectively:
 
 ```php
-Arr::make('options')->snake()
+ArrayHash::make('options')
+  ->camelizeFields()
+  ->snakeKeys()
 ```
 
-We support the following key conversions:
+We support the following conversions, with `*Fields` methods indicating
+the JSON:API field case, and `*Keys` indicating the model case:
 
-- `camelize()`: convert to camel-case keys.
-- `dasherize()`: convert to dash-case keys.
-- `underscore()` or `snake()`: convert to snake-case (underscored) keys.
+- `camelizeFields()` and `camelizeKeys()`: convert to camel-case.
+- `dasherizeFields()` and `dasherizeKeys()`: convert to dash-case.
+- `snakeFields()` or `snakeKeys()`: convert to snake-case (underscored).
+- `underscoreFields()` and `underscoreKeys()`: convert to underscored (snake).
 
 :::tip
 If the above key conversions do not fit your use-case, you can use the

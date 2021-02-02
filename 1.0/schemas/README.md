@@ -8,6 +8,10 @@ Schemas **describe** JSON:API resources that exist within your server.
 For Eloquent models, they also describe how the JSON:API server interacts
 with the database to query, create, read, update and delete resources.
 
+Schemas are also used to automatically serialize models to JSON:API
+resource objects, unless you define your own serialization using our
+[resource classes.](../resources/)
+
 ## Defining Schemas
 
 By default, schemas exist in a namespace relative to the namespace of
@@ -92,8 +96,8 @@ Manually registering schemas makes your API more efficient.
 :::
 
 Once your schema class is registered, your server is able to auto-discover
-the additional `Resource` and `Request` classes for the schema's resource
-type.
+any additional classes for the resource - for example, `Request` or
+`Resource` classes.
 
 ## Resource Type
 
@@ -119,6 +123,50 @@ class PostSchema extends Schema
     public static function type(): string
     {
         return 'blog_posts';
+    }
+}
+```
+
+### URI Type
+
+When the resource type appears in resource URIs, we use the dash-case form
+of the resource type. Therefore `blogPosts` or `blog_posts` will be
+`/blog-posts`. This follows our default convention of dash-casing URLs.
+
+This can be customised by setting the `$uriType` property on your
+schema. For example, if we wanted to underscore the type in the URI:
+
+```php
+class BlogPostSchema extends Schema
+{
+   /**
+    * The resource type as it appears in URIs.
+    *
+    * @var string|null
+    */
+    protected ?string $uriType = 'blog_posts';
+}
+```
+
+If you need to programmatically work out the URI type, then overload
+the `uriType()` method. If you're doing this, we recommend caching
+the value as it is likely to be used a lot of times. For example:
+
+```php
+class BlogPostSchema extends Schema
+{
+   /**
+    * The resource type as it appears in URIs.
+    *
+    * @return string
+    */
+    public function uriType(): string
+    {
+        if ($this->uriType) {
+            return $this->uriType;
+        }
+
+        return $this->uriType = '...calculated value';
     }
 }
 ```

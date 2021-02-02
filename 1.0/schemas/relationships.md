@@ -40,14 +40,42 @@ public function fields(): array
 
 By default, the field will expect the method for the relationship on the
 Eloquent model to be the *camel-case* form of the JSON:API field name.
-For example, for a relationship field name of `postal-address`, the
-expected method on the Eloquent model would be `postalAddress`.
+For example, for a relationship field name of `blog-author`, the
+expected method on the Eloquent model would be `blogAuthor`.
 
 To use a different method name than the default, provide the method name
 as the second argument to the `make` method:
 
 ```php
-BelongsTo::make('address', 'postalAddress');
+BelongsTo::make('author', 'blogAuthor');
+```
+
+## URI Name
+
+By default we dasherize the JSON:API field name when it appears in
+relationship URLs. For example, if the field name was
+`blogAuthor`, the links would be:
+
+```json
+{
+  "links": {
+    "self": "http://localhost/api/v1/posts/123/relationships/blog-author",
+    "related": "http://localhost/api/v1/posts/123/blog-author"
+  }
+}
+```
+
+If you wanted to keep `blogAuthor` as-is, use the `retainFieldName` method:
+
+```php
+BelongsTo::make('blogAuthor')->retainFieldName()
+```
+
+Otherwise, if you want to use a different convention, provide the URI
+fragment to the `withUriFieldName` method:
+
+```php
+BelongsTo::make('blogAuthor')->withUriFieldName('blog_author')
 ```
 
 ## Inverse Type
@@ -116,15 +144,20 @@ read-only.
 For the other relationship fields, there are times when you may want to allow
 the client to only create or update certain relationships on the resource.
 You can do this by using the `readOnly` method, which will prevent the field
-from being filled in certain circumstances.
+from being filled
 
-Pass a closure to the `readOnly()` method. It will receive the current
+```php
+BelongsTo::make('author')->readOnly()
+```
+
+If you need a relationships to only be filled in certain circumstances,
+pass a closure to the `readOnly` method. It will receive the current
 request as the first argument:
 
 ```php
 BelongsTo::make('author')->readOnly(
     static fn($request) => !$request->user()->isAdmin()
-);
+)
 ```
 
 If you only want to set the relationship to read only when creating or
@@ -132,7 +165,8 @@ updating resources, you may use the `readOnlyOnCreate` or
 `readOnlyOnUpdate` methods:
 
 ```php
-BelongsTo::make('author')->readOnlyOnUpdate();
+BelongsTo::make('author')->readOnlyOnCreate()
+BelongsTo::make('author')->readOnlyOnUpdate()
 ```
 
 :::danger
@@ -148,6 +182,126 @@ end-points: e.g. `PATCH /api/v1/posts/123/relationships/author`. There is
 no need for us to check the read-only status in this circumstance because
 this relationship route should not be registered with the Laravel router
 if the relationship is read-only.
+:::
+
+## Relationship Serialization
+
+Schemas are used to convert models to JSON:API resource objects.
+Each relationship you define will appear in the resource JSON.
+Each relationship is serialized as a
+[JSON:API relationship object](https://jsonapi.org/format/#document-resource-object-relationships).
+These relationship objects must contain at least one of `links`,
+`data` or `meta`.
+
+By default, relationship objects are serialized with the `links`
+member, and will include the `self` and `related` links. The `data`
+member will only be included if the relationship data has been
+requested by the client using an
+[Include Path.](https://jsonapi.org/format/#fetching-includes)
+
+To customise the relation serialization, use the `serializeUsing`
+method. This receives the JSON:API relation as its first argument:
+
+```php
+BelongsTo::make('author')->serializeUsing(
+  static fn($relation) => $relation->withoutSelfLink()
+)
+```
+
+### Removing Links
+
+If you do not want the relationship object to have a `self` link,
+use the `withoutSelfLink` method:
+
+```php
+BelongsTo::make('author')->serializeUsing(
+  static fn($relation) => $relation->withoutSelfLink()
+)
+```
+
+Likewise, if you do not want the relationship object to have a `related`
+link, use the `withoutRelatedLink` method:
+
+```php
+BelongsTo::make('author')->serializeUsing(
+  static fn($relation) => $relation->withoutRelatedLink()
+)
+```
+
+If you want to remove both the `self` and `related` links, you can use the
+`withoutLinks` method:
+
+```php
+BelongsTo::make('author')->serializeUsing(
+  static fn($relation) => $relation->withoutLinks()
+)
+```
+
+### Showing Data
+
+By default we only show the `data` member of the relationship if the
+client has requested it using an include path. This is a sensible
+default because the whole point of the JSON:API specification is to
+give the client complete control over what it wants include in the
+response JSON. If the server made decisions over what is included,
+then it will increase the size of the response payload when
+the client may have no intent to use the extra JSON content.
+
+If you must override this, we provide two methods on the relation.
+Firstly, the `showDataIfLoaded` method will include the relationship
+`data` member if the relation is loaded on the model:
+
+```php
+BelongsTo::make('author')->serializeUsing(
+  static fn($relation) => $relation->showDataIfLoaded()
+)
+```
+
+Secondly we provide the `alwaysShowData` member to force the `data`
+member to be shown. If you are using the `alwaysShowData` method,
+you will need to consider adding default eager load paths to your
+schema to avoid "N+1" database query problems.
+
+```php
+BelongsTo::make('author')->serializeUsing(
+  static fn($relation) => $relation->alwaysShowData()
+)
+```
+
+:::warning
+If you use the `alwaysShowData` method, you must ensure that the
+relationship is *always* eager loaded. See the
+[Eager Loading chapter](./eager-loading.md) for details.
+:::
+
+### Hiding Fields
+
+When serializing relationships to JSON, you may want to omit a field from
+the JSON. To do this, use the `hidden` method:
+
+```php
+BelongsTo::make('createdBy')->hidden()
+```
+
+To only hide the field in certain circumstances, provide a closure to
+the `hidden` method. It will receive the current request as the first
+argument:
+
+```php
+BelongsTo::make('createdBy')->hidden(
+  static fn($request) => !$request->user()->isAdmin()
+)
+```
+
+Note that if you use JSON:API resources outside of HTTP requests -
+for example, queued broadcasting - then your closure should handle
+the `$request` parameter being `null`.
+
+:::tip
+If you have complex logic for determining what relationships should
+appear in the resource's JSON, you should use our
+[resource classes](../resources/) which give you complete control over
+the serialization.
 :::
 
 ## Relationship Types
@@ -463,7 +617,7 @@ Use the [`HasOne` field](#has-one) for an Eloquent `morphOne` relation.
 
 ### Morph Many
 
-Use the [`Has Many` field](#has-many) for an Eloquent `morphMany` relation.
+Use the [`HasMany` field](#has-many) for an Eloquent `morphMany` relation.
 
 ### Morph To
 
@@ -491,5 +645,5 @@ MorphTo::make('commentable', 'items')
 
 ### Morph To Many
 
-Use the [`Belongs To Many` field](#belongs-to-many)  for an Eloquent
+Use the [`BelongsToMany` field](#belongs-to-many)  for an Eloquent
 `morphToMany` relation.
