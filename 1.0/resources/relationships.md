@@ -174,32 +174,12 @@ relationship object. The URL is calculated by appending the either
 The resource's `self` URL is calculated on the resource class, i.e.
 `PostResource` in our example. See the [Links Chapter](./links.md)
 if you need to customise the URL.
+
+The relationship's URL field name is obtained from the schema
+field. By default, we dash-case the field name when using it in
+URLs.
+[You can override this on your schema if needed.](../schemas/relationships.md#uri-name)
 :::
-
-By default we dasherize the JSON:API field name for the relationship URLs.
-For example, if the field name was `blogAuthor`, the links would be:
-
-```json
-{
-  "links": {
-    "self": "http://localhost/api/v1/posts/123/relationships/blog-author",
-    "related": "http://localhost/api/v1/posts/123/blog-author"
-  }
-}
-```
-
-If you wanted to keep `blogAuthor` as-is, use the `retainFieldName` method:
-
-```php
-$this->relation('blogAuthor')->retainFieldName()
-```
-
-Otherwise, if you want to use a different convention, provide the URI
-fragment to the `withUriFieldName` method:
-
-```php
-$this->relation('blogAuthor')->withUriFieldName('blog_author')
-```
 
 ### Removing Links
 

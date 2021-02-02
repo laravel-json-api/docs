@@ -40,14 +40,42 @@ public function fields(): array
 
 By default, the field will expect the method for the relationship on the
 Eloquent model to be the *camel-case* form of the JSON:API field name.
-For example, for a relationship field name of `postal-address`, the
-expected method on the Eloquent model would be `postalAddress`.
+For example, for a relationship field name of `blog-author`, the
+expected method on the Eloquent model would be `blogAuthor`.
 
 To use a different method name than the default, provide the method name
 as the second argument to the `make` method:
 
 ```php
-BelongsTo::make('address', 'postalAddress');
+BelongsTo::make('author', 'blogAuthor');
+```
+
+## URI Name
+
+By default we dasherize the JSON:API field name when it appears in
+relationship URLs. For example, if the field name was
+`blogAuthor`, the links would be:
+
+```json
+{
+  "links": {
+    "self": "http://localhost/api/v1/posts/123/relationships/blog-author",
+    "related": "http://localhost/api/v1/posts/123/blog-author"
+  }
+}
+```
+
+If you wanted to keep `blogAuthor` as-is, use the `retainFieldName` method:
+
+```php
+BelongsTo::make('blogAuthor')->retainFieldName()
+```
+
+Otherwise, if you want to use a different convention, provide the URI
+fragment to the `withUriFieldName` method:
+
+```php
+BelongsTo::make('blogAuthor')->withUriFieldName('blog_author')
 ```
 
 ## Inverse Type
