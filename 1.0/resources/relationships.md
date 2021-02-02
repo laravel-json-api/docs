@@ -272,14 +272,6 @@ Note that this will not include the related resource in the `included`
 member of the JSON:API document. The `included` resources are always
 determined by the include path query parameter.
 
-:::warning
-Although this is a convenient approach to show already eager-loaded
-relationships, by using it you are removing the capability of the client
-to determine the contents of the JSON:API document via include paths.
-I.e. the server is deciding to include `data` when the
-client may have no intent to use it.
-:::
-
 ### Always Including Data
 
 If you would always like your relationship object to have the `data`
@@ -293,16 +285,11 @@ Note that this will not include the related resource in the `included`
 member of the JSON:API document. The `included` resources are always
 determined by the include path query parameter.
 
-If you are using the `alwaysShowData` method, you will need to consider
-adding default eager load paths to your schema to avoid "N+1"
-database query problems.
-
-:::danger
-Although we provide the ability to always show the data, we strongly
-recommend this is **NOT** used. By using it, you are removing the capability
-of the client to determine the contents of the JSON:API document via
-the include paths. I.e. the server is deciding to include `data` when the
-client may have no intent to use it.
+:::warning
+If you are using the `alwaysShowData` method, you will need to ensure
+that the relation is always eager loaded to avoid "N+1" database query
+problems. See the [Eager Loading chapter](../schemas/eager-loading.md)
+for details.
 :::
 
 ## Meta

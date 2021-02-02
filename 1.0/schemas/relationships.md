@@ -268,11 +268,10 @@ BelongsTo::make('author')->serializeUsing(
 )
 ```
 
-:::danger
-We provide the `showDataIfLoaded` and `alwaysShowData` methods, but
-we **DO NOT** recommend using them. A well-designed API will always
-let the client choose what relations are loaded via the `include`
-query parameter.
+:::warning
+If you use the `alwaysShowData` method, you must ensure that the
+relationship is *always* eager loaded. See the
+[Eager Loading chapter](./eager-loading.md) for details.
 :::
 
 ### Hiding Fields
