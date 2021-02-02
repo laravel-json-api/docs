@@ -132,61 +132,18 @@ difference in our implementation is that the request can be `null`. This
 will be the case when serializing a resource outside of an HTTP request -
 for example, during a queued broadcasting job.
 
-## Type
+## Identification
 
-To work out the resource `type`, we pluralize and dasherize the name of
-the class that appears before `Resource`. For example, `PostResource` will
-become `posts` and `BlogPostResource` will be `blog-posts`.
+JSON:API resource objects are identified by their `type` and `id` members.
+Together, these uniquely identify the resource.
 
-To use a different value, add the `$type` property to your resource class:
+The resource class is injected with the schema that describes the
+model being serialized - and this is used when determining the `type`
+and `id` of the resource.
 
-```php
-use LaravelJsonApi\Core\Resources\JsonApiResource;
+The `type` is determined using class name of the schema, and can
+be [overridden on the schema if needed.](../schemas/#resource-type)
 
-class PostResource extends JsonApiResource
-{
-
-    /**
-     * The resource type.
-     *
-     * @var string
-     */
-    protected string $type = 'articles';
-
-    // ...
-
-}
-```
-
-## ID
-
-To work out the resource `id`, we use the model's `getRouteKey()` method.
-To use a different value, or if your resource is not a model, implement
-the `id()` method:
-
-```php
-use LaravelJsonApi\Core\Resources\JsonApiResource;
-
-class PostResource extends JsonApiResource
-{
-
-    /**
-     * Get the resource's id.
-     *
-     * @return string
-     */
-    public function id(): string
-    {
-        return $this->uuid;
-    }
-
-    // ...
-
-}
-```
-
-:::tip
-If you're using a different column than the route key for your resource
-`id`, don't forget to also update the `ID` object on your
-[resource schema.](../schemas/identifier.md#column-name)
-:::
+By default the `id` will be the value returned by the `Model::getRouteKey()`
+method. If this is not the case, you should set the column name
+on the [`ID` field of your schema.](../schemas/identifier.md#column-name)
