@@ -1,4 +1,4 @@
-# Resource Requests
+# Resource Validation
 
 [[toc]]
 
@@ -130,12 +130,15 @@ the server MUST interpret the missing attributes as if they were included
 with their current values. The server MUST NOT interpret missing attributes
 as null values.
 
+The same applies to relationships.
+
 As Laravel provides validation rules that allow you to compare values that
 are being validated (e.g. a date that must be `before` another value),
 we take the existing field values of your resource and merge the values
 provided by the client over the top.
 
-For example, given this request:
+For example, in the following `PATCH` request the client has not provided
+values for the `content`, `slug` and `author` fields:
 
 
 ```http
@@ -164,14 +167,17 @@ Accept: application/vnd.api+json
 }
 ```
 
-In the above, the client has not provided the `content` and `slug`
-attributes of the `posts` resource. To comply with the JSON:API we must
-assume these missing fields are the current values stored on the model.
-We therefore merge these current values in, so that the validator receives
-the following data:
+To comply with the JSON:API specification we must assume that the missing fields
+are the current values stored on the resource. We therefore get the current
+resource values and then merge the client values on-top. In the above example,
+this means that the validator receives the following data:
 
 ```php
 [
+    "author" => [
+        "type" => "users",
+        "id" => "345",
+    ],
     "content" => "...",
     "id" => "1",
     "slug" => "hello-world",
@@ -183,52 +189,47 @@ the following data:
 ];
 ```
 
-:::tip
-We use the `attributes` method on the `PostResource` class to acquire the
-current values of the resource's attributes.
-:::
+When working out the current values, we only take the values of `BelongsTo`
+and `MorphTo` relations. This is because it  would be extremely inefficient for
+us to read the value of every relation. For example, our `posts` resource could
+have hundreds of `comments`, which are not required for validation.
 
-If you need the current values of relationships, you must mark the relation
-as required for validation when defining it in your resource class.
-For example, we may want our `PostResource` to merge the current value of
-the `tags` relationship if it is not provided by the client. On our
-`PostResource` class we would call the `mustValidate` method on our `tags`
-relation:
+If you need the values of a relationship that is not included by default,
+use the `mustValidate()` method on the field in your schema. For example,
+if we wanted the current value of `tags` to be used:
 
 ```php
-class PostResource extends JsonApiResource
+class PostSchema extends Schema
 {
     // ...
 
-    /**
-     * Get the resource's relationships.
-     *
-     * @return iterable
-     */
-    public function relationships(): iterable
+    public function fields(): array
     {
         return [
-            $this->relation('author'),
-            $this->relation('comments'),
-            $this->relation('tags')->mustValidate(),
+            ID::make(),
+            // ...attribute fields
+            BelongsTo::make('author'),
+            HasMany::make('comments'),
+            HasMany::make('tags')->mustValidate(),
         ];
     }
 }
 ```
 
-:::tip
-The reason why relationships have to be explicitly marked as required for
-validation is because it would be extremely inefficient for us to read
-the value of every relation. For example, our `PostResource` could have
-hundreds of `comments`, which are not required for validation.
-:::
+If you want to exclude a `BelongsTo` or `MorphTo` relation that we automatically
+include, use the `notValidated()` method on the field in your schema. For
+example, if we wanted to exclude the `author` relationship:
+
+```php
+BelongsTo::make('author')->notValidated()
+```
 
 #### Customising Existing Values
 
-If you want to adjust the extraction of current attributes, overload
-the `existingAttributes` method. For example, if you are using the `not_present`
-rule for an attribute, you would not want the existing value to be merged in.
-In this case you could forget the existing value as follows:
+If you want to adjust any current values *before* the client-provided values
+are merged, implement the `withExisting()` method on your request class.
+This method receives the model and the JSON:API resource representation
+as its arguments.
 
 ```php
 class PostRequest extends ResourceRequest
@@ -236,46 +237,23 @@ class PostRequest extends ResourceRequest
     // ...
 
     /**
-     * Extract existing attributes for the provided model.
+     * Modify the existing resource before it is merged with client values.
      *
      * @param \App\Models\Post $model
-     * @return iterable
+     * @return array|null
      */
-    protected function existingAttributes(object $model): iterable
+    protected function withExisting(Post $model, array $resource): ?array
     {
-        return collect(parent::existingAttributes($model))->forget('foobar');
+        unset($resource['attributes']['foobar']);
+
+        return $resource;
     }
 }
 ```
 
-For relationships, overload the `existingRelationships` method. In the
-following example we manually add the author to the existing relationships:
-
-```php
-class PostRequest extends ResourceRequest
-{
-    // ...
-
-    /**
-     * Extract existing relationships for the provided model.
-     *
-     * @param \App\Models\Post $model
-     * @return iterable
-     */
-    protected function existingRelationships(object $model): iterable
-    {
-        return collect(parent::existingRelationships($model))
-          ->put('author', $model->author);
-    }
-}
-```
-
-#### Disabling Existing Values
-
-If you need to disable the merging of the existing values, set the
-`$validateExisting` property on your request class to `false`.
-If you need to programmatically work out whether to merge the existing
-values, overload the `mustValidateExisting` method.
+You **must** return the array that you want the validator to use. If you
+return `null`, then the validator will assume you did not modify the resource
+and will use it as-is.
 
 ### Modifying Relationships
 
