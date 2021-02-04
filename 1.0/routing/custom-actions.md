@@ -105,6 +105,59 @@ a different route name, use the `name()` method:
 $actions->delete('purge')->name('deleteAll');
 ```
 
+## Authorization
+
+Typically when writing custom actions, you can authorize the request using
+[Controller authorization helpers.](https://laravel.com/docs/authorization#via-controller-helpers)
+This is shown in both the examples below.
+
+There is however an alternative. If you are injecting a
+[query parameter class](../requests/query-parameters.md) into your controller
+action, you can put the authorization logic in the query class.
+
+The reason you might do this is if you want the action to support
+JSON:API query parameters - e.g. enabling the client to send an `include`
+parameter when using your custom action.
+
+For example, if we were injecting the `PostQuery` class into our custom
+controller action, we could add our authorization logic to that class:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Laravel\Http\Requests\ResourceQuery;
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+class PostQuery extends ResourceQuery
+{
+
+    /**
+     * Authorize the request.
+     *
+     * @return bool|null
+     */
+    public function authorize(): ?bool
+    {
+        if ($this->is('*-actions*')) {
+            return (bool) optional($this->user())->can(
+                'update',
+                $this->model()
+            );
+        }
+
+        return null;
+    }
+
+    // ...other methods
+}
+```
+
+:::tip
+As described in [Form Request Authorization](../requests/authorization.md#form-request-authorization),
+returning `null` from the `authorize()` method tells the form request to run
+the default JSON:API authorization.
+:::
+
 ## Resources Example
 
 In this example, we want to add a route that will allow an administrator to
