@@ -1,12 +1,12 @@
-# Writing Actions
+# Writing JSON:API Actions
 
 [[toc]]
 
 ## Introduction
 
 Our controllers are designed to allow you to easily write your own
-actions if desired. Typically this involves removing the action trait
-from the controller class, and then implementing the action method
+JSON:API actions if desired. Typically this involves removing the action
+trait from the controller class, and then implementing the action method
 yourself.
 
 This chapter walks you through doing that for each controller action.
