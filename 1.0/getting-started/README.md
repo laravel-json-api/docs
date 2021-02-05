@@ -64,8 +64,6 @@ Update the `register()` method on your `\App\Exceptions\Handler` class
 as follows:
 
 ```php
-<?php
-
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
@@ -82,7 +80,12 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->renderable(\LaravelJsonApi\Exceptions\ExceptionParser::renderer());
+        $this->renderable(
+            \LaravelJsonApi\Exceptions\ExceptionParser::make()->renderable()
+        );
     }
 }
 ```
+
+For more information on exception parsing, see the
+[error handling chapter.](../responses/errors.md#error-handling)
