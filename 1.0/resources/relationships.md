@@ -85,6 +85,26 @@ as follows:
 $this->relation('author', 'user')
 ```
 
+### Conditional Relationships
+
+Just as with [conditional attributes](./attributes.md#conditional-attributes),
+you can also define conditional relationships. To do this, use the `when()`
+and `mergeWhen()` methods. For example:
+
+```php
+public function relationships($request): iterable
+{
+    return [
+        $this->relation('author'),
+        $this->when($request->user()->isAdmin(), $this->relation('publishedBy')),
+        $this->mergeWhen($request->user()->isOwner(), [
+            $this->relation('foo'),
+            $this->relation('bar'),
+        ]),
+    ];
+}
+```
+
 ## Default Serialization
 
 By default, relationship objects are serialized with the `links` member,
