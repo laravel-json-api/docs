@@ -329,16 +329,25 @@ size, i.e. the maximum number of resources that can appear on each page.
 For the page-based approach, this is controlled via the `size` parameter;
 for the cursor-based approach the `limit` parameter is used.
 
-If no page size is provided by an API client, the page size will default
-to the per-page value specified on the Eloquent model. This is set on
-the `Model::$perPage` property, and returned from the
-`Model::getPerPage()` method.
+In both implementations it is possible for a client to send page parameters,
+but omit the page size. For example:
+
+```http
+GET /api/v1/posts?page[number]=1 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+In this scenario the client will receive a paged response, with the size
+defaulting to the per-page value specified on the Eloquent model. This is set
+on the `Model::$perPage` property, and returned from the `Model::getPerPage()`
+method.
 
 **By default, Laravel sets this value to 15.**
 
-If you want to override this default value, both the page-based and
-cursor-based paginators have a `withDefaultPerPage` method. For example,
-to change the default to 25 per-page:
+If you want your JSON:API resource to have a different default page size, use
+the `withDefaultPerPage()` method. This works on both the page-based and
+cursor-based paginators. For example, to change the default to 25
+per-page:
 
 ```php
 public function pagination(): ?Paginator
@@ -497,33 +506,59 @@ public function pagination(): ?Paginator
 There are some resources that you will always want to be paginated - because
 without pagination, your API would return too many resources in one request.
 
-To force a resource to be paginated even if the client does not send
-pagination parameters, use the `$defaultPagination` option on your schema.
-The parameters you set in this property are used if the API client does not
-provide any page parameters.
+For example, if the client sends this request:
 
-For example, the following will force the first page to be used for the
-page-based approach:
+```http
+GET /api/v1/posts HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+This would return all `posts` resources. In a large blog, that would potentially
+result in a response with hundreds or thousands of `posts` resources. In this
+scenario, we would want to *always* return a paginated response.
+
+We can use one of two approaches to achieve this:
+
+- Specify default pagination parameters that the server uses when **none** are
+  provided by the client; or
+- Force the client to provide page parameters by making them **required** in our
+  validation rules.
+
+### Default Pagination
+
+Default pagination parameters allow the client to send a request *without* page
+parameters, but ensure the server *always* returns a paged response.
+
+To do this we set the page parameters that the server should use when none are
+provided by the client, using the `$defaultPagination` property on the
+schema. For example, if our `posts` resource used page-based pagination:
 
 ```php
 class PostSchema extends Schema
 {
 
-    protected $defaultPagination = ['number' => 1];
+    protected ?array $defaultPagination = ['number' => 1];
 
     // ...
 
 }
 ```
 
-Or for the cursor-based approach:
+Or if it used the cursor-based approach:
 
 ```php
-protected $defaultPagination = ['limit' => 15];
+class PostSchema extends Schema
+{
+
+    protected ?array $defaultPagination = ['limit' => 15];
+
+    // ...
+
+}
 ```
 
 If you need to programmatically work out the default paging parameters,
-overload the `defaultPagination` method. For example, if you had written a
+overload the `defaultPagination()` method. For example, if you had written a
 custom date-based pagination approach:
 
 ```php
@@ -543,7 +578,7 @@ class PostSchema extends Schema
 }
 ```
 
-### To-Many Relationships
+#### Default Pagination for To-Many Relationships
 
 When you set default pagination on a schema, the default values will also
 be used when querying the resource in a *to-many* relationship.
@@ -583,6 +618,100 @@ class PostSchema extends Schema
 }
 ```
 
+### Requiring Page Parameters
+
+The alternative to using default pagination parameters is to force the client
+to *always* provide page parameters. We do this via our validation
+rules on the [collection query class](../requests/query-parameters.md),
+for example our `PostCollectionQuery`.
+
+For the page-based approach:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+use LaravelJsonApi\Laravel\Http\Requests\ResourceQuery;
+
+class PostCollectionQuery extends ResourceQuery
+{
+
+    public function rules(): array
+    {
+        return [
+            // ...other rules
+
+            'page.number' => ['required', 'integer', 'min:1'],
+            'page.size' => ['integer', 'between:1,200'],
+        ];
+    }
+}
+```
+
+Or for the cursor-based approach:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+use LaravelJsonApi\Laravel\Http\Requests\ResourceQuery;
+
+class PostCollectionQuery extends ResourceQuery
+{
+
+    public function rules(): array
+    {
+        return [
+            // ...other rules
+
+            'page.limit' => ['required', 'integer', 'between:1,200'],
+        ];
+    }
+}
+```
+
+#### Required Page Parameters for To-Many Relationships
+
+When requiring page parameters in your validation, this will also apply when
+querying the resource in a *to-many* relationship.
+
+Imagine our `users` resource has a `posts` relationship. The validation rules
+shown in the above examples would apply when the client makes this request,
+which would fail the validation:
+
+```http
+GET /api/v1/users/123/posts HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+If we wanted to allow the client to omit page parameters when retrieving
+`posts` resources via a relationship, we would need to conditionally add the
+`required` rule:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+use LaravelJsonApi\Laravel\Http\Requests\ResourceQuery;
+
+class PostCollectionQuery extends ResourceQuery
+{
+
+    public function rules(): array
+    {
+        return [
+            // ...other rules
+
+            'page.limit' => array_filter([
+                $this->isNotRelationship() ? 'required' : null,
+                'integer',
+                'between:1,200'
+            ]),
+        ];
+    }
+}
+```
+
 ## Disallowing Pagination
 
 If your resource does not support pagination, you should reject any request
@@ -612,7 +741,7 @@ class PostCollectionQuery extends ResourceQuery
 }
 ```
 
-On your schema, you can return `null` from the `pagination` method:
+On your schema, you can then return `null` from the `pagination` method:
 
 ```php
 namespace App\JsonApi\V1\Posts;
