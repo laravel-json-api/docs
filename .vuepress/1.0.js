@@ -36,6 +36,7 @@ module.exports = [
       '',
       'controllers',
       'writing-actions',
+      'custom-actions',
     ]),
   },
   {

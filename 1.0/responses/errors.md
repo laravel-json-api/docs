@@ -253,3 +253,127 @@ $errors = $factory
     ->createErrors($validator)
     ->withPointers(fn($key) => "/foo/{$key}");
 ```
+
+## Error Handling
+
+As described in the [installation instructions](../getting-started/#exception-handler),
+the following should have been added to your application's exception handler:
+
+```php
+class Handler extends ExceptionHandler
+{
+    // ...
+
+    /**
+     * Register the exception handling callbacks for the application.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->renderable(
+            \LaravelJsonApi\Exceptions\ExceptionParser::make()->renderable()
+        );
+    }
+}
+```
+
+The Laravel exception handler already takes care of converting exceptions to
+either `application/json` or `text/html` responses. Our exception handler
+effectively adds JSON:API error responses as a *third* media type. If the
+client has sent a request with an `Accept` header of `application/vnd.api+json`,
+then they will receive the exception response as a JSON:API error response -
+even if the endpoint they are hitting is not one of your JSON:API server
+endpoints.
+
+### JSON Responses
+
+If a client encounters an exception when using an `Accept` header of
+`application/json`, they will still receive Laravel's default JSON exception
+response, rather than a JSON:API response.
+
+If you want our exception parser to render JSON exception responses *instead*
+of the default Laravel response, use the `acceptsJson()` method when registering
+our exception parser:
+
+```php
+$this->renderable(
+    ExceptionParser::make()->acceptsJson()->renderable()
+);
+```
+
+### Custom Rendering Logic
+
+If you want your own logic for when a JSON:API exception response should be
+rendered, pass a closure to the `accept()` method.
+
+For example, let's say we wanted our API to always return JSON:API exception
+responses, regardless of what `Accept` header the client sent. We would use
+the request `is()` method to check if the path is our API:
+
+```php
+$this->renderable(ExceptionParser::make()
+    ->accept(fn(\Throwable $ex, $request) => $request->is('/api*'))
+    ->renderable()
+);
+```
+
+:::tip
+If you return `false` from the callback, the normal exception rendering logic
+will run - meaning a client that has sent an `Accept` header with the JSON:API
+media type will still receive a JSON:API response. This is semantically correct,
+as the `Accept` header value should be respected.
+:::
+
+### Converting Exceptions
+
+Our exception parser is built so that you can easily add support for
+custom exceptions to the JSON:API rendering process. The implementation works
+using a pipeline, meaning you can add your own handlers for converting
+exceptions to JSON:API errors.
+
+For example, imagine our application had a `PaymentFailed` exception, that
+we wanted to convert to JSON:API errors if thrown to the exception handler.
+We would write the following class:
+
+```php
+namespace App\JsonApi\Exceptions;
+
+use App\Exceptions\PaymentFailedException;
+use LaravelJsonApi\Core\Responses\ErrorResponse;
+
+class PaymentFailedHandler
+{
+
+    /**
+     * Handle the exception.
+     *
+     * @param \Throwable $ex
+     * @param \Closure $next
+     * @return ErrorResponse
+     */
+    public function handle(\Throwable $ex, \Closure $next): ErrorResponse
+    {
+        if ($ex instanceof PaymentFailedException) {
+            return ErrorResponse::error([
+                'code' => $ex->getCode(),
+                'detail' => $ex->getMessage(),
+                'status' => '400',
+                'title' => 'Payment Failed'
+            ]);
+        }
+
+        return $next($ex);
+    }
+}
+```
+
+We can then add it to the JSON:API exception parser using either the
+`prepend` or `append` method:
+
+```php
+$this->renderable(ExceptionParser::make()
+    ->append(\App\JsonApi\Exceptions\PaymentFailedHandler::class)
+    ->renderable()
+);
+```
