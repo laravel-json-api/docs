@@ -187,7 +187,7 @@ whenever a `users` resource was retrieved. To do this, we would add the
  *
  * @var array
  */
-public static $with = ['profile'];
+protected array $with = ['profile'];
 ```
 
 :::tip
