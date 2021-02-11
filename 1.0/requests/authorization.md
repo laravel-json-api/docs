@@ -371,7 +371,7 @@ and instead use Laravel's
 to protect the entire API.
 :::
 
-## Hiding Resources
+## Hiding Entire Resources
 
 There may be times when you need to hide certain resources when a user
 accesses your API. This is easily achieved using
@@ -473,6 +473,63 @@ they will receive a `404 Not Found` response. Also, when they view
 lists of `posts` resources (e.g. by requesting
 `GET /api/v1/posts`), they will not see any draft `posts` for which
 they are not the author.
+
+## Index Filtering
+
+You may notice that returning `false` from a policy's `view` method does not
+stop a given resource from appearing in the resource index. To filter models
+from the resource index query, you may override the `indexQuery` method on
+your schema.
+
+For example, if we wanted a user to only be able to list their own models when
+executing an index query:
+
+```php
+/**
+ * Build an "index" query for the given resource.
+ *
+ * @param \Illuminate\Http\Request|null $request
+ * @param \Illuminate\Database\Eloquent\Builder  $query
+ * @return \Illuminate\Database\Eloquent\Builder
+ */
+public function indexQuery(?Request $request, Builder $query): Builder
+{
+    return $query->where('user_id', $request->user()->id);
+}
+```
+
+Unlike [hiding entire resources](#hiding-entire-resources), using index
+filtering only prevents the resource from appearing in the resource index. This
+means that the API client will still be able to request a resource they do not
+have access to - and will receive a `403 Forbidden` response instead of the
+`404 Not Found` that the hiding entire resources approach would return.
+
+:::tip
+Index filtering does not affect include paths. If you need to hide resources
+from appearing via an include path, you should use the hiding entire resources
+approach described above.
+:::
+
+## Relatable Filtering
+
+If you would like to filter the resources when they appear in a *to-many*
+relation, you may override the `relatableQuery` method on your schema.
+
+For example:
+
+```php
+/**
+ * Build a "relatable" query for this resource.
+ *
+ * @param \Illuminate\Http\Request|null $request
+ * @param \Illuminate\Database\Eloquent\Relations\Relation $query
+ * @return Illuminate\Database\Eloquent\Relations\Relation
+ */
+public function relatableQuery(?Request $request, Relation $query): Relation
+{
+    return $query;
+}
+```
 
 ## Customising Authorization
 
