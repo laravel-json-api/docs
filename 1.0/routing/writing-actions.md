@@ -58,7 +58,7 @@ public function index(PostSchema $schema, PostCollectionQuery $request)
   $models = $schema
     ->repository()
     ->queryAll()
-    ->using($request)
+    ->withRequest($request)
     ->firstOrPaginate($request->page());
 
   // do something custom...
@@ -102,7 +102,7 @@ public function show(PostSchema $schema, PostQuery $request, Post $post)
   $model = $schema
     ->repository()
     ->queryOne($post)
-    ->using($request)
+    ->withRequest($request)
     ->first();
 
   // do something custom...
@@ -149,7 +149,7 @@ public function show(PostSchema $schema, PostRequest $request, PostQuery $query)
   $model = $schema
     ->repository()
     ->create()
-    ->using($query)
+    ->withRequest($query)
     ->store($request->validated());
 
   // do something custom...
@@ -202,7 +202,7 @@ public function update(
   $model = $schema
     ->repository()
     ->update($post)
-    ->using($query)
+    ->withRequest($query)
     ->store($request->validated());
 
   // do something custom...
@@ -330,7 +330,7 @@ public function showRelatedAuthor(PostSchema $schema, UserQuery $request, Post $
   $author = $schema
     ->repository()
     ->queryToOne($post, 'author')
-    ->using($request)
+    ->withRequest($request)
     ->first();
 
   // do something custom...
@@ -363,7 +363,7 @@ public function showRelatedTags(
   $tags = $schema
     ->repository()
     ->queryToMany($post, 'tags')
-    ->using($request)
+    ->withRequest($request)
     ->getOrPaginate($request->page());
 
   // do something custom...
@@ -425,7 +425,7 @@ public function showAuthor(
   $author = $schema
     ->repository()
     ->queryToOne($post, 'author')
-    ->using($request)
+    ->withRequest($request)
     ->first();
 
   // do something custom...
@@ -458,7 +458,7 @@ public function showTags(
   $tags = $schema
     ->repository()
     ->queryToMany($post, 'tags')
-    ->using($request)
+    ->withRequest($request)
     ->getOrPaginate($request->page());
 
   // do something custom...
@@ -526,7 +526,7 @@ public function updateAuthor(
   $author = $schema
     ->repository()
     ->modifyToOne($post, 'author')
-    ->using($query)
+    ->withRequest($query)
     ->associate($request->validatedForRelation());
 
   // do something custom...
@@ -562,7 +562,7 @@ public function updateTags(
   $tags = $schema
     ->repository()
     ->modifyToMany($post, 'tags')
-    ->using($query)
+    ->withRequest($query)
     ->sync($request->validatedForRelation());
 
   // do something custom...
@@ -628,7 +628,7 @@ public function attachTags(
   $tags = $schema
     ->repository()
     ->modifyToMany($post, 'tags')
-    ->using($query)
+    ->withRequest($query)
     ->attach($request->validatedForRelation());
 
   // do something custom...
@@ -694,7 +694,7 @@ public function detachTags(
   $tags = $schema
     ->repository()
     ->modifyToMany($post, 'tags')
-    ->using($query)
+    ->withRequest($query)
     ->detach($request->validatedForRelation());
 
   // do something custom...
