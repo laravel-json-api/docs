@@ -585,6 +585,29 @@ receive a *zero-to-many* document even if they use a singular filter. This
 is because a page by its nature must have a resource collection.
 :::
 
+### Complex Singular Filters
+
+Alternatively, if a combination of filters should return *zero-to-one*
+resource, you can add the logic to the `isSingular` method on your schema.
+This is useful when the presence of multiple filters in a single request
+means there could only be zero-to-one matching models in the database.
+
+For example:
+
+```php
+class PostSchema extends Schema
+{
+
+    // ...
+
+    public function isSingular(array $filters): bool
+    {
+        return isset($filters['userId'], $filters['clientId']);
+    }
+
+}
+```
+
 ## Writing Filters
 
 As your implementation grows, you will probably find scenarios where you
