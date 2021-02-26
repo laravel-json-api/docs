@@ -102,11 +102,11 @@ HasMany::make('tags', 'postTags') // assumed 'post-tags'
 ```
 
 In either case, to use a different inverse resource type, just call the
-`inverseType()` method. For example if our `Post` schema has an
-`author` relationship field, but the inverse type was `users`:
+`type()` method. For example if our `Post` schema has an `author` relationship
+field, but the inverse type was `users`:
 
 ```php
-BelongsTo::make('author')->inverseType('users')
+BelongsTo::make('author')->type('users')
 ```
 
 ## Eager Loading
@@ -340,12 +340,12 @@ HasOne::make('address', 'postalAddress')
 ```
 
 The inverse resource type is assumed to be the pluralized and dasherized form
-of the Eloquent method name. If this is not the case, use the `inverseType`
+of the Eloquent method name. If this is not the case, use the `type`
 method:
 
 ```php
 HasOne::make('address') // assumed 'addresses'
-HasOne::make('address')->inverseType('user-addresses')
+HasOne::make('address')->type('user-addresses')
 ```
 
 ### Has Many
@@ -369,11 +369,11 @@ HasMany::make('comments', 'userComments')
 ```
 
 The inverse resource type is assumed to be the dasherized form of the Eloquent
-method name. If this is not the case, use the `inverseType` method:
+method name. If this is not the case, use the `type` method:
 
 ```php
 HasMany::make('comments') // assumed 'comments'
-HasMany::make('comments')->inverseType('video-comments')
+HasMany::make('comments')->type('video-comments')
 ```
 
 ### Has One Through
@@ -401,12 +401,12 @@ HasOneThrough::make('owner', 'carOwner');
 ```
 
 The inverse resource type is assumed to be the pluralized and dasherized form
-of the Eloquent method name. If this is not the case, use the `inverseType`
+of the Eloquent method name. If this is not the case, use the `type`
 method:
 
 ```php
 HasOneThrough::make('owner') // assumed 'owners'
-HasOneThrough::make('owner')->inverseType('car-owners')
+HasOneThrough::make('owner')->type('car-owners')
 ```
 
 :::warning
@@ -443,11 +443,11 @@ HasManyThrough::make('posts', 'blogPosts')
 ```
 
 The inverse resource type is assumed to be the dasherized form of the Eloquent
-method name. If this is not the case, use the `inverseType` method:
+method name. If this is not the case, use the `type` method:
 
 ```php
 HasManyThrough::make('posts') // assumed 'posts'
-HasManyThrough::make('posts')->inverseType('blog-posts')
+HasManyThrough::make('posts')->type('blog-posts')
 ```
 
 :::warning
@@ -482,12 +482,12 @@ BelongsTo::make('author', 'user')
 ```
 
 The inverse resource type is assumed to be the pluralized and dasherized form
-of the Eloquent method name. If this is not the case, use the `inverseType`
+of the Eloquent method name. If this is not the case, use the `type`
 method:
 
 ```php
 BelongsTo::make('author', 'user') // assumed 'users'
-BelongsTo::make('author')->inverseType('users')
+BelongsTo::make('author')->type('users')
 ```
 
 ### Belongs To Many
@@ -512,11 +512,11 @@ BelongsToMany::make('roles', 'accessRoles')
 ```
 
 The inverse resource type is assumed to be the dasherized form of the Eloquent
-method name. If this is not the case, use the `inverseType` method:
+method name. If this is not the case, use the `type` method:
 
 ```php
 BelongsToMany::make('roles') // assumed 'roles'
-BelongsToMany::make('roles')->inverseType('access-roles')
+BelongsToMany::make('roles')->type('access-roles')
 ```
 
 #### Pivot Table
