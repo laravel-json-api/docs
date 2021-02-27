@@ -111,7 +111,8 @@ on the controller.
 
 These hooks allow you to easily implement application specific actions,
 such as firing events or dispatching jobs. They also allow you to return
-customised responses.
+customised responses. If you return a response from any hook, the controller
+action will stop executing and immediately return the response.
 
 ## Resource Hooks
 
