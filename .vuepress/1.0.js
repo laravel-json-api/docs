@@ -27,6 +27,7 @@ module.exports = [
       'eager-loading',
       'pagination',
       'filters',
+      'soft-deleting',
     ]),
   },
   {
