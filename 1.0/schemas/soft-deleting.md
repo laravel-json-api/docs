@@ -292,7 +292,6 @@ three filters that you can add to your schema. These are:
 
 - [WithTrashed](#withtrashed)
 - [OnlyTrashed](#onlytrashed)
-- [WhereTrashed](#wheretrashed)
 
 :::tip
 All three filters expect the client to provide a boolean value. The values
@@ -325,30 +324,9 @@ filter to your schema as follows, providing the JSON:API filter key name:
 ```php
 use LaravelJsonApi\Eloquent\Filters\WithTrashed;
 
-OnlyTrashed::make('only-trashed')
+OnlyTrashed::make('trashed')
 ```
 
 Once this is added, the client can provide a `true` value to receive only
 models that are soft-deleted. Providing `false` means only models that are
 not soft-deleted will be returned.
-
-### WhereTrashed
-
-The `WhereTrashed` filter allows a client to choose whether it wants to receive
-models that are soft-deleted **or** those that are not soft deleted. Add the
-filter to your schema as follows, providing the JSON:API filter key name:
-
-```php
-use LaravelJsonApi\Eloquent\Filters\WithTrashed;
-
-WhereTrashed::make('trashed')
-```
-
-When the client provides a `true` value, they will receive only resources that
-are trashed (soft-deleted). If they provide `false`, they will receive only
-resources that have not been soft-deleted.
-
-:::tip
-This is different from the `WithTrashed` filter, as that decides whether to
-return both soft-deleted **and** not soft-deleted models.
-:::

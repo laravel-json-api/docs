@@ -474,9 +474,9 @@ so you can set a string delimiter if required by using the `delimiter` method.
 
 ### Soft-Delete Filters
 
-This package provides the `WithTrashed`, `OnlyTrashed` and `WhereTrashed`
-filters for resources that support soft-deleting. You can read about them
-in [the Filters section of the Soft Deleting chapter.](./soft-deleting.md#filters)
+This package provides the `WithTrashed` and `OnlyTrashed` filters for resources
+that support soft-deleting. You can read about them in
+[the Filters section of the Soft Deleting chapter.](./soft-deleting.md#filters)
 
 ## Singular Filters
 
