@@ -76,6 +76,7 @@ module.exports = [
     children: prefix('digging-deeper', [
       'artisan',
       'localisation',
+      'proxies',
     ]),
   },
   {
