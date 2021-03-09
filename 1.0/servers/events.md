@@ -75,6 +75,11 @@ class Server extends BaseServer
 }
 ```
 
+:::tip
+You may type-hint any dependencies you need within the `serving` method's
+signature. They will automatically be resolved via the Laravel service container.
+:::
+
 ## Controller Events
 
 If you need to dispatch events, but do not want them dispatched as model events,
