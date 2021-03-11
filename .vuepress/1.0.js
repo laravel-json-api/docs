@@ -77,6 +77,7 @@ module.exports = [
       'artisan',
       'localisation',
       'proxies',
+      'polymorphic-to-many',
     ]),
   },
   {

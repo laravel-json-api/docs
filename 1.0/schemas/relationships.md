@@ -318,6 +318,7 @@ Eloquent relationships. The types are:
 | [Belongs To](#belongs-to) | `belongsTo` | Yes |
 | [Belongs To Many](#belongs-to-many) | `belongsToMany`, `morphToMany`, `morphedByMany` | Yes |
 | [Morph To](#morph-to) | `morphTo` | Yes |
+| [Morph to Many](#morph-to-many) | *None* | Yes |
 
 ### Has One
 
@@ -611,14 +612,6 @@ class ApprovedPivot
 }
 ```
 
-### Morph One
-
-Use the [`HasOne` field](#has-one) for an Eloquent `morphOne` relation.
-
-### Morph Many
-
-Use the [`HasMany` field](#has-many) for an Eloquent `morphMany` relation.
-
 ### Morph To
 
 The `MorphTo` field corresponds to a `morphTo` Eloquent relationship.
@@ -645,5 +638,11 @@ MorphTo::make('commentable', 'items')
 
 ### Morph To Many
 
-Use the [`BelongsToMany` field](#belongs-to-many)  for an Eloquent
-`morphToMany` relation.
+The JSON:API `MorphToMany` field helps you construct polymorphic *to-many*
+relationships. It's important to note that there is *not* an equivalent relationship
+type in Eloquent. (The Eloquent `morphToMany` relationship type is handled by
+the [`BelongsToMany` JSON:API field](#belongs-to-many).)
+
+Adding polymorphic to-many relations involves a number of complexities and
+limitations. As such, there is a [chapter covering exactly this topic,](../digging-deeper/polymorphic-to-many.md)
+where you can find instructions on how to add this relationship to your schema.
