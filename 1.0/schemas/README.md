@@ -227,3 +227,12 @@ class PostSchema extends Schema
 
 }
 ```
+
+## Multi-Resource Models
+
+Typically each model class is represented in your API as a single resource type.
+E.g. our `Post` model is represented as a `posts` resource.
+
+There may however be occasions where you need to represent an Eloquent model as
+multiple resource types in your API. To do this, follow the instructions in
+the [Multi-Resource Models chapter.](../digging-deeper/proxies.md)

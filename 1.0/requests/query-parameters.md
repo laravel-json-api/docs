@@ -61,7 +61,7 @@ The `PostQuery` is used for any request that will result in *zero-to-one*
 | GET | `/likes/{like}/relationships/post` | showRelationship |
 | PATCH | `/likes/{like}/relationships/post` | updateRelationship |
 
-The `PostCollectQuery` is used for any request that will result in
+The `PostCollectionQuery` is used for any request that will result in
 *zero-to-many* resources in the response. For example:
 
 | Verb | URI | Action |

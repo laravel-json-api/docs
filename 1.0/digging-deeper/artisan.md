@@ -150,6 +150,9 @@ php artisan jsonapi:schema posts --model="\App\Foo\Bar\BlogPost" --server=v1
 ```
 :::
 
+If you are generating a schema for a [multi-resource model](./proxies.md),
+you should use the `--proxy` option when creating a schema for a proxy class.
+
 As with other commands, use the `--force` option if you need to overwrite
 an existing file.
 

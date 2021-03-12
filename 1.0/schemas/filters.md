@@ -232,6 +232,7 @@ Laravel JSON:API ships with the following filters:
 - [WherePivot](#wherepivot)
 - [WherePivotIn](#wherepivotin)
 - [WherePivotNotIn](#wherepivotnotin)
+- [Soft Delete Filters](#soft-delete-filters)
 
 :::tip
 If you want to add additional filters, submit a Pull Request to the
@@ -470,6 +471,12 @@ $query->wherePivotNotIn('category', $value)
 The `WherePivotNotIn` filter extends the [`WhereNotIn` filter](#wherenotin),
 so you can set a string delimiter if required by using the `delimiter` method.
 :::
+
+### Soft-Delete Filters
+
+This package provides the `WithTrashed` and `OnlyTrashed` filters for resources
+that support soft-deleting. You can read about them in
+[the Filters section of the Soft Deleting chapter.](./soft-deleting.md#filters)
 
 ## Singular Filters
 

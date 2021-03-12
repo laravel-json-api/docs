@@ -27,6 +27,7 @@ module.exports = [
       'eager-loading',
       'pagination',
       'filters',
+      'soft-deleting',
     ]),
   },
   {
@@ -75,6 +76,8 @@ module.exports = [
     children: prefix('digging-deeper', [
       'artisan',
       'localisation',
+      'proxies',
+      'polymorphic-to-many',
     ]),
   },
   {
