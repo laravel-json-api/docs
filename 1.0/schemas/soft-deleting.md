@@ -288,13 +288,13 @@ will **not** contain any soft-deleted resources. This matches the Eloquent
 behaviour of excluding soft-deleted models from database queries by default.
 
 To allow the client to filter resources by their soft-deleted status, we provide
-three filters that you can add to your schema. These are:
+two filters that you can add to your schema. These are:
 
 - [WithTrashed](#withtrashed)
 - [OnlyTrashed](#onlytrashed)
 
 :::tip
-All three filters expect the client to provide a boolean value. The values
+Both filters expect the client to provide a boolean value. The values
 accepted are the same as described in the
 [boolean values section of the Filters chapter.](./filters.md#boolean-values)
 :::
