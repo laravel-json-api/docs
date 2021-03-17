@@ -184,6 +184,13 @@ this relationship route should not be registered with the Laravel router
 if the relationship is read-only.
 :::
 
+## Countable Fields
+
+Sometimes a client may want to count the number of related resources for a
+given relationship without actually loading the related resources. Our
+*to-many* fields allow this using our
+[Countable Relationships feature.](../digging-deeper/countable.md)
+
 ## Relationship Serialization
 
 Schemas are used to convert models to JSON:API resource objects.
