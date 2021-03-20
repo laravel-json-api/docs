@@ -404,15 +404,18 @@ You would add this to the relationship's filters.
 For example:
 
 ```php
+use LaravelJsonApi\Eloquent\Fields\Relations\BelongsToMany;
 use LaravelJsonApi\Eloquent\Filters\WherePivot;
 
-WherePivot::make('accepted')->asBoolean()
+BelongsToMany::make('roles')->withFilters(
+    WherePivot::make('accepted')->asBoolean()
+);
 ```
 
 Is equivalent to:
 
 ```php
-$query->wherePivot('accepted', $value)
+$user->roles()->wherePivot('accepted', $value)
 ```
 
 :::tip
@@ -430,15 +433,18 @@ You would add this to the relationship's filters.
 For example:
 
 ```php
+use LaravelJsonApi\Eloquent\Fields\Relations\BelongsToMany;
 use LaravelJsonApi\Eloquent\Filters\WherePivotIn;
 
-WherePivotIn::make('flags')
+BelongsToMany::make('roles')->withFilters(
+    WherePivotIn::make('category')
+);
 ```
 
 Is equivalent to:
 
 ```php
-$query->wherePivotIn('flags', $value)
+$user->roles()->wherePivotIn('category', $value)
 ```
 
 :::tip
@@ -456,15 +462,18 @@ You would add this to the relationship's filters.
 For example:
 
 ```php
+use LaravelJsonApi\Eloquent\Fields\Relations\BelongsToMany;
 use LaravelJsonApi\Eloquent\Filters\WherePivotNotIn;
 
-WherePivotNotIn::make('category')
+BelongsToMany::make('roles')->withFilters(
+    WherePivotNotIn::make('category')
+);
 ```
 
 Is equivalent to:
 
 ```php
-$query->wherePivotNotIn('category', $value)
+$user->roles()->wherePivotNotIn('category', $value)
 ```
 
 :::tip
