@@ -406,3 +406,46 @@ The following example adds middleware to our `tags` relationship routes:
 ```php
 $relationships->hasMany('tags')->middleware('my_middlware1', 'my_middlware2');
 ```
+
+## Route Model Binding
+
+By default Laravel takes care of substituting parameter values for models using
+its [Route Model Binding implementation.](https://laravel.com/docs/routing#route-model-binding)
+Laravel does this in the `Illuminate\Routing\Middleware\SubstituteBindings`
+middleware.
+
+In a fresh Laravel installation, this middleware is already included in the
+`api` middleware group. This means when you use `JsonApiRoute::server()` helper
+method to define JSON:API routes within your `routes/api.php` file, the
+JSON:API server routes are defined *after* the `SubstituteBindings` middleware
+runs.
+
+The JSON:API implementation however does work *without* the `SubstituteBindings`
+middleware. This is because the JSON:API middleware is able to substitute the
+resource binding for the route without resorting to Laravel's implementation.
+For example, when you define a route for `GET /api/v1/posts/{post}`, the
+JSON:API implementation can substitute the `post` parameter for a `Post` model
+itself.
+
+In fact, it is *preferrable* that the JSON:API implementation takes care of
+substituting the binding. This is because JSON:API bindings are substituted
+*after* your server's `serving()` hook is called - which means if you apply
+any global scopes in that hook, they will affect whether or not a model can
+be found and therefore whether a `404 Not Found` response is sent.
+
+**If your API routes have no other bindings to substitute, we therefore
+recommend that you remove Laravel's `SubstituteBindings` middleware from your
+JSON:API routes.**
+
+You can do this using the `withoutMiddleware()` method when registering your
+JSON:API routes:
+
+```php
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->namespace('Api\V1')
+    ->withoutMiddleware(\Illuminate\Routing\Middleware\SubstituteBindings::class)
+    ->resources(function ($server) {
+        $server->resource('posts');
+    });
+```
