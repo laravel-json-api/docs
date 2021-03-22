@@ -228,6 +228,7 @@ Laravel JSON:API ships with the following filters:
 - [Scope](#scope)
 - [Where](#where)
 - [WhereIdIn](#whereidin)
+- [WhereIdNotIn](#whereidnotin)
 - [WhereIn](#wherein)
 - [WhereNotIn](#wherenotin)
 - [WherePivot](#wherepivot)
@@ -388,6 +389,32 @@ The client could then make this request:
 ```http
 GET /api/v1/posts?filter[id]=3,9 HTTP/1.1
 Accept: application/vnd.api+json
+```
+
+### WhereIdNotIn
+
+The `WhereIdNotIn` filter works exactly like the
+[`WhereIdIn` filter](#whereidin), except it allows the client to *exclude*
+resources by their id. For example:
+
+```php
+use LaravelJsonApi\Eloquent\Filters\WhereIdNotIn;
+
+WhereIdNotIn::make($this, 'exclude');
+```
+
+The client could then exclude specific resources as follows:
+
+```http
+GET /api/v1/posts?filter[exclude]=3&filter[exclude]=9 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+Just like the `WhereIdIn` filter, the `WhereIdNotIn` filter will accept
+string values if a delimiter is set:
+
+```php
+WhereIdNotIn($this, 'exclude')->delimiter(',')
 ```
 
 ### WhereIn
