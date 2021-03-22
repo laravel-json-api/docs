@@ -28,7 +28,7 @@ if our `posts` resource type allowed `id` and `slug` filters:
 namespace App\JsonApi\V1\Posts;
 
 use LaravelJsonApi\Eloquent\Filters\Where;
-use LaravelJsonApi\Eloquent\Filters\WhereIn;
+use LaravelJsonApi\Eloquent\Filters\WhereIdIn;
 use LaravelJsonApi\Eloquent\Schema;
 
 class PostSchema extends Schema
@@ -39,7 +39,7 @@ class PostSchema extends Schema
     public function filters(): array
     {
         return [
-            WhereIn::make('id', $this->idColumn()),
+            WhereIdIn::make($this),
             Where::make('slug'),
         ];
     }
@@ -227,6 +227,7 @@ Laravel JSON:API ships with the following filters:
 
 - [Scope](#scope)
 - [Where](#where)
+- [WhereIdIn](#whereidin)
 - [WhereIn](#wherein)
 - [WhereNotIn](#wherenotin)
 - [WherePivot](#wherepivot)
@@ -327,6 +328,68 @@ For example:
 Where::make('votes')->gt();
 ```
 
+### WhereIdIn
+
+The `WhereIdIn` filter allows a client to request one-to-many specified
+resources.
+
+This filter must be provided with the schema as the first argument to the
+`make()` method. As filters are constructed within schemas, this means passing
+`$this` as the first argument, for example:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Eloquent\Filters\WhereIdIn;
+use LaravelJsonApi\Eloquent\Schema;
+
+class PostSchema extends Schema
+{
+
+    // ...
+
+    public function filters(): array
+    {
+        return [
+            WhereIdIn::make($this),
+            // ...
+        ];
+    }
+
+}
+```
+
+This will allow the client to make the following request to obtain multiple
+specified resources:
+
+```http
+GET /api/v1/posts?filter[id]=3&filter[id]=9 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+Notice that by default, `WhereIdIn` uses the `id` filter key. If
+you wanted to use a different key, provide it as the second argument to the
+`make()` method. For example, if we wanted the filter key to be `ids`:
+
+```php
+WhereIdIn::make($this, 'ids')
+```
+
+Also notice how the value of the `id` filter is an `array` of strings.
+If you want to accept a `string` value, use the `delimiter()` method.
+For example, if we wanted to accept a comma-separated string of ids:
+
+```php
+WhereIdIn::make($this)->delimiter(',')
+```
+
+The client could then make this request:
+
+```http
+GET /api/v1/posts?filter[id]=3,9 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
 ### WhereIn
 
 The `WhereIn` filter is used to invoke the query builder `whereIn` method
@@ -335,25 +398,26 @@ for a filter value. For example:
 ```php
 use LaravelJsonApi\Eloquent\Filters\Where;
 
-WhereIn::make('id')
+WhereIn::make('category')
 ```
 
 This is equivalent to:
 
 ```php
-$query->whereIn('id', $value);
+$query->whereIn('category', $value);
 ```
 
-This would allow the client to request multiple resources by `id`:
+This would allow the client to request multiple resources by their category,
+for example:
 
 ```http
-GET /api/v1/posts?filter[id]=123&filter[id]=456 HTTP/1.1
+GET /api/v1/posts?filter[category]=foo&filter[category]=bar HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
-Notice how the value of the `id` filter is an `array` of strings.
-If you want to accept a `string` value, use the `delimiter` method.
-For example, if we wanted to accept a comma-separated string of ids:
+Notice how the value of the `category` filter is an `array` of strings.
+If you want to accept a `string` value, use the `delimiter()` method.
+For example, if we wanted to accept a comma-separated string of categories:
 
 ```php
 WhereIn::make('id')->delimiter(',')
@@ -362,7 +426,7 @@ WhereIn::make('id')->delimiter(',')
 The client could then make this request:
 
 ```http
-GET /api/v1/posts?filter[id]=123,456 HTTP/1.1
+GET /api/v1/posts?filter[category]=foo,bar HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -372,18 +436,18 @@ The `WhereNotIn` filter works exactly like the [`WhereIn` filter](#wherein),
 except it calls the query builder's `whereNotIn` method.
 
 For example, this filter would allow a client to exclude resources by their
-`id`:
+`category` attribute:
 
 ```php
 use LaravelJsonApi\Eloquent\Filters\WhereNotIn;
 
-WhereNotIn::make('exclude', 'id');
+WhereNotIn::make('not-category', 'category');
 ```
 
-The client could then exclude resources by `id` as follows:
+The client could then exclude resources by `category` as follows:
 
 ```http
-GET /api/v1/posts?filter[exclude]=123&filter[exclude]=456 HTTP/1.1
+GET /api/v1/posts?filter[not-category]=foo&filter[not-category]=bar HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -391,7 +455,7 @@ Just like the `WhereIn` filter, the `WhereNotIn` filter will accept
 string values if a delimiter is set:
 
 ```php
-WhereNotIn('exclude', 'id')->delimiter(',')
+WhereNotIn('not-category', 'category')->delimiter(',')
 ```
 
 ### WherePivot
@@ -449,7 +513,7 @@ $user->roles()->wherePivotIn('category', $value)
 
 :::tip
 The `WherePivotIn` filter extends the [`WhereIn` filter](#wherein),
-so you can set a string delimiter if required by using the `delimiter` method.
+so you can set a string delimiter if required by using the `delimiter()` method.
 :::
 
 ### WherePivotNotIn
@@ -478,7 +542,7 @@ $user->roles()->wherePivotNotIn('category', $value)
 
 :::tip
 The `WherePivotNotIn` filter extends the [`WhereNotIn` filter](#wherenotin),
-so you can set a string delimiter if required by using the `delimiter` method.
+so you can set a string delimiter if required by using the `delimiter()` method.
 :::
 
 ### Soft-Delete Filters
