@@ -315,7 +315,7 @@ For example, for our *to-one* `author` relationship:
 use App\JsonApi\V1\Posts\PostSchema;
 use App\JsonApi\V1\Users\UserQuery;
 use App\Models\Post;
-use LaravelJsonApi\Core\Responses\DataResponse;
+use LaravelJsonApi\Core\Responses\RelatedResponse;
 
 /**
  * Fetch zero to one related resources.
@@ -335,7 +335,7 @@ public function showRelatedAuthor(PostSchema $schema, UserQuery $request, Post $
 
   // do something custom...
 
-  return new DataResponse($author);
+  return new RelatedResponse($post, 'author', $author);
 }
 ```
 
@@ -345,7 +345,7 @@ And for example, for our *to-many* `tags` relationship:
 use App\JsonApi\V1\Posts\PostSchema;
 use App\JsonApi\V1\Tags\TagCollectionQuery;
 use App\Models\Post;
-use LaravelJsonApi\Core\Responses\DataResponse;
+use LaravelJsonApi\Core\Responses\RelatedResponse;
 
 /**
  * Fetch zero to many related resources.
@@ -368,7 +368,7 @@ public function showRelatedTags(
 
   // do something custom...
 
-  return new DataResponse($tags);
+  return new RelatedResponse($post, 'tags', $tags);
 }
 ```
 
