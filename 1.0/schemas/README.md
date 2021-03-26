@@ -171,6 +171,37 @@ class BlogPostSchema extends Schema
 }
 ```
 
+### Disabling the `Self` Link
+
+When models are serialized to JSON:API resources, a `self` link for the resource
+is included in the JSON representation by default.
+
+According the the JSON:API specification, if a resource has a `self` link, a
+`GET` request to the link **MUST** return the resource. If you have a resource
+that is not retrievable by its resource identifier, then you must disable the
+`self` link. To do this, set the `$selfLink` property on your schema to `false`:
+
+```php
+class PostSchema extends Schema
+{
+    /**
+     * Whether resources of this type have a self link.
+     *
+     * @var bool
+     */
+    protected bool $selfLink = false;
+
+    // ...
+}
+```
+
+:::warning
+If you disable the `self` link on a schema, the resource's relationships will
+no longer have `self` and `related` links in the relationship object. This is
+because it does not make sense to have relationship endpoints when the resource
+itself is not retrievable via a `self` link.
+:::
+
 ## Fields
 
 In the JSON:API specification, a resource object's attributes and
