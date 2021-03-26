@@ -73,11 +73,20 @@ See the next chapter for a complete guide to
 If you have a resource type that does not need to use any controller hooks,
 and does not need to override any of our default action implementations,
 you can use our `JsonApiController`. This removes the need for you to
-generate a controller for a resource type.
+generate a controller for a resource type. This can be registered as follows:
 
-To use, specify the controller when registering the resource routes.
-If you are using route namespacing, you will need to specify the controller
-as follows:
+```php
+use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->resources(function ($server) {
+        $server->resource('posts', JsonApiController::class);
+    });
+```
+
+If you are using controller namespacing, you will need to fully-qualify the
+generic controller when registering it. For example:
 
 ```php
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
@@ -87,18 +96,6 @@ JsonApiRoute::server('v1')
     ->namespace('Api\V1')
     ->resources(function ($server) {
         $server->resource('posts', '\\' . JsonApiController::class);
-    });
-```
-
-If you are not using route namespacing, specify the controller as follows:
-
-```php
-use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
-
-JsonApiRoute::server('v1')
-    ->prefix('v1')
-    ->resources(function ($server) {
-        $server->resource('posts', JsonApiController::class);
     });
 ```
 
