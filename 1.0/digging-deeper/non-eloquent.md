@@ -265,20 +265,29 @@ composer require laravel-json-api/non-eloquent
 
 ## Concept & Initial Setup
 
-For each *Non-Eloquent resource*, we need three classes: a `Schema`, `Resource`
-and a `Repository`.
+For each *Non-Eloquent resource*, we need a `Schema` and a `Resource`.
+We are also likely to need a `Repository`.
 
-Unlike Eloquent schemas, our non-Eloquent schemas cannot be used to serialize
-the class they represent to a JSON:API resource. This means that the `Resource`
-class is compulsory for non-Eloquent resources (unlike the Eloquent ones, where
-the `Resource` class is optional).
+In our Eloquent implementation, the `Resource` class is optional. This is
+because we can use the information from the Eloquent schema to serialize a model
+to its JSON:API resource representation. However, this is not possible for a
+non-Eloquent resource, because we do not know how to get values from your
+non-Eloquent class. This means the `Resource` class is compulsory.
 
-The `Repository` class is the class that plugs the non-Eloquent resource into
-the JSON:API implementation. For Eloquent resources you do not need a
-`Repository` class because our Eloquent implementation is able to use a generic
-repository that works for all Eloquent models. However, in the non-Eloquent
-implementation, we need you to write the `Repository` class as we do not know
-how to interface with your non-Eloquent resource.
+The `Repository` class allows our implementation to retrieve objects by their
+JSON:API resource `id`. It is also used for validating any JSON:API resource
+identifiers that occur within JSON:API documents received from an API client.
+
+In our Eloquent implementation, you do not need a repository class - because
+we have implemented a generic repository that works with any Eloquent model.
+However, this is not the case with non-Eloquent resources, as we do not know
+how to retrieve your non-Eloquent class using a JSON:API resource id.
+
+The `Repository` class is therefore compulsory if your non-Eloquent resource
+can be retrieved by its JSON:API resource `id`. The only circumstance in which
+you will not have a repository will be if your non-Eloquent resource can
+**never** be retrieved by its `id`, and **never** referenced in a JSON:API
+document by its resource identifier.
 
 We will now create these three classes for our `Site` entity.
 
@@ -298,7 +307,6 @@ This will generate the following schema, which we will add some attributes to:
 namespace App\JsonApi\V1\Sites;
 
 use App\Entities\Site;
-use LaravelJsonApi\Contracts\Repository;
 use LaravelJsonApi\Core\Schema\Schema;
 use LaravelJsonApi\NonEloquent\Fields\Attribute;
 use LaravelJsonApi\NonEloquent\Fields\ID;
@@ -338,16 +346,6 @@ class SiteSchema extends Schema
         return [
             Filter::make('slugs'),
         ];
-    }
-
-    /**
-     * Get the resource repository.
-     *
-     * @return Repository
-     */
-    public function repository(): Repository
-    {
-        // @TODO
     }
 
 }
@@ -505,13 +503,11 @@ Once we have created our `SiteRepository`, we need to register it by adding
 it to the `repository()` method on our `SiteSchema`:
 
 ```php
-use LaravelJsonApi\Contracts\Store\Repository;
-
 class SiteSchema extends Schema
 {
     // ...other methods
 
-    public function repository(): Repository
+    public function repository(): SiteRepository
     {
         return SiteRepository::make()
             ->withServer($this->server)
@@ -538,6 +534,8 @@ methods on your repository class.
 
 ## Capabilities
 
+### What are Capabilities?
+
 Once we have completed the above steps, the following minimum *capabilities*
 have been implemented for our `sites` resource:
 
@@ -557,6 +555,17 @@ capabilities you want to support. For example, if a `sites` resource can be
 created via your API you will need to add the create capability. However, if
 you do not need `sites` resources to be deleted via the API, you never need
 to implement a delete capability.
+
+:::tip
+Adding capabilities to your resource's repository allows you to use our generic
+JSON:API controller actions. It is also forward-compatible with our intent to
+support [JSON:API Atomic Operations.](https://jsonapi.org/ext/atomic/)
+
+An alternative approach would be to
+[write your own JSON:API controller actions](../routing/writing-actions.md)
+for your non-Eloquent resource. If you take this approach, you do not need to
+use the capabilities listed in this chapter.
+:::
 
 The following capabilities can be added to a repository:
 
@@ -644,7 +653,6 @@ For example, on our `SiteRepository`:
 namespace App\JsonApi\V1\Sites;
 
 use LaravelJsonApi\Contracts\Store\QueriesAll;
-use LaravelJsonApi\Contracts\Store\QueryManyBuilder;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 
 class SiteRepository extends AbstractRepository implements QueriesAll
@@ -655,7 +663,7 @@ class SiteRepository extends AbstractRepository implements QueriesAll
     /**
      * @inheritDoc
      */
-    public function queryAll(): QueryManyBuilder
+    public function queryAll(): Capabilities\QuerySites
     {
         return Capabilities\QuerySites::make()
             ->withServer($this->server)
@@ -815,7 +823,6 @@ use LaravelJsonApi\Contracts\Store\CreatesResources;
 use LaravelJsonApi\Contracts\Store\DeletesResources;
 use LaravelJsonApi\Contracts\Store\UpdatesResources;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
-use LaravelJsonApi\NonEloquent\Capabilities\Crud;
 use LaravelJsonApi\NonEloquent\Concerns\HasCrudCapability;
 
 class SiteRepository extends AbstractRepository implements
@@ -831,7 +838,7 @@ class SiteRepository extends AbstractRepository implements
     /**
      * @inheritDoc
      */
-    protected function crud(): Crud
+    protected function crud(): Capabilities\Crud
     {
         return Capabilities\Crud::make();
     }
@@ -936,7 +943,6 @@ For example, on our `SiteRepository`:
 namespace App\JsonApi\V1\Sites;
 
 use LaravelJsonApi\Contracts\Store\CreatesResources;
-use LaravelJsonApi\Contracts\Store\ResourceBuilder;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 
 class SiteRepository extends AbstractRepository implements CreatesResources
@@ -947,7 +953,7 @@ class SiteRepository extends AbstractRepository implements CreatesResources
     /**
      * @inheritDoc
      */
-    public function create(): ResourceBuilder
+    public function create(): Capabilities\CreateSite
     {
         return Capabilities\CreateSite::make()
             ->withServer($this->server)
@@ -1061,7 +1067,6 @@ For example, on our `SiteRepository`:
 namespace App\JsonApi\V1\Sites;
 
 use LaravelJsonApi\Contracts\Store\CreatesResources;
-use LaravelJsonApi\Contracts\Store\ResourceBuilder;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 
 class SiteRepository extends AbstractRepository implements CreatesResources
@@ -1072,7 +1077,7 @@ class SiteRepository extends AbstractRepository implements CreatesResources
     /**
      * @inheritDoc
      */
-    public function update($modelOrResourceId): ResourceBuilder
+    public function update($modelOrResourceId): Capabilities\ModifySite
     {
         return Capabilities\ModifySite::make()
             ->withServer($this->server)
@@ -1280,7 +1285,6 @@ namespace App\JsonApi\V1\Sites;
 use LaravelJsonApi\Contracts\Store\ModifiesToOne;
 use LaravelJsonApi\Contracts\Store\ModifiesToMany;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
-use LaravelJsonApi\NonEloquent\Capabilities\Crud;
 use LaravelJsonApi\NonEloquent\Concerns\HasModifyRelationsCapability;
 
 class SiteRepository extends AbstractRepository implements
@@ -1295,9 +1299,9 @@ class SiteRepository extends AbstractRepository implements
     /**
      * @inheritDoc
      */
-    protected function relations(): ModifyRelations
+    protected function relations(): Capabilities\ModifySiteRelationships
     {
-        return ModifySiteRelationships::make();
+        return Capabilities\ModifySiteRelationships::make();
     }
 
 }
@@ -1391,7 +1395,6 @@ the `queryOne()` method to return our `QuerySite` class:
 ```php
 namespace App\JsonApi\V1\Sites;
 
-use LaravelJsonApi\Contracts\Store\QueryOneBuilder;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 
 class SiteRepository extends AbstractRepository
@@ -1402,7 +1405,7 @@ class SiteRepository extends AbstractRepository
     /**
      * @inheritDoc
      */
-    public function queryOne($modelOrResourceId): QueryOneBuilder
+    public function queryOne($modelOrResourceId): Capabilities\QuerySite
     {
         return Capabilities\QuerySite::make()
             ->withServer($this->server)
@@ -1466,7 +1469,6 @@ the `queryToOne()` method to return the `QuerySiteToOneRelation` capability:
 ```php
 namespace App\JsonApi\V1\Sites;
 
-use LaravelJsonApi\Contracts\Store\QueryOneBuilder;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 
 class SiteRepository extends AbstractRepository
@@ -1477,7 +1479,7 @@ class SiteRepository extends AbstractRepository
     /**
      * @inheritDoc
      */
-    public function queryToOne($modelOrResourceId, string $fieldName): QueryOneBuilder
+    public function queryToOne($modelOrResourceId, string $fieldName): Capabilities\QuerySiteToOneRelation
     {
       return Capabilities\QuerySiteToOneRelation::make()
           ->withServer($this->server)
@@ -1544,7 +1546,6 @@ the `queryToMany()` method to return the `QuerySiteToOneRelation` capability:
 ```php
 namespace App\JsonApi\V1\Sites;
 
-use LaravelJsonApi\Contracts\Store\QueryManyBuilder;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 
 class SiteRepository extends AbstractRepository
@@ -1555,7 +1556,7 @@ class SiteRepository extends AbstractRepository
     /**
      * @inheritDoc
      */
-    public function queryToMany($modelOrResourceId, string $fieldName): QueryManyBuilder
+    public function queryToMany($modelOrResourceId, string $fieldName): Capabilities\QuerySiteToManyRelation
     {
       return Capabilities\QuerySiteToManyRelation::make()
           ->withServer($this->server)
@@ -1605,7 +1606,7 @@ class SiteSchema extends Schema
     /**
      * @inheritDoc
      */
-    public function pagination(): ?Paginator
+    public function pagination(): EnumerablePagination
     {
         return EnumerablePagination::make();
     }
