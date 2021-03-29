@@ -78,6 +78,7 @@ module.exports = [
       'countable',
       'localisation',
       'proxies',
+      'non-eloquent',
       'polymorphic-to-many',
     ]),
   },
