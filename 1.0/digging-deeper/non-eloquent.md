@@ -534,8 +534,6 @@ methods on your repository class.
 
 ## Capabilities
 
-### What are Capabilities?
-
 Once we have completed the above steps, the following minimum *capabilities*
 have been implemented for our `sites` resource:
 
@@ -567,32 +565,7 @@ for your non-Eloquent resource. If you take this approach, you do not need to
 use the capabilities listed in this chapter.
 :::
 
-The following capabilities can be added to a repository:
-
-- [Query All](#query-all-capability) for retrieving zero-to-many resources.
-- [CRUD](#crud-capability) if your resource can be created, read, updated *and* deleted.
-- [Create](#create-capability) if your resource can be created.
-- [Modify](#modify-capability) if your resource can be updated.
-- [Delete](#delete-capability) if your resource can be deleted.
-- [Modify Relations](#modify-relations-capability) if your resource's relationships
-  can be modified via relationship endpoints.
-
-In addition, while the following capabilities already exist on the `AbstractRepository`,
-you can re-implement them if you need to write custom behaviour:
-
-- [Query One](#query-one-capability) for retrieving zero-to-one resource.
-- [Query To-One](#query-to-one-capability) for retrieving the value of a to-one relationship.
-- [Query To-Many](#query-to-many-capability) for retrieving the value of a to-many relationship.
-
-:::tip
-To add capabilities to your repository, you typically need to add an interface
-and then a method that returns your capability class. One other thing to note...
-In the example capabilities you will notice we put the capabilities in the
-`App\JsonApi\V1\Sites\Capabilities` namespace. It is totally up to you whether
-you put the capability classes in the `Sites` namespace or a sub-namespace.
-:::
-
-### Query All Capability
+## Query All Capability
 
 This capability allows your resource to be retrieved on the index route, i.e.
 this request:
@@ -717,22 +690,28 @@ The `QuerySites` capability is also where support for pagination is added,
 if needed. See the [Pagination](#pagination) section for examples.
 :::
 
-### CRUD Capability
+## Resource Capabilities
 
-This capability allows your resource to be created, updated and deleted,
-using a single class to add all these capabilities.
+If your resource can be created, updated and/or deleted, you will need to add
+a *CRUD* capability to your repository. This capability also allows you to
+customise reading a specific resource.
 
-To implement this capability, create a new class that extends the
-`LaravelJsonApi\NonEloquent\Capabilities\Crud` class. For example:
+### Writing the CRUD Capability
+
+Firstly you will need to create a new class that extends the
+`LaravelJsonApi\NonEloquent\Capabilities\CrudResource` capability class.
+
+For example, we would add the following `CrudSite` class for our `sites`
+resource. We inject our `SiteStorage` class using constructor dependency
+injection:
 
 ```php
 namespace App\JsonApi\V1\Sites\Capabilities;
 
-use App\Entities\Site;
 use App\Entities\SiteStorage;
-use LaravelJsonApi\NonEloquent\Capabilities\Crud;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudResource;
 
-class CrudSite extends Crud
+class CrudSite extends CrudResource
 {
 
     /**
@@ -750,85 +729,30 @@ class CrudSite extends Crud
         parent::__construct();
         $this->storage = $storage;
     }
-
-    /**
-     * Create a new site.
-     *
-     * @param array $validatedData
-     * @return Site
-     */
-    public function create(array $validatedData): Site
-    {
-        $site = Site::fromArray($validatedData['slug'], $validatedData);
-
-        $this->storage->store($site);
-
-        return $site;
-    }
-
-    /**
-     * Update the supplied site.
-     *
-     * @param Site $site
-     * @param array $validatedData
-     * @return void
-     */
-    public function update(Site $site, array $validatedData): void
-    {
-        if (array_key_exists('domain', $validatedData)) {
-            $site->setDomain($validatedData['domain']);
-        }
-
-        if (array_key_exists('name', $validatedData)) {
-            $site->setName($validatedData['name']);
-        }
-
-        if (array_key_exists('owner', $validatedData)) {
-            $site->setOwner($this->toOne($validatedData['owner']));
-        }
-
-        if (isset($validatedData['tags'])) {
-            $site->setTags(...$this->toMany($validatedData['tags']));
-        }
-
-        $this->storage->store($site);
-    }
-
-    /**
-     * Delete the supplied site.
-     *
-     * @param Site $site
-     * @return void
-     */
-    public function delete(Site $site): void
-    {
-        $this->storage->remove($site);
-    }
 }
 ```
 
-Once you have written this CRUD class, you must add it to your repository, by:
+This `CrudSite` class is where we will implement the methods to create,
+update and delete a `sites` resource. It is worth noting that we will only
+need to add the methods for the capabilities we want to support. For example,
+if our resource was not deletable in our API, then we would not need to add
+a delete method.
 
-1. Adding the `CreatesResources`, `UpdatesResources` and `DeletesResources`
-interfaces to your repository; AND
-2. Adding the `HasCrudCapability` trait to your repository; AND
-3. Returning your CRUD Capability class from the `crud()` method.
+Once this class is created, you will need to add it to your repository, by:
 
-For example, on our `SiteRepository` class:
+1. Adding the `LaravelJsonApi\NonEloquent\Concerns\HasCrudCapability` trait to
+your repository; AND
+2. Returning your CRUD class from the `crud()` method.
+
+For example, we would update our `SiteRepository` as follows:
 
 ```php
 namespace App\JsonApi\V1\Sites;
 
-use LaravelJsonApi\Contracts\Store\CreatesResources;
-use LaravelJsonApi\Contracts\Store\DeletesResources;
-use LaravelJsonApi\Contracts\Store\UpdatesResources;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
 use LaravelJsonApi\NonEloquent\Concerns\HasCrudCapability;
 
-class SiteRepository extends AbstractRepository implements
-    CreatesResources,
-    UpdatesResources,
-    DeletesResources
+class SiteRepository extends AbstractRepository
 {
 
     use HasCrudCapability;
@@ -838,30 +762,20 @@ class SiteRepository extends AbstractRepository implements
     /**
      * @inheritDoc
      */
-    protected function crud(): Capabilities\Crud
+    protected function crud(): Capabilities\CrudSite
     {
-        return Capabilities\Crud::make();
+        return Capabilities\CrudSite::make();
     }
 
 }
 ```
 
 :::tip
-The CRUD capabilty's `make()` method takes care of any constructor dependency
-injection. Note that unlike other capabilities, we do not need to call the
-`withServer()` and `withSchema()` methods on our capability. This is because
-the `HasCrudCapability` trait takes care of this for you.
+As with other capabilities, the `make()` method takes care of constructor
+dependency injection. You do not need to use the `withServer()` or
+`withSchema()` methods as our `HasCrudCapability` trait takes care of injecting
+those dependencies for you.
 :::
-
-As you can see from the example `CrudSite` capability shown above, the class
-implements three methods: `create`, `update` and `delete`. Each method implements
-the relevant logic.
-
-Note that in the example above, the `update()` method calls the `toOne()` and
-`toMany()` helper methods. These take care of converting JSON:API relationship
-identifiers to instances of the classes that the identifiers represent. This
-enables you to set relationship as needed, without having to worry about how
-to look up related classes from JSON:API identifiers.
 
 ### Create Capability
 
@@ -877,34 +791,44 @@ Content-Type: application/vnd.api+json
 }
 ```
 
-To implement this capability, create a new class that extends the
-`LaravelJsonApi\NonEloquent\Capabilities\CreateResource` class. For example:
+To add this capability we need to do two things:
+
+1. Add the `LaravelJsonApi\Contracts\Store\CreatesResources` interface to our
+repository; AND
+2. Implement the `create()` method on our `CrudSite` capability class.
+
+This is what our updated `SiteRepository` would look like:
+
+```php
+namespace App\JsonApi\V1\Sites;
+
+use LaravelJsonApi\Contracts\Store\CreatesResources;
+use LaravelJsonApi\NonEloquent\AbstractRepository;
+use LaravelJsonApi\NonEloquent\Concerns\HasCrudCapability;
+
+class SiteRepository extends AbstractRepository implements CreatesResources
+{
+
+    use HasCrudCapability;
+
+    // ...
+
+}
+```
+
+And we would add the `create()` method to our `CrudSite` capability class,
+for example:
 
 ```php
 namespace App\JsonApi\V1\Sites\Capabilities;
 
 use App\Entities\Site;
-use App\Entities\SiteStorage;
-use LaravelJsonApi\NonEloquent\Capabilities\CreateResource;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudResource;
 
-class CreateSite extends CreateResource
+class CrudSite extends CrudResource
 {
 
-    /**
-     * @var SiteStorage
-     */
-    private SiteStorage $storage;
-
-    /**
-     * CreateSite constructor.
-     *
-     * @param SiteStorage $storage
-     */
-    public function __construct(SiteStorage $storage)
-    {
-        parent::__construct();
-        $this->storage = $storage;
-    }
+    // ...
 
     /**
      * Create a new site.
@@ -927,60 +851,82 @@ class CreateSite extends CreateResource
 
         return $site;
     }
-
 }
 ```
 
-Once you have written this class, you must add it to your repository, by:
-
-1. Adding the `LaravelJsonApi\Contracts\Store\CreatesResources` interface to
-your repository; AND
-2. Returning the capability from the `create()` method.
-
-For example, on our `SiteRepository`:
-
-```php
-namespace App\JsonApi\V1\Sites;
-
-use LaravelJsonApi\Contracts\Store\CreatesResources;
-use LaravelJsonApi\NonEloquent\AbstractRepository;
-
-class SiteRepository extends AbstractRepository implements CreatesResources
-{
-
-    // ...
-
-    /**
-     * @inheritDoc
-     */
-    public function create(): Capabilities\CreateSite
-    {
-        return Capabilities\CreateSite::make()
-            ->withServer($this->server)
-            ->withSchema($this->schema);
-    }
-
-}
-```
-
-:::tip
-As with other capabilities, the `make()` method takes care of constructor
-dependency injection, while the `withServer()` and `withSchema()` methods
-inject the JSON:API server and schema in case they are needed within the
-capability.
-:::
-
-Our `CreateSite` capability class is relatively simple: it implements a
-`create` method. This receives the validated data received from the API client,
+The `create()` method receives the validated data sent by the API client,
 and returns the created `Site` object.
 
 Note that if the validated data contains JSON:API resource identifiers for
 relationships, you can use the `toOne()` and `toMany()` methods to convert
 the identifiers to actual instances of the related classes. This makes it
 easy to set relationships when creating new resources - as shown in the
-`CreateSite` example above.
+`CrudSite::create()` example above.
 
-### Modify Capability
+### Read Capability
+
+This capability is already implemented on the abstract repository class, and
+allows a resource to be retrieved using its resource `id`, i.e. this request:
+
+```http
+GET /api/v1/sites/<SLUG> HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+You only need to implement this capability yourself if you want to add
+additional features. For example, you might want to support filters, such as
+this request:
+
+```http
+GET /api/v1/sites/<SLUG>?filter[name]=Test HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+In this example, the client is asking whether the site with the provided slug
+has a name of `Test`. To support this, we will need to implement the `read()`
+method on our `CrudSite` capability class. (We do not need to add any
+interfaces to our repository, as the abstract repository already implements
+the relevant interface.)
+
+Here is our example `read()` method implemented on our `CrudSite` class:
+
+```php
+namespace App\JsonApi\V1\Sites\Capabilities;
+
+use App\Entities\Site;
+use Illuminate\Support\Str;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudResource;
+
+class CrudSite extends CrudResource
+{
+
+    // ...
+
+    /**
+     * Read the supplied site.
+     *
+     * @param Site $site
+     * @return Site|null
+     */
+    public function read(Site $site): ?Site
+    {
+        $filters = $this->queryParameters->filter();
+
+        if ($filters && $name = $filters->value('name')) {
+            return Str::contains($site->getName(), $name) ? $site : null;
+        }
+
+        return $site;
+    }
+}
+```
+
+The `read()` method receives the `Site` object that is subject of the request,
+and can return either the `Site` or `null`. In our example, we return `null`
+if the `name` filter does not match our `Site` class. Otherwise we return
+the `Site` object.
+
+### Update Capability
 
 This capability allows API clients to update resources, i.e. this request:
 
@@ -994,34 +940,44 @@ Content-Type: application/vnd.api+json
 }
 ```
 
-To implement this capability, create a new class that extends the
-`LaravelJsonApi\NonEloquent\Capabilities\ModifyResource` class. For example:
+To add this capability we need to do two things:
+
+1. Add the `LaravelJsonApi\Contracts\Store\UpdatesResources` interface to our
+repository; AND
+2. Implement the `update()` method on our `CrudSite` capability class.
+
+This is what our updated `SiteRepository` would look like:
+
+```php
+namespace App\JsonApi\V1\Sites;
+
+use LaravelJsonApi\Contracts\Store\UpdatesResources;
+use LaravelJsonApi\NonEloquent\AbstractRepository;
+use LaravelJsonApi\NonEloquent\Concerns\HasCrudCapability;
+
+class SiteRepository extends AbstractRepository implements UpdatesResources
+{
+
+    use HasCrudCapability;
+
+    // ...
+
+}
+```
+
+And we would add the `update()` method to our `CrudSite` capability class,
+for example:
 
 ```php
 namespace App\JsonApi\V1\Sites\Capabilities;
 
 use App\Entities\Site;
-use App\Entities\SiteStorage;
-use LaravelJsonApi\NonEloquent\Capabilities\ModifyResource;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudResource;
 
-class ModifySite extends ModifyResource
+class CrudSite extends CrudResource
 {
 
-    /**
-     * @var SiteStorage
-     */
-    private SiteStorage $storage;
-
-    /**
-     * ModifySite constructor.
-     *
-     * @param SiteStorage $storage
-     */
-    public function __construct(SiteStorage $storage)
-    {
-        parent::__construct();
-        $this->storage = $storage;
-    }
+    // ...
 
     /**
      * Update the site.
@@ -1052,60 +1008,17 @@ class ModifySite extends ModifyResource
 
         return $site;
     }
-
-}
-```
-Once you have written this class, you must add it to your repository, by:
-
-1. Adding the `LaravelJsonApi\Contracts\Store\UpdatesResources` interface to
-your repository; AND
-2. Returning the capability from the `update()` method.
-
-For example, on our `SiteRepository`:
-
-```php
-namespace App\JsonApi\V1\Sites;
-
-use LaravelJsonApi\Contracts\Store\CreatesResources;
-use LaravelJsonApi\NonEloquent\AbstractRepository;
-
-class SiteRepository extends AbstractRepository implements CreatesResources
-{
-
-    // ...
-
-    /**
-     * @inheritDoc
-     */
-    public function update($modelOrResourceId): Capabilities\ModifySite
-    {
-        return Capabilities\ModifySite::make()
-            ->withServer($this->server)
-            ->withSchema($this->schema)
-            ->withRepository($this)
-            ->withModelOrResourceId($modelOrResourceId);
-    }
-
 }
 ```
 
-:::tip
-As with other capabilities, the `make()` method takes care of constructor
-dependency injection, while the `withServer()` and `withSchema()` methods
-inject the JSON:API server and schema in case they are needed within the
-capability.
-
-With this capability we also inject the repository via the `withRepository()`
-method, and pass in the `$modelOrResourceId` that is being updated.
-:::
-
-Our `ModifySite` capability class is relatively simple: it implements an
-`update` method. This receives the `Site` being updated and the validated data
-received from the API client.
+The `update()` method receives the `Site` being updated and the validated data
+sent by the API client.
 
 Note that if the validated data contains JSON:API resource identifiers for
 relationships, you can use the `toOne()` and `toMany()` methods to convert
-the identifiers to actual instances of the related classes.
+the identifiers to actual instances of the related classes. This makes it easy
+to set relationships when update resources - as shown in the
+`CrudSite::update()` example above.
 
 ### Delete Capability
 
@@ -1116,76 +1029,84 @@ DELETE /api/v1/sites/<SLUG> HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
-This capability does not need a separate capability class - it is implemented
-on the repository by:
+To add this capability we need to do two things:
 
-1. Adding the `LaravelJsonApi\Contracts\Store\DeletesResources` interface to the
+1. Add the `LaravelJsonApi\Contracts\Store\DeletesResources` interface to our
 repository; AND
-2. Implementing the `delete` method.
+2. Implement the `delete()` method on our `CrudSite` capability class.
 
-For example, on our `SiteRepository`:
+This is what our updated `SiteRepository` would look like:
 
 ```php
 namespace App\JsonApi\V1\Sites;
 
 use LaravelJsonApi\Contracts\Store\DeletesResources;
 use LaravelJsonApi\NonEloquent\AbstractRepository;
+use LaravelJsonApi\NonEloquent\Concerns\HasCrudCapability;
 
 class SiteRepository extends AbstractRepository implements DeletesResources
+{
+
+    use HasCrudCapability;
+
+    // ...
+
+}
+```
+
+And we would add the `delete()` method to our `CrudSite` capability class,
+for example:
+
+```php
+namespace App\JsonApi\V1\Sites\Capabilities;
+
+use App\Entities\Site;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudResource;
+
+class CrudSite extends CrudResource
 {
 
     // ...
 
     /**
-     * @inheritDoc
+     * Delete the site.
+     *
+     * @param Site $site
+     * @return void
      */
-    public function delete($modelOrResourceId): void
+    public function delete(Site $site): void
     {
-        if (\is_string($modelOrResourceId)) {
-            $site = $this->findOrFail($modelOrResourceId);
-        } else {
-            $site = $modelOrResourceId;
-        }
-
         $this->storage->remove($site);
     }
-
 }
 ```
 
-As the delete method receives either a string resource `id` or the actual
-model itself (in this case, the `Site` object), we handle both as shown in
-the example. Afterwards, we take care of deleting the object, which in this
-case involves calling the `SiteStorage::remove()` method.
+The `delete()` method receives the `Site` being deleted, and removes it from
+storage.
 
-### Modify Relations Capability
+## Relationship Capabilities
 
-This capability allows API clients to modify a resource's relationships
-via relationship endpoints. For example:
+If your resource allows relationships to be modified via relationship endpoints,
+you will need to add a *CRUD Relations* capability to your repository. This
+capability also allows you to customise reading a specific resource's
+relationships.
 
-```http
-PATCH /api/v1/sites/<SLUG>/relationships/tags HTTP/1.1
-Accept: application/vnd.api+json
-Content-Type: application/vnd.api+json
+### Writing the CRUD Relations Capability
 
-{
-    // ...
-}
-```
+Firstly you will need to create a new class that extends the
+`LaravelJsonApi\NonEloquent\Capabilities\CrudRelations` capability class.
 
-To implement this capability, create a new class that extends the
-`LaravelJsonApi\NonEloquent\Capabilities\ModifyRelations` class. For example:
+For example, we would add the following `CrudSiteRelations` class for our
+`sites` resource. We inject our `SiteStorage` class using constructor
+dependency injection:
 
 ```php
 namespace App\JsonApi\Sites\Capabilities;
 
-use App\Entities\Site;
 use App\Entities\SiteStorage;
-use App\Entities\Tag;
-use App\Entities\User;
-use LaravelJsonApi\NonEloquent\Capabilities\ModifyRelations;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudRelations;
 
-class ModifySiteRelationships extends ModifyRelations
+class CrudSiteRelations extends CrudRelations
 {
 
     /**
@@ -1204,6 +1125,173 @@ class ModifySiteRelationships extends ModifyRelations
         $this->storage = $storage;
     }
 
+}
+```
+
+The `CrudSiteRelations` class is where we will implement the methods to
+read or set a *to-one* relation, and the methods to read, sync, attach or
+detach a *to-many* relation. It is worth noting that we only need to add the
+methods for the relationships and capabilities that we need to support.
+
+Once this class is created, you will need to add it to your repository, by:
+
+1. Adding the `LaravelJsonApi\NonEloquent\Concerns\HasRelationsCapability`
+trait to your repository; AND
+2. Returning the CRUD Relations class from the `relations()` method.
+
+For example, we would update our `SiteRepository` as follows:
+
+```php
+namespace App\JsonApi\V1\Sites;
+
+use LaravelJsonApi\NonEloquent\AbstractRepository;
+use LaravelJsonApi\NonEloquent\Concerns\HasRelationsCapability;
+
+class SiteRepository extends AbstractRepository
+{
+
+    use HasRelationsCapability;
+
+    // ...
+
+    /**
+     * @inheritDoc
+     */
+    protected function relations(): Capabilities\CrudSiteRelations
+    {
+        return Capabilities\CrudSiteRelations::make();
+    }
+
+}
+```
+
+:::tip
+As with other capabilities, the `make()` method takes care of constructor
+dependency injection. You do not need to use the `withServer()` or `withSchema()`
+methods as our `HasRelationsCapability` trait takes care of injecting those
+dependencies for you.
+:::
+
+### Read Relations Capability
+
+This capability is already implemented on the abstract repository, and allows
+the value of a resource's relationship to be retrieved by both of these
+requests:
+
+```http
+GET /api/v1/sites/<SLUG>/<RELATION> HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+And
+
+```http
+GET /api/v1/sites/<SLUG>/relationships/<RELATION> HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+You only need to implement this capability yourself if you want to add additional
+features. For example, you might want to allow a *to-many* relationship to be
+filtered.
+
+If we wanted to do this for the `tags` relationship of our `sites` resource,
+we would add the `getTags()` method on our `CrudSiteRelations` capability
+class. (We do not need to add any interfaces to our repository, as the abstract
+repository already implements the relevant interface.)
+
+Here is our example `getTags()` method implemented on our `CrudSiteRelations`
+class:
+
+```php
+namespace App\JsonApi\Sites\Capabilities;
+
+use App\Entities\Site;
+use App\Entities\User;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudRelations;
+
+class CrudSiteRelations extends CrudRelations
+{
+
+    // ...
+
+    /**
+     * Get the tags relationship
+     *
+     * @param Site $site
+     * @return iterable
+     */
+    public function getTags(Site $site): iterable
+    {
+        $tags = collect($site->getTags());
+
+        $filters = $this->queryParameters->filter();
+
+        if ($filters && $name = $filters->value('name')) {
+            $tags = $tags->filter(
+                fn(Tag $tag) => Str::contains($tag->getName(), $name)
+            );
+        }
+
+        return $tags;
+    }
+}
+```
+
+### Modify To-One Capability
+
+This capability allows API clients to modify a resource's *to-one* relationships
+via relationship endpoints. For example:
+
+```http
+PATCH /api/v1/sites/<SLUG>/relationships/owner HTTP/1.1
+Accept: application/vnd.api+json
+Content-Type: application/vnd.api+json
+
+{
+    // ...
+}
+```
+
+To add this capability we need to do two things:
+
+1. Add the `LaravelJsonApi\Contracts\Store\ModifiesToOne` interface to our
+repository; AND
+2. Add the `set<Relation>` method to our `CrudSiteRelations` capability class.
+
+This is what our updated `SiteRepository` would look like:
+
+```php
+namespace App\JsonApi\V1\Sites;
+
+use LaravelJsonApi\Contracts\Store\ModifiesToOne;
+use LaravelJsonApi\NonEloquent\AbstractRepository;
+use LaravelJsonApi\NonEloquent\Concerns\HasRelationsCapability;
+
+class SiteRepository extends AbstractRepository implements ModifiesToOne
+{
+
+    use HasRelationsCapability;
+
+    // ...
+
+}
+```
+
+And we would add the `setOwner()` method to our `CrudSiteRelations` capability
+class, for example:
+
+```php
+namespace App\JsonApi\Sites\Capabilities;
+
+use App\Entities\Site;
+use App\Entities\User;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudRelations;
+
+class CrudSiteRelations extends CrudRelations
+{
+
+    // ...
+
     /**
      * Set the owner relationship.
      *
@@ -1217,6 +1305,71 @@ class ModifySiteRelationships extends ModifyRelations
 
         $this->storage->store($site);
     }
+}
+```
+
+The `set<Relation>` method receives the `Site` class that the relationship is
+on, and the related class that was provided by the client or `null` if an
+empty *to-one* relationship was provided.
+
+Our example implementation modifies the relationship and then stores the updated
+`Site` object.
+
+### Modify To-Many Capability
+
+This capability allows API clients to modify a resource's *to-many* relationships
+via relationship endpoints. For example:
+
+```http
+PATCH /api/v1/sites/<SLUG>/relationships/tags HTTP/1.1
+Accept: application/vnd.api+json
+Content-Type: application/vnd.api+json
+
+{
+    // ...
+}
+```
+
+To add this capability we need to do two things:
+
+1. Add the `LaravelJsonApi\Contracts\Store\ModifiesToMany` interface to our
+repository; AND
+2. Add the `set<Relation>`, `attach<Relation>`, `detach<Relation>` methods to
+our `CrudSiteRelations` capability class.
+
+This is what our updated `SiteRepository` would look like:
+
+```php
+namespace App\JsonApi\V1\Sites;
+
+use LaravelJsonApi\Contracts\Store\ModifiesToMany;
+use LaravelJsonApi\NonEloquent\AbstractRepository;
+use LaravelJsonApi\NonEloquent\Concerns\HasRelationsCapability;
+
+class SiteRepository extends AbstractRepository implements ModifiesToMany
+{
+
+    use HasRelationsCapability;
+
+    // ...
+
+}
+```
+
+And we would add the following methods to our `CrudSiteRelations` capability
+class for the `tags` relationship:
+
+```php
+namespace App\JsonApi\Sites\Capabilities;
+
+use App\Entities\Site;
+use App\Entities\Tag;
+use LaravelJsonApi\NonEloquent\Capabilities\CrudRelations;
+
+class CrudSiteRelations extends CrudRelations
+{
+
+    // ...
 
     /**
      * Set the tags relationship.
@@ -1226,6 +1379,10 @@ class ModifySiteRelationships extends ModifyRelations
      */
     public function setTags(Site $site, array $tags): void
     {
+        $tags = collect($tags)->unique(
+          fn(Tag $tag) => $tag->getSlug()
+        );
+
         $site->setTags(...$tags);
 
         $this->storage->store($site);
@@ -1241,7 +1398,7 @@ class ModifySiteRelationships extends ModifyRelations
     {
         $all = collect($site->getTags())
             ->merge($tags)
-            ->unique(fn (Tag $tag) => $tag->getSlug());
+            ->unique(fn(Tag $tag) => $tag->getSlug());
 
         $site->setTags(...$all);
 
@@ -1261,7 +1418,8 @@ class ModifySiteRelationships extends ModifyRelations
             ->map(fn(Tag $tag) => $tag->getSlug());
 
         $all = collect($site->getTags())
-            ->reject(fn(Tag $tag) => $remove->contains($tag->getSlug()));
+            ->reject(fn(Tag $tag) => $remove->contains($tag->getSlug()))
+            ->unique(fn(Tag $tag) => $tag->getSlug());
 
         $site->setTags(...$all);
 
@@ -1270,311 +1428,15 @@ class ModifySiteRelationships extends ModifyRelations
 }
 ```
 
-Once you have written this class, you must add it to your repository, by:
-
-1. Adding the `LaravelJsonApi\Contracts\Store\ModifiesToOne` and `ModifiesToMany`
-interfaces to your repository; AND
-2. Adding the `HasModifyRelationsCapability` trait to your repository; AND
-3. Implementing the `relations()` method on your repository.
-
-For example, on our `SiteRepository`:
-
-```php
-namespace App\JsonApi\V1\Sites;
-
-use LaravelJsonApi\Contracts\Store\ModifiesToOne;
-use LaravelJsonApi\Contracts\Store\ModifiesToMany;
-use LaravelJsonApi\NonEloquent\AbstractRepository;
-use LaravelJsonApi\NonEloquent\Concerns\HasModifyRelationsCapability;
-
-class SiteRepository extends AbstractRepository implements
-    ModifiesToOne,
-    ModifiesToMany
-{
-
-    use HasModifyRelationsCapability;
-
-    // ...
-
-    /**
-     * @inheritDoc
-     */
-    protected function relations(): Capabilities\ModifySiteRelationships
-    {
-        return Capabilities\ModifySiteRelationships::make();
-    }
-
-}
-```
-
-:::tip
-The capabilty's `make()` method takes care of any constructor dependency
-injection. Note that unlike other capabilities, we do not need to call the
-`withServer()` and `withSchema()` methods on our capability. This is because
-the `HasModifyRelationsCapability` trait takes care of this for you.
-:::
-
-As you can see from the `ModifySiteRelationships` example above, we support
-modifying specific relations by adding methods to the capability class.
-
-For a *to-one* relationship, we add a method called `set<Relation>`, e.g.
-in our example class the `setOwner` method. This receives the `Site` that
-is being modified and the related class or `null`.
-
-For a *to-many* relationship, we can add the following methods:
-
-- `set<Relation>`, to completely replace the relationship value.
-- `attach<Relation>`, to attach objects to the relationship.
-- `detach<Relation`, to remove objects from the relationship.
-
-The *to-many* methods receive the `Site` that is being modified, and an array
-of the related objects. This is shown in the example `setTags()`, `attachTags()`
-and `detachTags()` methods above.
-
-### Query One Capability
-
-This capability is already implemented on our `AbstractRepository` class, and
-allows a resource to be retrieved using its resource `id`, i.e. this request:
-
-```http
-GET /api/v1/sites/<SLUG> HTTP/1.1
-Accept: application/vnd.api+json
-```
-
-You only need to implement this capability yourself if you want to add
-additional features. For example, you might want to support filters, such as
-this request:
-
-```http
-GET /api/v1/sites/<SLUG>?filter[name]=Test HTTP/1.1
-Accept: application/vnd.api+json
-```
-
-In this example, the client is asking whether the site with the provided slug
-has a name of `Test`. To support this, we will either need to add our own
-*query-one* capability; or if we are already using the *CRUD* capability, we
-can add it to that class.
-
-To implement this capability when not using the *CRUD* capability, create a new
-class that extends the `LaravelJsonApi\NonEloquent\Capabilities\QueryOne` class.
-For example:
-
-```php
-namespace App\JsonApi\V1\Sites\Capabilities;
-
-use App\Entities\Site;
-use Illuminate\Support\Str;
-use LaravelJsonApi\NonEloquent\Capabilities\QueryOne;
-
-class QuerySite extends QueryOne
-{
-
-    /**
-     * Read the supplied site.
-     *
-     * @param Site $site
-     * @return Site|null
-     */
-    public function read(Site $site): ?Site
-    {
-        $filters = $this->queryParameters->filter();
-
-        if ($filters && $name = $filters->value('name')) {
-            return Str::contains($site->getName(), $name) ? $site : null;
-        }
-
-        return $site;
-    }
-
-}
-```
-
-We would then need to add this capability to our repository, by overloading
-the `queryOne()` method to return our `QuerySite` class:
-
-```php
-namespace App\JsonApi\V1\Sites;
-
-use LaravelJsonApi\NonEloquent\AbstractRepository;
-
-class SiteRepository extends AbstractRepository
-{
-
-    // ...
-
-    /**
-     * @inheritDoc
-     */
-    public function queryOne($modelOrResourceId): Capabilities\QuerySite
-    {
-        return Capabilities\QuerySite::make()
-            ->withServer($this->server)
-            ->withSchema($this->schema)
-            ->withRepository($this)
-            ->withModelOrResourceId($modelOrResourceId);
-    }
-
-}
-```
-
-If you are using the *CRUD* capability, then just add the `read()` method
-(as shown above on the `QuerySite` class) to your CRUD capability class.
-You **do not** need to make any changes to your repository when doing this.
-
-### Query To-One Capability
-
-This capability is already implemented on our `AbstractRepository` class, and
-allows a relationship to be read using a relationship endpoint. For example:
-
-```http
-GET /api/v1/sites/<SLUG>/owner HTTP/1.1
-Accept: application/vnd.api+json
-```
-
-You only need to implement this capability yourself if you want to add additional
-features, for example supporting filters.
-
-To implement this capability, create a new class that extends the
-`LaravelJsonApi\NonEloquent\Capabilities\QueryToOne` class. For example:
-
-```php
-namespace App\JsonApi\V1\Sites\Capabilities;
-
-use LaravelJsonApi\NonEloquent\Capabilities\QueryToOne;
-
-class QuerySiteToOneRelation extends QueryToOne
-{
-
-    /**
-     * Read the site's owner relationship.
-     *
-     * @param Site $site
-     * @return User|null
-     */
-    public function getOwner(Site $site): ?User
-    {
-        $user = $site->getOwner();
-
-        // implement any features you want, e.g. filters.
-
-        return $user;
-    }
-
-}
-```
-
-We would then need to add this capability to our repository, by overloading
-the `queryToOne()` method to return the `QuerySiteToOneRelation` capability:
-
-```php
-namespace App\JsonApi\V1\Sites;
-
-use LaravelJsonApi\NonEloquent\AbstractRepository;
-
-class SiteRepository extends AbstractRepository
-{
-
-    // ...
-
-    /**
-     * @inheritDoc
-     */
-    public function queryToOne($modelOrResourceId, string $fieldName): Capabilities\QuerySiteToOneRelation
-    {
-      return Capabilities\QuerySiteToOneRelation::make()
-          ->withServer($this->server)
-          ->withSchema($this->schema)
-          ->withRepository($this)
-          ->withModelOrResourceId($modelOrResourceId)
-          ->withFieldName($fieldName);
-    }
-
-}
-```
-
-As shown in the above examples, we implement a `get<FieldName>` method on the
-capability class. This is where we can add features, such as filters.
-
-If you do not implement a method for a relationship field, the capability class
-falls back to our default implementation. This is to read the relationship value
-from the resource class, i.e. `SiteResource` in our example.
-
-### Query To-Many Capability
-
-This capability is already implemented on our `AbstractRepository` class, and
-allows a relationship to be read using a relationship endpoint. For example:
-
-```http
-GET /api/v1/sites/<SLUG>/tags HTTP/1.1
-Accept: application/vnd.api+json
-```
-
-You only need to implement this capability yourself if you want to add
-additional features, for example supporting filters.
-
-To implement this capability, create a new class that extends the
-`LaravelJsonApi\NonEloquent\Capabilities\QueryToMany` class. For example:
-
-```php
-namespace App\JsonApi\V1\Sites\Capabilities;
-
-use LaravelJsonApi\NonEloquent\Capabilities\QueryToMany;
-
-class QuerySiteToManyRelation extends QueryToMany
-{
-
-    /**
-     * Read the site's tags relationship.
-     *
-     * @param Site $site
-     * @return array
-     */
-    public function getTags(Site $site): array
-    {
-        $tags = $site->getTags();
-
-        // implement any features you want, e.g. filters.
-
-        return $tags;
-    }
-
-}
-```
-We would then need to add this capability to our repository, by overloading
-the `queryToMany()` method to return the `QuerySiteToOneRelation` capability:
-
-```php
-namespace App\JsonApi\V1\Sites;
-
-use LaravelJsonApi\NonEloquent\AbstractRepository;
-
-class SiteRepository extends AbstractRepository
-{
-
-    // ...
-
-    /**
-     * @inheritDoc
-     */
-    public function queryToMany($modelOrResourceId, string $fieldName): Capabilities\QuerySiteToManyRelation
-    {
-      return Capabilities\QuerySiteToManyRelation::make()
-          ->withServer($this->server)
-          ->withSchema($this->schema)
-          ->withRepository($this)
-          ->withModelOrResourceId($modelOrResourceId)
-          ->withFieldName($fieldName);
-    }
-
-}
-```
-
-As shown in the above examples, we implement a `get<FieldName>` method on the
-capability class. This is where we can add features, such as filters.
-
-If you do not implement a method for a relationship field, the capability class
-falls back to our default implementation. This is to read the relationship value
-from the resource class, i.e. `SiteResource` in our example.
+The `set<Relation>` methods receive the `Site` class that the relationship is
+on, and an array of the related classes that the client specified in the
+request. In the above example, this is an array of `Tag` classes.
+
+Note that the `setTags()` method completely replaces the entire relationship,
+while the `attachTags()` and `detachTags()` just attach and detach tags
+respectively. Note that the JSON:API specification says that a related resource
+can only appear in the relationship once, so you should ensure there are no
+duplicates when attaching and detaching related resources.
 
 ## Pagination
 
