@@ -34,7 +34,6 @@ schema's `pagination` method. For example:
 ```php
 namespace App\JsonApi\V1\Posts;
 
-use LaravelJsonApi\Contracts\Pagination\Paginator;
 use LaravelJsonApi\Eloquent\Pagination\PagePagination;
 use LaravelJsonApi\Eloquent\Schema;
 
@@ -45,9 +44,9 @@ class PostSchema extends Schema
     /**
      * Get the resource paginator.
      *
-     * @return Paginator|null
+     * @return PagePagination
      */
-    public function pagination(): ?Paginator
+    public function pagination(): PagePagination
     {
         return PagePagination::make();
     }
@@ -101,7 +100,7 @@ To change the default page parameters of `"number"` and `"size"`, use the
 For example, to change them to `"page"` and `"limit"`:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()
         ->withPageKey('page')
@@ -123,7 +122,7 @@ By default the page-based approach uses Laravel's length-aware pagination.
 To use simple pagination instead, call the `withSimplePagination` method:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withSimplePagination();
 }
@@ -172,7 +171,6 @@ schema's `pagination` method. For example:
 ```php
 namespace App\JsonApi\V1\Posts;
 
-use LaravelJsonApi\Contracts\Pagination\Paginator;
 use LaravelJsonApi\Eloquent\Pagination\CursorPagination;
 use LaravelJsonApi\Eloquent\Schema;
 
@@ -183,9 +181,9 @@ class PostSchema extends Schema
     /**
      * Get the resource paginator.
      *
-     * @return Paginator|null
+     * @return CursorPagination
      */
-    public function pagination(): ?Paginator
+    public function pagination(): CursorPagination
     {
         return CursorPagination::make();
     }
@@ -236,7 +234,7 @@ the `withLimitKey`, `withAfterKey` and `withBeforeKey` methods as needed.
 For example:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): CursorPagination
 {
     return CursorPagination::make()
         ->withLimitKey('size')
@@ -266,7 +264,7 @@ method. If you prefer your list to be in ascending order, use the
 `withAscending` method. For example:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): CursorPagination
 {
     return CursorPagination::make()
         ->withCursorColumn('published_at')
@@ -350,7 +348,7 @@ cursor-based paginators. For example, to change the default to 25
 per-page:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withDefaultPerPage(25);
 }
@@ -379,7 +377,7 @@ If you want to snake-case the meta keys (e.g. `current_page`), use the
 `withSnakeCaseMeta` method:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withSnakeCaseMeta();
 }
@@ -389,7 +387,7 @@ If you need to dash-case the meta keys (e.g. `current-page`), use the
 `withDashCaseMeta` method:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withDashCaseMeta();
 }
@@ -405,7 +403,7 @@ If you want to use a different key for the nested page meta, then use the
 `withMetaKey` method:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withMetaKey('paginator');
 }
@@ -433,7 +431,7 @@ If you want to disable nesting of the page details in the top-level
 `meta`, you can use the `withoutNestedMeta` method:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withoutNestedMeta();
 }
@@ -461,7 +459,7 @@ If you do not want page meta added to your response document, use the
 `withoutMeta` method:
 
 ```php
-public function pagination(): ?Paginator
+public function pagination(): PagePagination
 {
     return PagePagination::make()->withoutMeta();
 }
@@ -610,7 +608,7 @@ class PostSchema extends Schema
         ];
     }
 
-    public function pagination(): ?Paginator
+    public function pagination(): PagePagination
     {
         return PagePagination::make();
     }
