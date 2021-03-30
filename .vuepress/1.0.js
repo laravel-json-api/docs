@@ -75,8 +75,10 @@ module.exports = [
     collapsable: false,
     children: prefix('digging-deeper', [
       'artisan',
+      'countable',
       'localisation',
       'proxies',
+      'non-eloquent',
       'polymorphic-to-many',
     ]),
   },

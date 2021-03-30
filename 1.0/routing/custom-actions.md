@@ -168,14 +168,14 @@ Firstly we will register the action in our routing:
 ```php
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->namespace('Api\V1')
     ->resources(function ($server) {
-        $server->resource('posts')->relationships(function ($relationships) {
-            $relationships->hasOne('author')->readOnly();
-            $relationships->hasMany('tags');
-        })->actions('-actions', function ($actions) {
-            $actions->delete('purge');
-        });
+        $server->resource('posts', PostController::class)
+            ->relationships(function ($relationships) {
+                $relationships->hasOne('author')->readOnly();
+                $relationships->hasMany('tags');
+            })->actions('-actions', function ($actions) {
+                $actions->delete('purge');
+            });
 
         // ...other resources
     });
@@ -263,14 +263,14 @@ to indicate that the URL relates to a specific resource:
 ```php
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->namespace('Api\V1')
     ->resources(function ($server) {
-        $server->resource('posts')->relationships(function ($relationships) {
-            $relationships->hasOne('author')->readOnly();
-            $relationships->hasMany('tags');
-        })->actions('-actions', function ($actions) {
-            $actions->withId()->post('purge');
-        });
+        $server->resource('posts', PostController::class)
+            ->relationships(function ($relationships) {
+                $relationships->hasOne('author')->readOnly();
+                $relationships->hasMany('tags');
+            })->actions('-actions', function ($actions) {
+                $actions->withId()->post('purge');
+            });
 
         // ...other resources
     });

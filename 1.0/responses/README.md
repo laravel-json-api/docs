@@ -16,11 +16,13 @@ then you will also need to construct responses.
 
 ## Response Classes
 
-We provide the following JSON:API response classes for returning a resource
-or resources in a JSON:API document:
+We provide the following JSON:API response classes for returning responses that
+contain a JSON:API document in their body:
 
 - [Data Response](#data-response)
+- [Related Response](#related-response)
 - [Relationship Response](#relationship-response)
+- [Meta Response](#meta-response)
 
 We also provide the [Error Response](./errors.md#responses) class, which
 is covered in the [errors chapter](./errors.md).
@@ -75,6 +77,42 @@ response, use the `didCreate` method:
 return DataResponse::make($model)->didCreate();
 ```
 
+### Related Response
+
+Our `LaravelJsonApi\Core\Responses\RelatedResponse` class is used for the
+response to read the related resources in a relationship. E.g.
+`GET /api/v1/posts/123/tags` would read the related `tags` resources.
+
+Like our other response classes, this class takes care of converting the value
+provided to the correct resource class, or converting values when iterating
+over them.
+
+To create a related response, you need to provide three arguments:
+
+1. The model to which the relationship belongs;
+2. The JSON:API field name of the relationship; and
+3. The related value: either a model, models or `null`.
+
+For example, given a `post` model, with a `tags` relationship:
+
+```php
+use LaravelJsonApi\Core\Response\RelatedResponse;
+
+return new RelatedResponse($post, 'tags', $post->tags);
+// or
+return RelatedResponse::make($post, 'tags', $post->tags)
+    ->withHeader('X-Foo', 'Bar')
+    ->withMeta(['foo' => 'bar']);
+```
+
+By default this class will merge the relationship's `meta` into the top-level
+`meta` member of the JSON:API document. If you do not want this merging to occur,
+use the `withoutRelationshipMeta()` method, for example:
+
+```php
+return RelatedResponse::make($post, 'tags', $post->tags)
+  ->withoutRelationshipMeta();
+```
 
 ### Relationship Response
 
@@ -83,16 +121,16 @@ for the response to a relationship endpoint, e.g.
 `GET /api/v1/posts/123/relationships/tags`. These endpoints return
 resource identifiers instead of resources.
 
-Again this class takes care of converting the value provided to the
-correct resource class, or converting values when iterating over them.
-It also adds the top-level relationship links to the JSON:API document in
+Like other response classes, this class takes care of converting the value
+provided to the correct resource class, or converting values when iterating over
+them. It also adds the top-level relationship links to the JSON:API document in
 the response.
 
 To create a relationship response, you need to provide three arguments:
 
 1. The model to which the relationship belongs;
 2. The JSON:API field name of the relationship; and
-3. The related model or models, or `null`.
+3. The related value: either a model, models or `null`.
 
 For example, given a `post` model, with a `tags` relationship:
 
@@ -104,6 +142,36 @@ return new RelationshipResponse($post, 'tags', $post->tags);
 return RelationshipResponse::make($post, 'tags', $post->tags)
     ->withHeader('X-Foo', 'Bar')
     ->withMeta(['foo' => 'bar']);
+```
+
+By default this class will merge the relationship's `meta` into the top-level
+`meta` member of the JSON:API document. If you do not want this merging to occur,
+use the `withoutRelationshipMeta()` method, for example:
+
+```php
+return RelationshipResponse::make($post, 'tags', $post->tags)
+  ->withoutRelationshipMeta();
+```
+
+### Meta Response
+
+Our `LaravelJsonApi\Core\Responses\MetaResponse` class allows you to return a
+a JSON:API response that has a top-level `meta` member, but no `data` member.
+This is allowed by the specification.
+
+To use this class, you just need to provide the meta value to either the
+constructor or the static `make` method. The meta value can be an array or
+a Laravel collection.
+
+For example:
+
+```php
+use LaravelJsonApi\Core\Response\MetaResponse;
+
+return new MetaResponse(['foo' => 'bar']);
+// or
+return MetaResponse::make(['foo' => 'bar'])
+    ->withHeader('X-Foo', 'Bar');
 ```
 
 ## JSON:API Object

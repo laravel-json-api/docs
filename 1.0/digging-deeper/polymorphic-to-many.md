@@ -374,7 +374,7 @@ in our server's `serving()` method:
 
 ```php
 use App\JsonApi\V1\Media\MediaCollectionQuery;
-use LaravelJsonApi\Laravel\Http\Requests\RequestResolver;
+use LaravelJsonApi\Laravel\LaravelJsonApi;
 
 /**
  * Bootstrap the server when it is handling an HTTP request.
@@ -383,10 +383,7 @@ use LaravelJsonApi\Laravel\Http\Requests\RequestResolver;
  */
 public function serving(): void
 {
-    RequestResolver::registerCollectionQuery(
-      'media',
-      MediaCollectionQuery::class
-    );
+    LaravelJsonApi::registerCollectionQuery(MediaCollectionQuery::class, 'media');
 }
 ```
 

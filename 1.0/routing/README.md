@@ -20,13 +20,16 @@ To define routes available in a JSON:API server, register the API in
 your `routes/api.php` file as follows:
 
 ```php
+use App\Http\Controllers\Api\V1\PostController;
+use App\Http\Controllers\Api\V1\TagController;
+use App\Http\Controllers\Api\V1\UserController;
+
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->namespace('Api\V1')
     ->resources(function ($server) {
-        $server->resource('posts');
-        $server->resource('tags');
-        $server->resource('users');
+        $server->resource('posts', PostController::class);
+        $server->resource('tags', TagController::class);
+        $server->resource('users', UserController::class);
     });
 ```
 
@@ -47,43 +50,9 @@ resource type in our server. This is similar to a
 
 ### Controllers and Namespaces
 
-Laravel's route groups have traditionally allowed controller namespaces
-to be set via groups. In the following example, the `namespace` method
-is called, instructing Laravel that controllers for our server are
-in the `App\Http\Controllers\Api\V1` namespace:
-
-```php
-JsonApiRoute::server('v1')
-    ->prefix('v1')
-    ->namespace('Api\V1')
-    ->resources(function ($server) {
-        $server->resource('posts');
-    });
-```
-
-This will work if the `$namespace` property is set on your
-`App\Providers\RouteServiceProvider`. In this case, we do not need to
-specify a controller when registering a resource type using the `resource`
-method. The controller is assumed to be the singular form of the resource
-type. For example, the `blog-posts` resource type would be expected to have
-a `BlogPostController` in the specified namespace.
-
-If your controller does not conform to this convention, provide the
-controller name as the second argument to the `resource` method:
-
-```php
-JsonApiRoute::server('v1')
-    ->prefix('v1')
-    ->namespace('Api\V1')
-    ->resources(function ($server) {
-        $server->resource('blog-posts', 'PostController');
-    });
-```
-
-**If you are not using namespacing**, i.e. the `$namespace` property is not
-set on your `App\Providers\RouteServiceProvider`, you will **always** need
-to provide the fully-qualified controller class name to the `resource`
-method. For example:
+On a fresh installation of a Laravel 8 application, you will need to provide the
+fully-qualified namespace of the controller when register JSON:API resource
+routes. For example:
 
 ```php
 use App\Http\Controllers\Api\V1\PostController;
@@ -97,11 +66,77 @@ JsonApiRoute::server('v1')
     });
 ```
 
-:::tip
-As explained in the [Controllers chapter](./controllers.md), it is also
-possible to use a default `JsonApiController`. This can be used when
-you do not need to customise any of our default action implementations.
-:::
+As controllers are optional, it is also possible to use the default
+`JsonApiController`. For example:
+
+```php
+use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->resources(function ($server) {
+        $server->resource('posts', JsonApiController::class);
+        $server->resources('tags', JsonApiController::class);
+    });
+```
+
+Both the above examples work if the `$namespace` property of your application's
+`RouteServiceProvider` is **not** set. This is the case in a fresh installation
+of a Laravel 8 application.
+
+Traditionally, Laravel's route groups have allowed controller namespaces
+to be set via groups. This works if the `$namespace` property on your
+`RouteServiceProvider` is set to the base namespace of your controllers,
+e.g. `App\Http\Controllers`. **Your application may be set up like this if it
+was created before Laravel 8.**
+
+In this scenario you should call the `namespace()` method when registering the
+routes for a JSON:API sever. Providing the controller name to the `resource()`
+method then becomes *optional*. In the following example, the `namespace()`
+method is called,  instructing Laravel that controllers for our server are in
+the `App\Http\Controllers\Api\V1` namespace:
+
+```php
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->namespace('Api\V1')
+    ->resources(function ($server) {
+        // Expects controller to be `App\Http\Api\V1\PostController`
+        $server->resource('posts');
+    });
+```
+
+In this case, the controller is assumed to be the singular form of the resource
+type. For example, the `blog-posts` resource type would be expected to have a
+`BlogPostController` in the specified namespace.
+
+If your controller does not conform to this convention, provide the
+controller name as the second argument to the `resource()` method:
+
+```php
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->namespace('Api\V1')
+    ->resources(function ($server) {
+        // Controller is `App\Http\Api\V1\BlogPostController`
+        $server->resource('posts', 'BlogPostController');
+    });
+```
+
+When using controller namespacing, if you want to use the generic
+`JsonApiController` you must qualify the controller when providing it to the
+`resource()` method. For example:
+
+```php
+use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->namespace('Api\V1')
+    ->resources(function ($server) {
+        $server->resource('posts', '\\' . JsonApiController::class);
+    });
+```
 
 ### Server Domain
 
@@ -112,9 +147,9 @@ For example:
 JsonApiRoute::server('v1')
     ->domain('api.myapp.com')
     ->resources(function ($server) {
-        $server->resource('posts');
-        $server->resource('tags');
-        $server->resource('users');
+        $server->resource('posts', PostController::class);
+        $server->resource('tags', TagController::class);
+        $server->resource('users', UserController::class);
     });
 ```
 
@@ -124,9 +159,9 @@ Or if you had wildcard sub-domains:
 JsonApiRoute::server('v1')
     ->domain('{account}.myapp.com')
     ->resources(function ($server) {
-        $server->resource('posts');
-        $server->resource('tags');
-        $server->resource('users');
+        $server->resource('posts', PostController::class);
+        $server->resource('tags', TagController::class);
+        $server->resource('users', UserController::class);
     });
 ```
 
@@ -146,9 +181,8 @@ In this example:
 JsonApiRoute::server('v1')
     ->middleware('my-middleware1', 'my-middleware2')
     ->prefix('v1')
-    ->namespace('Api\V1')
     ->resources(function ($server) {
-        $server->resource('posts');
+        $server->resource('posts', PostController::class);
     });
 ```
 
@@ -166,9 +200,8 @@ Route::middleware('my-middleware1')->group(function () {
     JsonApiRoute::server('v1')
       ->middleware('my-middleware2')
       ->prefix('v1')
-      ->namespace('Api\V1')
       ->resources(function ($server) {
-          $server->resource('posts');
+          $server->resource('posts', PostController::class);
       });
 });
 ```
@@ -192,9 +225,8 @@ In the following example, we override the default route name of `v1` to
 JsonApiRoute::server('v1')
     ->name('api:v1')
     ->prefix('v1')
-    ->namespace('Api\V1')
     ->resources(function ($server) {
-        $server->resource('posts');
+        $server->resource('posts', PostController::class);
     });
 ```
 
@@ -209,11 +241,10 @@ For example, the following registers routes for the `posts`, `tags` and
 ```php
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->namespace('Api\V1')
     ->resources(function ($server) {
-        $server->resource('posts');
-        $server->resource('tags');
-        $server->resource('users');
+        $server->resource('posts', PostController::class);
+        $server->resource('tags', TagController::class);
+        $server->resource('users', UserController::class);
     });
 ```
 
@@ -405,4 +436,46 @@ The following example adds middleware to our `tags` relationship routes:
 
 ```php
 $relationships->hasMany('tags')->middleware('my_middlware1', 'my_middlware2');
+```
+
+## Route Model Binding
+
+By default Laravel takes care of substituting parameter values for models using
+its [Route Model Binding implementation.](https://laravel.com/docs/routing#route-model-binding)
+Laravel does this in the `Illuminate\Routing\Middleware\SubstituteBindings`
+middleware.
+
+In a fresh Laravel installation, this middleware is already included in the
+`api` middleware group. This means when you use `JsonApiRoute::server()` helper
+method to define JSON:API routes within your `routes/api.php` file, the
+JSON:API server routes are defined *after* the `SubstituteBindings` middleware
+runs.
+
+The JSON:API implementation however does work *without* the `SubstituteBindings`
+middleware. This is because the JSON:API middleware is able to substitute the
+resource binding for the route without resorting to Laravel's implementation.
+For example, when you define a route for `GET /api/v1/posts/{post}`, the
+JSON:API implementation can substitute the `post` parameter for a `Post` model
+itself.
+
+In fact, it is *preferrable* that the JSON:API implementation takes care of
+substituting the binding. This is because JSON:API bindings are substituted
+*after* your server's `serving()` hook is called - which means if you apply
+any global scopes in that hook, they will affect whether or not a model can
+be found and therefore whether a `404 Not Found` response is sent.
+
+**If your API routes have no other bindings to substitute, we therefore
+recommend that you remove Laravel's `SubstituteBindings` middleware from your
+JSON:API routes.**
+
+You can do this using the `withoutMiddleware()` method when registering your
+JSON:API routes:
+
+```php
+JsonApiRoute::server('v1')
+    ->prefix('v1')
+    ->withoutMiddleware(\Illuminate\Routing\Middleware\SubstituteBindings::class)
+    ->resources(function ($server) {
+        $server->resource('posts', PostController::class);
+    });
 ```
