@@ -486,10 +486,9 @@ are from the `User` model. However, the `description` and `image` attributes
 are derived from the `UserProfile` model returned by the `User` model's
 `profile` relationship.
 
-:::warning
-When using attributes from related models, you must add the relationship to
-your [default eager load paths](./eager-loading#default-eager-loading) on
-your schema. This prevents *N+1* loading problems when serializing resources.
+:::tip
+When using attributes from related models, we automatically take care of eager
+loading the related models to prevent *N+1* loading problems.
 :::
 
 ### Related Column Names

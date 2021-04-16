@@ -167,19 +167,28 @@ public function includePaths(): iterable
 }
 ```
 
+## Eager Loading Attribute Values
+
+If any of your resource's attributes are derived from related models, you
+should use the attribute's `on()` method to set the relationship.
+[This is described in the attributes chapter](./attributes.md#attributes-from-related-models),
+but an example looks like this:
+
+```php
+Str::make('description')->on('profile')
+```
+
+When you do this, we will automatically eager load the relationships from which
+the attributes are derived.
+
 ## Default Eager Loading
 
-If you need to access a resource's relationships within a resource's attributes,
-you can add the relationship to the `$with` property of your schema. This
-property instructs the schema to always eager load the listed model
+If for any reason there are additional relationships that you always need to
+eager load, you can add the relationship to the `$with` property of your schema.
+This property instructs the schema to always eager load the listed model
 relationships when retrieving the resource.
 
-For example, if your database had a `users` table and a `user_profiles` table.
-Instead of having a `profile` relationship on your `users` resource, you may
-want the profile information to always be serialized as an attribute on the
-`users` resource. You would therefore need to eager-load the related profile
-whenever a `users` resource was retrieved. To do this, we would add the
-`profile` relationship to the `UserSchema` `$with` property:
+For example:
 
 ```php
 /**
@@ -191,8 +200,9 @@ protected array $with = ['profile'];
 ```
 
 :::tip
-You should only need to add model relationships to your `$with` property if
-the related model is used when serializing attributes. If a model relationship
-is available on your resource as a JSON:API relationship, then eager loading
-is controlled via the `include` query parameter.
+Generally you will not need to add default eager load paths. If a model
+relationship is available on your resource as a JSON:API relationship, then
+eager loading is controlled via the `include` query parameter. If eager loading
+is required for an attribute, you should use the attribute's `on()` method to
+specify the relationship that needs to be eager loaded.
 :::
