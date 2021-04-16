@@ -99,13 +99,25 @@ If you need complete control over how a value is hydrated into the
 model attribute, use the `fillUsing` method:
 
 ```php
-Hash::make('coordinates')->fillUsing(static function ($model, $column, $value) {
-  $model->fill([
-    "{$column}_longitude" = $value['long'],
-    "{$column}_latitude" = $value['lat'],
-  ]);
-});
+Hash::make('coordinates')->fillUsing(
+  static function ($model, $column, $value, array $validatedData) {
+    $model->fill([
+      "{$column}_longitude" = $value['long'],
+      "{$column}_latitude" = $value['lat'],
+    ]);
+  }
+);
 ```
+
+As shown in the example, the callback you pass to the `fillUsing()` method
+receives four arguments:
+
+1. The model that is being filled.
+2. The model's column name, as set on the attribute field.
+3. The deserialized value (i.e. the value *after* any `deserializeUsing()`
+   callback has been applied.)
+4. All the validated data that is being filled. This allows you to calculate
+   values based on multiple fields provided by the client, if needed.
 
 ### Read-Only Fields
 
