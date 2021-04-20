@@ -221,6 +221,15 @@ function to parse the string to a boolean.
 This means a client can use `"1"`, `"true"`, `"on"` and `"yes"` for a `true`
 value. All other values will return `false`.
 
+## Validating Filters
+
+You should always ensure that filter values are validated, as passing an invalid
+value into the filter could cause a database error.
+
+Filter values are validated by your resource's query request classes. These
+are described in detail in the
+[Query Parameters chapter.](../requests/query-parameters.md)
+
 ## Available Filters
 
 Laravel JSON:API ships with the following filters:
@@ -364,7 +373,7 @@ This will allow the client to make the following request to obtain multiple
 specified resources:
 
 ```http
-GET /api/v1/posts?filter[id]=3&filter[id]=9 HTTP/1.1
+GET /api/v1/posts?filter[id][]=3&filter[id][]=9 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -391,6 +400,13 @@ GET /api/v1/posts?filter[id]=3,9 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
+:::tip
+You will need to ensure your `id` filter is validated to either accept an array
+or a string with your defined delimiter. Filter validation rules are defined
+in your query classes and described in the
+[Query Parameters chapter.](../requests/query-parameters.md)
+:::
+
 ### WhereIdNotIn
 
 The `WhereIdNotIn` filter works exactly like the
@@ -406,7 +422,7 @@ WhereIdNotIn::make($this, 'exclude');
 The client could then exclude specific resources as follows:
 
 ```http
-GET /api/v1/posts?filter[exclude]=3&filter[exclude]=9 HTTP/1.1
+GET /api/v1/posts?filter[exclude][]=3&filter[exclude][]=9 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -416,6 +432,21 @@ string values if a delimiter is set:
 ```php
 WhereIdNotIn($this, 'exclude')->delimiter(',')
 ```
+
+The client could then make the following request:
+
+```http
+GET /api/v1/posts?filter[exclude]=3,9 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+:::tip
+As with the `WhereIdIn` filter, you will need to ensure the `WhereIdNotIn`
+value is validated to either accept an array or a string with your defined
+delimiter. Filter validation rules are defined in your query classes and
+described in the
+[Query Parameters chapter.](../requests/query-parameters.md)
+:::
 
 ### WhereIn
 
