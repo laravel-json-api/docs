@@ -699,7 +699,7 @@ public function withValidator($validator)
       $validator->sometimes(
         'passwordConfirmation',
         'required_with:password|same:password',
-        fn($input) => isset($input['password']);
+        fn($input) => isset($input['password']),
       );
     }
 }

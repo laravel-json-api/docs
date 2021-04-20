@@ -99,13 +99,25 @@ If you need complete control over how a value is hydrated into the
 model attribute, use the `fillUsing` method:
 
 ```php
-Hash::make('coordinates')->fillUsing(static function ($model, $column, $value) {
-  $model->fill([
-    "{$column}_longitude" = $value['long'],
-    "{$column}_latitude" = $value['lat'],
-  ]);
-});
+Hash::make('coordinates')->fillUsing(
+  static function ($model, $column, $value, array $validatedData) {
+    $model->fill([
+      "{$column}_longitude" = $value['long'],
+      "{$column}_latitude" = $value['lat'],
+    ]);
+  }
+);
 ```
+
+As shown in the example, the callback you pass to the `fillUsing()` method
+receives four arguments:
+
+1. The model that is being filled.
+2. The model's column name, as set on the attribute field.
+3. The deserialized value (i.e. the value *after* any `deserializeUsing()`
+   callback has been applied.)
+4. All the validated data that is being filled. This allows you to calculate
+   values based on multiple fields provided by the client, if needed.
 
 ### Read-Only Fields
 
@@ -438,3 +450,142 @@ use LaravelJsonApi\Eloquent\Fields\Str;
 
 Str::make('displayName');
 ```
+
+## Attributes from Related Models
+
+Sometimes you may want to add attributes to your resource that are derived from
+a related model, instead of using a resource relationship.
+
+For example, imagine a scenario where our `User` model has-one `UserProfile`
+model. We could choose either to add a `profile` relationship to our `users`
+resource, or we may want to add column values from the `UserProfile` to our
+`users` resource.
+
+If we opt to add `UserProfile` column values to our `users` resource, we will
+need to tell our attribute field that the value is derived from a related
+model. To do this, we use the `on()` method. For example, our `users` resource
+fields could look like this:
+
+```php
+public function fields(): array
+{
+    return [
+        ID::make(),
+        DateTime::make('createdAt')->readOnly(),
+        Str::make('description')->on('profile'),
+        Str::make('email'),
+        Str::make('image')->on('profile'),
+        Str::make('name'),
+        DateTime::make('updatedAt')->readOnly(),
+    ];
+}
+```
+
+In this example, the `createdAt`, `email`, `name` and `updatedAt` attributes
+are from the `User` model. However, the `description` and `image` attributes
+are derived from the `UserProfile` model returned by the `User` model's
+`profile` relationship.
+
+:::tip
+When using attributes from related models, we automatically take care of eager
+loading the related models to prevent *N+1* loading problems.
+:::
+
+### Related Column Names
+
+When using the `on()` method, the field's column name must match the column
+name on the related model. So in this example:
+
+```php
+Str::make('profile', 'description')->on('profile')
+```
+
+The JSON:API field `profile` will be derived from the `UserProfile` model's
+`description` column.
+
+### Related Attribute Hydration
+
+If the attribute from a related model is fillable, you **must** ensure that
+the `withDefault()` method is called on the Eloquent model's relationship.
+For example, our `User` model's `profile` relationship must look like this:
+
+```php
+class User extends Model
+{
+
+    public function profile()
+    {
+        return $this
+            ->hasOne(UserProfile::class)
+            ->withDefault();
+    }
+}
+```
+
+This is required so that when attribute values are being filled, the related
+model (`UserProfile` in this example) can be created if it does not already
+exist.
+
+:::tip
+Refer to the [Laravel documentation](https://laravel.com/docs/eloquent-relationships#default-models)
+for more details on the `withDefault()` method.
+:::
+
+### Related Map Fields
+
+You can use the [`Map` field](#map-field) to nest values from a related model
+within your resource's attributes. For example, if we wanted to nest the
+columns derived from our `UserProfile` model our fields would look like this:
+
+```php
+public function fields(): array
+{
+    return [
+        ID::make(),
+        DateTime::make('createdAt')->readOnly(),
+        Str::make('email'),
+        Str::make('name'),
+        Map::make('profile', [
+          Str::make('description'),
+          Str::make('image'),
+        ])->on('profile'),
+        DateTime::make('updatedAt')->readOnly(),
+    ];
+}
+```
+
+This would result in the following attributes in our JSON:API resource:
+
+```json
+{
+  "createdAt": "2021-04-16T12:00:00.000000Z",
+  "email": "john.doe@example.com",
+  "name": "John Doe",
+  "profile": {
+    "description": "...",
+    "image": "http://localhost/public/images/john-doe.jpg"
+  },
+  "updatedAt": "2021-04-16T12:00:00.000000Z",
+}
+```
+
+By calling the `on()` method on the `Map` field, we tell the field that *all*
+its child fields exist on the `UserProfile` model. This means that we *do not*
+need to call the `on()` method on each child field.
+
+If you wanted to use a `Map` field that contains a mixture of attributes from
+the `User` model and `UserProfile` model, *do not* call the `on()` method
+on the `Map` field. Instead, call the `on()` method on the child fields that
+are derived from a related model. For example:
+
+```php
+Map::make('profile', [
+    Str::make('description')->on('profile'),
+    Str::make('synopsis'),
+    Str::make('image')->on('profile'),
+])
+```
+
+In this example, the `description` and `image` are derived from the `profile`
+relationship, while the `synopsis` column exists on the primary model (the
+`User` in our example).

@@ -286,6 +286,14 @@ then they will receive the exception response as a JSON:API error response -
 even if the endpoint they are hitting is not one of your JSON:API server
 endpoints.
 
+:::warning
+There are some scenarios where the Laravel exception handler does not call
+any registered renderables. For example, if an exception implements Laravel's
+`Responsable` interface, our exception parser will not be invoked as the handler
+uses the `Responsable::toResponse()` method on the exception to generate a
+response.
+:::
+
 ### JSON Responses
 
 If a client encounters an exception when using an `Accept` header of
@@ -299,6 +307,39 @@ our exception parser:
 ```php
 $this->renderable(
     ExceptionParser::make()->acceptsJson()->renderable()
+);
+```
+
+### Middleware Responses
+
+Sometimes you may want exceptions to be converted to JSON:API errors if the
+current route has a particular middleware applied to it. The most common example
+of this would be if you want JSON:API errors to always be rendered if the
+current route has the `api` middleware.
+
+In this scenario, use the `acceptsMiddleware()` method when registering our
+exception parser. For example:
+
+```php
+$this->renderable(
+    ExceptionParser::make()->acceptsMiddleware('api')->renderable()
+);
+```
+
+:::tip
+You can provide multiple middleware names to the `acceptsMiddleware()` method.
+When you do this, it will match a route that contains *any* of the provided
+middleware.
+:::
+
+### Always Rendering JSON:API Errors
+
+If you want our exception parser to always convert exceptions to JSON:API
+errors, use the `acceptsAll()` helper method:
+
+```php
+$this->renderable(
+    ExceptionParser::make()->acceptsAll()->renderable()
 );
 ```
 
