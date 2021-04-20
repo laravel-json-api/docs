@@ -56,6 +56,16 @@ php artisan jsonapi:schema posts --server=v1 --model=BlogPost
 Freshly created schemas only contain `id`, `createdAt` and `updatedAt`
 fields. Don't worry, we'll add more fields to our schema soon.
 
+### Parent Classes and Interfaces
+
+Our schemas support setting the `$model` property of a schema to a parent class
+or an interface.
+
+When matching models to schemas, a direct match will always be resolved first.
+If there is no direct match, we then check whether the model class has a parent
+for which a schema is registered. If no parent, we then check whether the model
+class implements any interfaces for which a schema is registered.
+
 ## Registering Schemas
 
 Before resources are available in your server, they must first be registered
