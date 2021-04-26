@@ -182,6 +182,19 @@ After generating your server class, don't forget to register the class
 in your `jsonapi.servers` configuration array.
 :::
 
+### Sort Field
+
+To generate a JSON:API sort field class, use the `jsonapi:sort-field` command:
+
+```bash
+php artisan jsonapi:sort-field MyCustomSort
+```
+
+This will generate the following sort field class:
+`App\JsonApi\Sorting\MyCustomSort`.
+
+Use the `--force` option if you want to overwrite an existing sort field.
+
 ## Stub Customisation
 
 The console commands described in this chapter that generate classes all

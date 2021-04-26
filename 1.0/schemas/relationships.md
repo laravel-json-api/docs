@@ -356,6 +356,29 @@ HasOne::make('address') // assumed 'addresses'
 HasOne::make('address')->type('user-addresses')
 ```
 
+#### Detaching Has-One Models
+
+When modifying this relationship, you will need to consider how you want to
+handle a model being detached from the relationship. For example, if a `User`
+model already had one `Address` and the client changes the relationship to
+`null` or a different `Address`, how should the existing `Address` model be
+detached?
+
+The default detach behaviour is to set the relationship columns on the `Address`
+model to `null`. I.e. the `Address` model is retained and detached from the
+`User` model.
+
+In some cases, you might actually want the `Address` model to be deleted if
+it is detached from the relationship. You can configure this behaviour
+using the `deleteDetachedModel()` or `forceDeleteDetachedModel()` methods
+on the `HasOne` field. For example:
+
+```php
+HasOne::make('address')->deleteDetachedModel()
+// or
+HasOne::make('address')->forceDeleteDetachedModel()
+```
+
 ### Has Many
 
 The `HasMany` field corresponds to a `hasMany` or a `morphMany` Eloquent
@@ -383,6 +406,29 @@ method name. If this is not the case, use the `type` method:
 HasMany::make('comments') // assumed 'comments'
 HasMany::make('comments')->type('video-comments')
 ```
+
+#### Detaching Has-Many Models
+
+When modifying this relationship, you will need to consider how you want to
+handle models that are detached from the relationship. For example, when
+updating the `Video` model's `comments` relationship, `Comment` models may be
+detached (removed).
+
+The default detach behaviour is to set the relationship columns on the `Comment`
+model to `null`. I.e. each `Comment` model removed from the relationship
+is retained and detached from the `Video` model.
+
+In some cases, you might actually want `Comment` models to be deleted when
+they are detached from the relationship. You can configure this behaviour
+using the `deleteDetachedModels()` or `forceDeleteDetachedModels()` methods
+on the `HasMany` field. For example:
+
+```php
+HasMany::make('comments')->deleteDetachedModels()
+// or
+HasMany::make('comments')->forceDeleteDetachedModels()
+```
+
 
 ### Has One Through
 

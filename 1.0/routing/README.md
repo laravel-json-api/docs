@@ -329,7 +329,7 @@ It is possible to add middleware for all of a resource's routes. Just
 use the `middleware` method:
 
 ```php
-$server->resource('posts')->middleware('my_middlware1', 'my_middlware2');
+$server->resource('posts')->middleware('my_middleware1', 'my_middleware2');
 ```
 
 :::tip
@@ -435,7 +435,7 @@ use the `middleware` method.
 The following example adds middleware to our `tags` relationship routes:
 
 ```php
-$relationships->hasMany('tags')->middleware('my_middlware1', 'my_middlware2');
+$relationships->hasMany('tags')->middleware('my_middleware1', 'my_middleware2');
 ```
 
 ## Route Model Binding

@@ -614,6 +614,44 @@ Note that with sort parameters, we do not need to provide the direction, e.g.
 `foo` and `-foo`. The rule allows `foo` in either direction.
 :::
 
+## Default Include Paths
+
+The query request classes can be used to specify default include paths that
+should be used when a client provides none. Simply add the JSON:API include
+paths to the `$defaultIncludePaths` on your query request class. For example:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\Laravel\Http\Requests\ResourceQuery;
+
+class PostCollectionQuery extends ResourceQuery
+{
+
+    /**
+     * The default include paths to use if the client provides none.
+     *
+     * @var array|null
+     */
+    protected ?array $defaultIncludePaths = ['author', 'tags'];
+
+    // ...
+}
+```
+
+If you need to programmatically work out the default include paths, overload
+the `defaultIncludePaths()` method on the request class.
+
+When you use default include paths, the client will receive a compound document
+containing the related resources when they do not provide an `include` query
+parameter. In this scenario, if the client wants no resources to be included,
+it must specify this using an empty `include` query parameter:
+
+```http
+GET /api/v1/posts?include= HTTP/1.1
+Accept: application/vnd.api+json
+```
+
 ## Helper Methods
 
 Our query request classes have some helper methods. You may need to use

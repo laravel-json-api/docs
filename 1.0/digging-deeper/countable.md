@@ -4,6 +4,12 @@
 
 ## Introduction
 
+:::danger
+We are planning to make breaking changes to the countable relations feature
+during the `1.0.0-beta` series. This feature is therefore consider not
+ready for use in production applications.
+:::
+
 Sometimes you may want to count the number of related models for a given
 relationship without actually loading the models. Eloquent provides this
 feature via its `withCount` method on the query builder, and `loadCount`

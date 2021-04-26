@@ -308,10 +308,10 @@ class PostRequest extends ResourceRequest
 
 ### Disabling Authorization
 
-We provide that ability to disabled our default authorization strategy
-at either a resource or server level.
+We provide the ability to disable our default authorization strategy at either
+a resource or server level.
 
-If you do not want a JSON:API resource to be authorized, then you can
+If you do not want a specific JSON:API resource to be authorized, then you can
 override the `authorizable` method on the JSON:API schema:
 
 ```php
