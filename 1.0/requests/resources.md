@@ -9,8 +9,8 @@ sent by the client against your application-specific validation rules.
 You can also define validation rules to determine whether a resource can be
 deleted.
 
-For any resource type that you allow to be created, updated and/or
-deleted (including updating relationships), you will need to create
+For any resource type that you allow to be created and/or updated
+(including updating relationships), you will need to create
 a resource request class. To generate a resource request, use the
 `jsonapi:request` Artisan command:
 

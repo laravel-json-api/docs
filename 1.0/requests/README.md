@@ -23,9 +23,9 @@ described in this chapter.
 ## Resource Request
 
 Our resource request classes are named according to the resource type.
-For example the `posts` resource will have `PostRequest` class.
-This class is **required** if you register any one of the `store`,
-`update` or `destroy` actions for the `posts` resource.
+For example the `posts` resource will have a `PostRequest` class.
+This class is **required** if you register the `store` and/or `update` actions
+for the `posts` resource. It is optional for the `destroy` action.
 
 In other words, the request class is responsible for requests to
 create, update or delete a specific resource. Our `PostRequest`:
