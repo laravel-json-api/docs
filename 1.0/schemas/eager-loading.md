@@ -181,7 +181,7 @@ Str::make('description')->on('profile')
 When you do this, we will automatically eager load the relationships from which
 the attributes are derived.
 
-## Default Eager Loading
+## Additional Eager Loading
 
 If for any reason there are additional relationships that you always need to
 eager load, you can add the relationship to the `$with` property of your schema.
@@ -206,3 +206,10 @@ eager loading is controlled via the `include` query parameter. If eager loading
 is required for an attribute, you should use the attribute's `on()` method to
 specify the relationship that needs to be eager loaded.
 :::
+
+## Default Include Paths
+
+If you want to set include paths that should be used when the client provides
+none, these must be set on the query parameters request class for the resource,
+e.g. `PostQuery` and `PostCollectionQuery`. Use the `$defaultIncludePaths`
+property, [as described in the query parameters chapter.](../requests/query-parameters.md#default-include-paths)
