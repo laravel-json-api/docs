@@ -25,6 +25,7 @@ module.exports = [
       'attributes',
       'relationships',
       'eager-loading',
+      'sorting',
       'pagination',
       'filters',
       'soft-deleting',

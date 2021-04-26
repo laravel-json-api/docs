@@ -44,15 +44,6 @@ as the second argument to the `make` method:
 Str::make('name', 'display_name')
 ```
 
-## Sortable Attributes
-
-When attaching an attribute to a schema, you may use the `sortable` method
-to indicate that the resource can be sorted by the given field:
-
-```php
-Str::make('name')->sortable()
-```
-
 ## Attribute Hydration
 
 On every create or update request, the attribute's corresponding model
