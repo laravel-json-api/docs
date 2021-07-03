@@ -174,7 +174,15 @@ HashId::make()->useConnection('posts')
 By default the `HashId` field sets the regex pattern for the resource id to
 `[a-zA-Z0-9]+`.
 
-If you need to change this, use the `matchAs` method
+If your implementation uses a minimum length for your hash ids, then you can
+set this using the `withLength()` method. For example, the following will set
+the ID pattern to `[a-zA-Z0-9]{16,}`:
+
+```php
+HashId::make()->withLength(16)
+```
+
+If you need to use any other pattern, use the `matchAs` method
 [as described above.](#pattern)
 
 ### Hashing Route Keys
