@@ -270,9 +270,14 @@ public function withValidator($validator)
 }
 ```
 
+:::tip
+You should use the [Helper methods](#helper-methods) described later in this
+chapter if you want to add *after* hooks for specific types of requests.
+:::
+
 ### Complex Conditional Validation
 
-The `withValidator` method can also be used to add
+The `withValidator` method shown in the previous example can also be used to add
 [complex conditional validation](https://laravel.com/docs/validation#complex-conditional-validation),
 using the `sometimes` method on the validator.
 
@@ -659,6 +664,10 @@ these when deciding to forget allowed parameters. The available methods are:
 
 - [isRelationship](#isrelationship)
 - [isNotRelationship](#isnotrelationship)
+- [isViewingAny](#isviewingany)
+- [isViewingOne](#isviewingone)
+- [isViewingRelated](#isviewingrelated)
+- [isViewingRelationship](#isviewingrelationship)
 
 #### isRelationship
 
@@ -684,3 +693,43 @@ JsonApiRule::filter()->forgetIf($this->isRelationship(), [
 #### isNotRelationship
 
 The opposite of the [`isRelationship`](#isrelationship) helper.
+
+#### isViewingAny
+
+Returns `true` if the request is to view *any* resource, i.e. the `index`
+action. For example:
+
+```http
+GET /api/v1/posts HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+#### isViewingOne
+
+Returns `true` if the request is to view *a specific resource*, i.e. the `read`
+action. For example:
+
+```http
+GET /api/v1/posts/123 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+#### isViewingRelated
+
+Returns `true` if the request is to view a related resource or related resources
+in a relationship, i.e. the show-related action. For example:
+
+```http
+GET /api/v1/posts/123/author HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+#### isViewingRelationship
+
+Returns `true` if the request is to view a resource identifier or resource
+identifiers in a relationship, i.e. the show-relationship action. For example:
+
+```http
+GET /api/v1/posts/123/relationships/tags HTTP/1.1
+Accept: application/vnd.api+json
+```
