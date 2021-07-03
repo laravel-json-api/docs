@@ -852,6 +852,7 @@ methods are:
 
 - [isCreating](#iscreating)
 - [isUpdating](#isupdating)
+- [isCreatingOrUpdating](#iscreatingorupdating)
 - [isDeleting](#isdeleting)
 - [getFieldName](#getfieldname)
 - [isUpdatingRelationship](#isupdatingrelationship)
@@ -894,6 +895,15 @@ Accept: application/vnd.api+json
 {
   ...
 }
+```
+
+#### isCreatingOrUpdating
+
+Returns `true` if the request will create or update a resource, i.e.:
+
+```php
+$request->isCreatingOrUpdating() ===
+    ($request->isCreating() || $request->isUpdating());
 ```
 
 #### isDeleting
