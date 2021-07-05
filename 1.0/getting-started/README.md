@@ -60,18 +60,28 @@ To ensure that clients receive a JSON:API error response for exceptions
 thrown by your application, you need to add the package exception renderer
 to your application's exception handler.
 
-Update the `register()` method on your `\App\Exceptions\Handler` class
-as follows:
+Update the `register()` method on your `\App\Exceptions\Handler` class and
+add our `JsonApiException` to your `$dontReport` property. Both changes are
+shown below:
 
 ```php
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Throwable;
+use LaravelJsonApi\Core\Exceptions\JsonApiException;
 
 class Handler extends ExceptionHandler
 {
     // ...
+
+    /**
+     * A list of the exception types that should not be reported.
+     *
+     * @var array
+     */
+    protected $dontReport = [
+        JsonApiException::class,
+    ];
 
     /**
      * Register the exception handling callbacks for the application.
@@ -87,5 +97,5 @@ class Handler extends ExceptionHandler
 }
 ```
 
-For more information on exception parsing, see the
-[error handling chapter.](../responses/errors.md#error-handling)
+For more information on exception rendering and reporting, see the
+[errors chapter.](../responses/errors.md#error-rendering)
