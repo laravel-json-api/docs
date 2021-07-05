@@ -195,6 +195,34 @@ throw JsonApiException::error([
 ]);
 ```
 
+### Helper Methods
+
+The `JsonApiException` class has a number of helper methods:
+
+- [is4xx](#is4xx)
+- [is5xx](#is5xx)
+- [getErrors](#geterrors)
+
+#### is4xx
+
+Returns `true` if the HTTP status code is a client error, i.e. in the 400-499
+range.
+
+#### is5xx
+
+Returns `true` if the HTTP status code is a server error, i.e. in the 500-599
+range.
+
+#### getErrors
+
+Use the `getErrors()` method to retrieve the JSON:API error objects from the
+exception. For example, if we wanted to log the errors:
+
+```php
+/** @var LaravelJsonApi\Core\Exceptions\JsonApiException $ex */
+logger('JSON:API exception.', $ex->getErrors()->toArray());
+```
+
 ## Validation Errors
 
 Our implementation of [resource requests](../requests/resources.md) and
