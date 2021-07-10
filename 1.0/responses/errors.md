@@ -195,6 +195,34 @@ throw JsonApiException::error([
 ]);
 ```
 
+### Helper Methods
+
+The `JsonApiException` class has a number of helper methods:
+
+- [is4xx](#is4xx)
+- [is5xx](#is5xx)
+- [getErrors](#geterrors)
+
+#### is4xx
+
+Returns `true` if the HTTP status code is a client error, i.e. in the 400-499
+range.
+
+#### is5xx
+
+Returns `true` if the HTTP status code is a server error, i.e. in the 500-599
+range.
+
+#### getErrors
+
+Use the `getErrors()` method to retrieve the JSON:API error objects from the
+exception. For example, if we wanted to log the errors:
+
+```php
+/** @var LaravelJsonApi\Core\Exceptions\JsonApiException $ex */
+logger('JSON:API exception.', $ex->getErrors()->toArray());
+```
+
 ## Validation Errors
 
 Our implementation of [resource requests](../requests/resources.md) and
@@ -254,10 +282,11 @@ $errors = $factory
     ->withPointers(fn($key) => "/foo/{$key}");
 ```
 
-## Error Handling
+## Error Rendering
 
 As described in the [installation instructions](../getting-started/#exception-handler),
-the following should have been added to your application's exception handler:
+the following should have been added to the `register` method on your
+application's exception handler:
 
 ```php
 class Handler extends ExceptionHandler
@@ -417,4 +446,82 @@ $this->renderable(ExceptionParser::make()
     ->append(\App\JsonApi\Exceptions\PaymentFailedHandler::class)
     ->renderable()
 );
+```
+
+## Error Reporting
+
+As described in the [installation instructions](../getting-started/#exception-handler),
+the following should have been added to the `$dontReport` property on your
+application's exception handler:
+
+```php
+use LaravelJsonApi\Core\Exceptions\JsonApiException;
+
+class Handler extends ExceptionHandler
+{
+    // ...
+
+    /**
+     * A list of the exception types that should not be reported.
+     *
+     * @var array
+     */
+    protected $dontReport = [
+        JsonApiException::class,
+    ];
+
+    // ...
+}
+```
+
+This prevents our `JsonApiException` from being reported in your application's
+error log. This is a sensible starting position, as the `JsonApiException`
+class is effectively a HTTP exception that needs to be rendered to the client.
+
+However, this does mean that any `JsonApiException` that has a `5xx` status
+code (server-side error) will not be reported in your error log. Therefore,
+an alternative is to use the helper methods on the `JsonApiException` class
+to determine whether or not the exception should be reported.
+
+To do this, we will use the `reportable()` method to register a callback
+for the JSON:API exception class. (At the same time, we remove the exception
+class from the `$dontReport` property.) For example, the following will stop
+the propagation of JSON:API exceptions to the default logging stack if the
+exception does not have a 5xx status:
+
+```php
+use LaravelJsonApi\Core\Exceptions\JsonApiException;
+
+/**
+ * Register the exception handling callbacks for the application.
+ *
+ * @return void
+ */
+public function register()
+{
+    $this->reportable(function (JsonApiException $ex) {
+        if (!$ex->is5xx()) {
+          return false;
+        }
+    });
+
+    // ...
+}
+```
+
+:::tip
+As described in the [Laravel documentation on reporting exceptions](https://laravel.com/docs/8.x/errors#reporting-exceptions), returning `false` from the reportable callback prevents the
+exception from propagating to the default logging stack.
+:::
+
+In the following example, we log 4xx statuses as debug information, while
+letting all other JSON:API exceptions propagate to the default logging stack:
+
+```php
+$this->reportable(function (JsonApiException $ex) {
+    if ($ex->is4xx()) {
+      logger('JSON:API client exception.', $ex->getErrors()->toArray());
+      return false;
+    }
+});
 ```
