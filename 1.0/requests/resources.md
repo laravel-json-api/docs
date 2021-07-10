@@ -467,21 +467,28 @@ actually evaluated:
  */
 public function withValidator($validator)
 {
-    $validator->after(function ($validator) {
-        if ($this->somethingElseIsInvalid()) {
-            $validator->errors()->add(
-              'field',
-              'Something is wrong with this field!'
-            );
-        }
-    });
+    if ($this->isCreatingOrUpdating()) {
+        $validator->after(function ($validator) {
+            if ($this->somethingElseIsInvalid()) {
+                $validator->errors()->add(
+                  'field',
+                  'Something is wrong with this field!'
+                );
+            }
+        });
+    }
 }
 ```
 
-:::tip
-When adding after hooks, you will most likely need to use the
-request's [helper methods](#helper-methods) to determine what type of request
-it is.
+:::warning
+When adding after hooks, you will need to use the request's
+[helper methods](#helper-methods) to determine what type of request
+it is. The example above checks whether the request is creating or updating a
+resource.
+
+You need to do this because the `withValidator` method will be called for *all*
+the different request types described in this chapter, i.e. creating/updating
+a resource, modifying a relationship and deleting a resource.
 :::
 
 ### Complex Conditional Validation
@@ -499,16 +506,23 @@ using the `sometimes` method on the validator. For example:
  */
 public function withValidator($validator)
 {
-    $validator->sometimes(['reason', 'cost'], 'required', function ($input) {
-        return $input->games >= 100;
-    });
+    if ($this->isCreatingOrUpdating()) {
+        $validator->sometimes(['reason', 'cost'], 'required', function ($input) {
+            return $input->games >= 100;
+        });
+    }
 }
 ```
 
-:::tip
-When adding conditional validation, you will most likely need to use the
-request's [helper methods](#helper-methods) to determine what type of request
-it is.
+:::warning
+When adding conditional validation, you will need to use the request's
+[helper methods](#helper-methods) to determine what type of request
+it is. The example above checks whether the request is creating or updating a
+resource before applying the conditional validation rules.
+
+You need to do this because the `withValidator` method will be called for *all*
+the different request types described in this chapter, i.e. creating/updating
+a resource, modifying a relationship and deleting a resource.
 :::
 
 ### Validating Dates
@@ -852,6 +866,7 @@ methods are:
 
 - [isCreating](#iscreating)
 - [isUpdating](#isupdating)
+- [isCreatingOrUpdating](#iscreatingorupdating)
 - [isDeleting](#isdeleting)
 - [getFieldName](#getfieldname)
 - [isUpdatingRelationship](#isupdatingrelationship)
@@ -894,6 +909,15 @@ Accept: application/vnd.api+json
 {
   ...
 }
+```
+
+#### isCreatingOrUpdating
+
+Returns `true` if the request will create or update a resource, i.e.:
+
+```php
+$request->isCreatingOrUpdating() ===
+    ($request->isCreating() || $request->isUpdating());
 ```
 
 #### isDeleting

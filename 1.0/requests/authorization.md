@@ -76,6 +76,53 @@ don't forget to define all of its relevant authorization methods.
 
 ### Relationship Authorization
 
+Laravel JSON:API also expects policy methods to be defined for each relationship
+request defined in the specification. Below we detail the policy methods that
+are invoked for each *to-one* and *to-many* relationship request defined by the
+specification.
+
+When authorizing relationships, it is important to understand that this
+authorization protects the **relationship endpoint**, i.e. the controller
+action. It does not protect the relationship from modification within a request
+to update the top-level resource.
+
+For example, the `updateAuthor()` policy method is checked when the client calls
+the `POST /posts/{post}/relationships/author` endpoint. The relationship
+authorization **is not called** if the author relationship is modified when
+updating the post resource, i.e. `PATCH /posts/{post}`.
+
+Likewise, viewing relationship authorization protects the relationship endpoints.
+It does not protect the relationship from being eager-loaded (i.e. being listed
+in an include path).
+
+For example, the `viewAuthor()` policy method is checked when the client calls
+the `GET /posts/{post}/author` endpoint. However, it is not called when the
+client calls the resource endpoint with an include path, i.e.
+`GET /posts/{post}?include=author`.
+
+:::tip
+Why is our implementation designed this way?
+
+This implementation works for most use-cases, where access to the resource is
+controlled at the **resource-level**. I.e. if the user can access a `posts`
+resource, they can see all attributes and relationships belonging to the
+individual post. Likewise, if a user can modify a `posts` resource, they can
+modify any writeable attribute or relationship.
+
+In this scenario, the use-case for a relationship endpoint having different
+access rights would be when a relationship is read-only when updating the
+resource, and instead can only be modified via the relationship endpoints. In
+such a case, the access rights can be different for the `PostPolicy::update()`
+method and the `PostPolicy::updateTags()` method.
+
+A more complex use-case is to control read/write access at the **field-level**,
+i.e. access can vary across different resource attributes and/or relationships.
+We cannot support this out-of-the-box because such use-cases tend to have very
+specific application logic to how the authorization should be implemented.
+However, you can implement such an authorization strategy by
+[writing your own authorizer, as described later in this chapter.](#customising-authorization)
+:::
+
 #### To-One
 
 The following table shows the request class and the policy authorization

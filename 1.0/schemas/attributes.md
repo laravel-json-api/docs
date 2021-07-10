@@ -163,12 +163,32 @@ Str::make('name')->serializeUsing(
 );
 ```
 
+If you need complete control over how a value is extracted from a model, use the
+`extractUsing()` method:
+
+```php
+Str::make('name')->extractUsing(
+  static fn($model, $column, $value) => $model->getSomeCustomImplementation()
+);
+```
+
+As shown in the example, the callback you pass to the `extractUsing()` method
+receives three arguments:
+
+1. The model from which the value is to be extracted.
+2. The column name, as set on the attribute field.
+3. The serialized value (i.e. the value *after* any `serializeUsing()` callback
+   has been applied).
+
 :::tip
-If you need complete control over how a model is serialized to a
-JSON:API resource object, you should use a
-[`Resource` class.](../resources/) When a model has a resource
-class, the schema attributes will **NOT** be used when serializing
-the model.
+While the `extractUsing()` method gives you complete control over the extraction
+of a specific attribute, it is inefficient to use for lots of attributes. If you
+need complete control over the serialization of a model to a JSON:API resource
+object, we recommend using a [`Resource` class.](../resources/)
+
+When a model has a resource class, the schema attributes will **NOT** be used
+when serializing the model. Instead, you will have complete control over
+serialization within the resource class itself.
 :::
 
 ### Hiding Fields

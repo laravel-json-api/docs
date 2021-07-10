@@ -16,6 +16,8 @@ In this chapter, we will demonstrate how to do this using two actions:
 
 ## Routing
 
+### Registering Actions
+
 To register custom actions, use the `actions()` method when registering
 resource routes. For example, we can add our *purge* and *publish* actions
 to our `posts` resource as follows:
@@ -48,6 +50,19 @@ The `$actions` helper supports all the typical HTTP verbs:
 - `delete`
 - `options`
 
+#### Actions without a URL Prefix
+
+:::warning
+When adding custom actions, we recommend thinking carefully about the naming
+of the URLs for the actions. As additions may be made to the JSON:API
+specification in the future, it is important to choose a URL that will
+avoid any potential future conflicts with the specification.
+
+For this reason, we recommend using a prefix. We also recommend choosing one
+like `/-actions` instead of `/actions`. This will help prevent any future
+conflicts with additions to the specification.
+:::
+
 As the above example shows, the `actions()` method was provided with a URL
 prefix and a callback. The prefix is optional, for example:
 
@@ -65,16 +80,34 @@ Would register the following routes:
 | DELETE | `/posts/purge` | purge | posts.purge |
 | POST | `/posts/{post}/publish` | publish | posts.publish |
 
-:::warning
-When adding custom actions, we recommend thinking carefully about the naming
-of the URLs for the actions. As additions may be made to the JSON:API
-specification in the future, it is important to choose a URL that will
-avoid any potential future conflicts with the specification.
+When adding actions without a URL prefix, you need to ensure you avoid colliding
+with any of the JSON:API routes that are registered for a resource. Typically
+this means ensuring your action does not match the ID pattern for a resource.
 
-For this reason, we recommend using a prefix. We also recommend choosing one
-like `/-actions` instead of `/actions`. This will help prevent any future
-conflicts with additions to the specification.
-:::
+This is best illustrated with an example. Say for example we wanted to register
+a `me` action for the `users` resource. This would return the current signed-in
+user, and the routing would look like this:
+
+```php
+$server->resource('users')->actions(function ($actions) {
+    $actions->get('me');
+});
+```
+
+In this example, the following routes will exist:
+
+- `GET /users/{user}`
+- `GET /users/me`
+
+This will work if the `users` resource `id` pattern does not match for `me`, e.g.
+if the pattern was `\d+`. However, if `me` did match the pattern - for example
+if it were `[a-zA-Z0-9]+`, then the custom `me` action **will not match**.
+Instead the implementation will attempt to find a `users` resource with an `id`
+of `me`.
+
+**Registering actions that conflict with the default JSON:API routes are not
+supported.** If you are registering actions without a URL prefix, you must ensure
+that you avoid registering actions that collide.
 
 ### Controller Action
 

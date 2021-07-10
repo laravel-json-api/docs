@@ -14,6 +14,27 @@ allow you to return a customised response for each of our action traits.
 Alternatively, if you are [implementing your own actions](../routing/writing-actions.md)
 then you will also need to construct responses.
 
+## Response Server
+
+Laravel JSON:API supports applications having multiple JSON:API servers. To
+correctly encode a JSON:API compound document, the implementation needs to know
+which server to use.
+
+Our JSON:API middleware takes care of setting the JSON:API server that is in
+use. This means if you are returning any response classes *after* this
+middleware has run, you **do not** need to tell the response which server must
+be used to encode the response.
+
+If your application returns any of our JSON:API response classes in routes that
+either *do not* have the JSON:API middleware, or middleware that run *before*
+that middleware, **you must explicitly set the server on the response**.
+This can easily be done using the [`withServer()` helper method.](#withserver)
+For example:
+
+```php
+return DataResponse::make($model)->withServer('v1');
+```
+
 ## Response Classes
 
 We provide the following JSON:API response classes for returning responses that
@@ -237,12 +258,32 @@ use the [`withJsonApi` helper method](#withjsonapi).
 Our response classes have a number of helper methods, to enable you to
 customise the response. The available methods are:
 
+- [withServer](#withserver)
 - [withJsonApi](#withjsonapi)
 - [withMeta](#withmeta)
 - [withLinks](#withlinks)
 - [withEncodeOptions](#withencodeoptions)
 - [withHeader](#withheader)
 - [withHeaders](#withheaders)
+
+#### withServer
+
+This method sets the JSON:API server that must be used when encoding the
+response to a JSON:API compound document. You *do not* need to use this method
+if the response is being returned *after* the JSON:API middleware has run. This
+is because the JSON:API middleware sets the server to use for all responses.
+Instead, use the `withServer()` method if you are returning a JSON:API response
+from a route that *does not* have the JSON:API middleware applied.
+
+For example:
+
+```php
+return DataResponse::make($model)->withServer('v1');
+```
+
+The string provided to the `withServer()` method is the server name used when
+registering servers in your JSON:API config file - as described in the
+[Servers chapter.](../servers/)
 
 #### withJsonApi
 
