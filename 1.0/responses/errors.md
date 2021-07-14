@@ -383,7 +383,7 @@ the request `is()` method to check if the path is our API:
 
 ```php
 $this->renderable(ExceptionParser::make()
-    ->accept(fn(\Throwable $ex, $request) => $request->is('/api*'))
+    ->accept(fn(\Throwable $ex, $request) => $request->is('api/*'))
     ->renderable()
 );
 ```
