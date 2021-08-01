@@ -234,8 +234,11 @@ are described in detail in the
 
 Laravel JSON:API ships with the following filters:
 
+- [Has](#has)
 - [Scope](#scope)
 - [Where](#where)
+- [WhereDoesntHave](#wheredoesnthave)
+- [WhereHas](#wherehas)
 - [WhereIdIn](#whereidin)
 - [WhereIdNotIn](#whereidnotin)
 - [WhereIn](#wherein)
@@ -251,6 +254,54 @@ If you want to add additional filters, submit a Pull Request to the
 We will typically accept filters that map to Eloquent query builder methods,
 and are unopinionated about a server's filter implementation.
 :::
+
+### Has
+
+The `Has` filter is used to invoke the query builder `has()` or `doesntHave()`
+method. The `has()` query builder method is used to query for the existence of
+a relationship, whereas the `doesntHave()` query builder method is used to query
+for the absence of the relationship.
+
+The value of the filter must be a boolean value. If it is truthy, then the
+`has()` query builder method is called; if false, then `doesntHave()` is used.
+
+To create a `Has` filter, you must provide the schema and the JSON:API field
+name of the relationship. For example in our `PostSchema`:
+
+```php
+use LaravelJsonApi\Eloquent\Filters\Has;
+
+Has::make($this, 'comments');
+```
+
+The client can now query for `posts` resources that have comments:
+
+```http
+GET /api/v1/posts?filter[comments]=true HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+Or to query for `posts` resources that do not have comments:
+
+```http
+GET /api/v1/posts?filter[comments]=false HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+Notice that by default, the name of the filter is the same as the JSON:API
+relationship field name. If you wanted to use a different filter name, provide
+it as the third argument. For example:
+
+```php
+Has::make($this, 'comments', 'has-comments');
+```
+
+The client would now need to query for posts with comments as follows:
+
+```http
+GET /api/v1/posts?filter[has-comments]=true HTTP/1.1
+Accept: application/vnd.api+json
+```
 
 ### Scope
 
@@ -336,6 +387,84 @@ For example:
 
 ```php
 Where::make('votes')->gt();
+```
+
+### WhereDoesntHave
+
+The `WhereDoesntHave` filter is used to invoke the query builder
+`whereDoesntHave()` method, which queries for the absence of a relationship.
+To create a `WhereDoesntHave` filter, you must provide the schema and the
+JSON:API field name of the relationship. For example in our `PostSchema`:
+
+```php
+use LaravelJsonApi\Eloquent\Filters\WhereDoesntHave;
+
+WhereDoesntHave::make($this, 'comments');
+```
+
+The filter value is an array of filters that are valid for the *inverse* resource
+type of the relationship. So in this example, the client can provide any filters
+that are valid for the `comments` resource. If our `comments` resource accepted
+a `user` filter that took the ID of a user resource, then the client could
+request `posts` resources that user `123` had *not* commented on:
+
+```http
+GET /api/v1/posts?filter[comments][user]=123 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+Notice that by default, the name of the filter is the same as the JSON:API
+relationship field name - in this case `comments`. If you wanted to use a
+different filter name, provide it as the third argument. For example:
+
+```php
+WhereDoesntHave::make($this, 'comments', 'without-comments');
+```
+
+The client would now need to invoke this filter as follows:
+
+```http
+GET /api/v1/posts?filter[without-comments][user]=123 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+### WhereHas
+
+The `WhereHas` filter is used to invoke the query builder `whereHas()` method,
+which queries for the existence of a matching relationship. To create a
+`WhereHas` filter, you must provide the schema and the JSON:API field name of
+the relationship. For example in our `PostSchema`:
+
+```php
+use LaravelJsonApi\Eloquent\Filters\WhereHas;
+
+WhereHas::make($this, 'comments');
+```
+
+The filter value is an array of filters that are valid for the *inverse* resource
+type of the relationship. So in this example, the client can provide any filters
+that are valid for the `comments` resource. If our `comments` resource accepted
+a `user` filter that took the ID of a user resource, then the client could
+request `posts` resources that user `123` has commented on:
+
+```http
+GET /api/v1/posts?filter[comments][user]=123 HTTP/1.1
+Accept: application/vnd.api+json
+```
+
+Notice that by default, the name of the filter is the same as the JSON:API
+relationship field name - in this case `comments`. If you wanted to use a
+different filter name, provide it as the third argument. For example:
+
+```php
+WhereHas::make($this, 'comments', 'with-comments');
+```
+
+The client would now need to invoke this filter as follows:
+
+```http
+GET /api/v1/posts?filter[with-comments][user]=123 HTTP/1.1
+Accept: application/vnd.api+json
 ```
 
 ### WhereIdIn
