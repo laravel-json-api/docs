@@ -5,7 +5,7 @@
 ## Requirements
 
 - PHP: `^7.4|^8.0`
-- Laravel: `^8.0`
+- Laravel: `^8.30`
 
 ## Installation
 
@@ -29,7 +29,6 @@ composer config minimum-stability alpha
 Then install the packages:
 
 ```bash
-
 composer require laravel-json-api/laravel
 composer require --dev laravel-json-api/testing
 ```

@@ -144,7 +144,7 @@ use LaravelJsonApi\Core\Responses\DataResponse;
  * @param PostQuery $query
  * @return \Illuminate\Contracts\Support\Responsable|\Illuminate\Http\Response
  */
-public function show(PostSchema $schema, PostRequest $request, PostQuery $query)
+public function store(PostSchema $schema, PostRequest $request, PostQuery $query)
 {
   $model = $schema
     ->repository()

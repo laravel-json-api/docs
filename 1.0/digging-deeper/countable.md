@@ -5,9 +5,17 @@
 ## Introduction
 
 :::danger
-We are planning to make breaking changes to the countable relations feature
-during the `1.0.0-beta` series. This feature is therefore consider not
-ready for use in production applications.
+Although included in the `1.0` release, the countable relationship feature
+**is experimental and is not considered ready for production use.** We will be
+making changes to this feature that will be breaking from the perspective of an
+API client.
+
+If your API is consumed by third-party clients, then
+**you must not use this feature in its current state.**
+
+If you develop the clients that connect to your API, then you could use this
+feature *at risk*. Which means when we make breaking changes to the feature,
+you will need to also update your client-side code.
 :::
 
 Sometimes you may want to count the number of related models for a given
@@ -16,7 +24,7 @@ feature via its `withCount` method on the query builder, and `loadCount`
 method on model instances, as
 [documented here.](https://laravel.com/docs/8.x/eloquent-relationships#counting-related-models)
 
-Laravel JSON:API exposes this capability via its *Countable* feature.
+Laravel JSON:API exposes this capability via its *Countable Relationships* feature.
 This adds a query parameter that allows a client to specify which relationships
 on a model it wants a count for - and then this value is added to the `meta`
 member of the relationship.
@@ -28,8 +36,16 @@ which we have used to add this capability to Laravel JSON:API.
 
 ## Countable Fields
 
-All *to-many* [relationship fields](../schema/relationships.md) are countable
-by default. If the client lists a countable field name in the countable query
+This feature is-opt in, i.e. you must mark a relationship field as being
+*countable*. Any *to-many* [relationship fields](../schema/relationships.md)
+can be marked as countable by calling the `canCount()` method on the relationship.
+For example:
+
+```php
+HasMany::make('comments')->canCount();
+```
+
+Once enabled, if the client lists a countable field name in the countable query
 parameter, the implementation takes care of ensuring the count value is loaded
 on the model (or models) and then added to a relationship's `meta` member.
 
@@ -46,16 +62,7 @@ relationship used a `HasMany` field in our `posts` schema, we could alias
 the count attribute as follows:
 
 ```php
-HasMany::make('comments')->countAs('total_comments');
-```
-
-### Disabling Counting
-
-If you do not want a client to be able to request a count for a relationship,
-use the `cannotCount()` method on the field in the schema. For example:
-
-```php
-HasMany::make('comments')->cannotCount();
+HasMany::make('comments')->canCount()->countAs('total_comments');
 ```
 
 ## Query Parameter
@@ -183,7 +190,7 @@ method on the resource relationship. For example:
 ```php
 $this->relation('comments')->withMeta(array_filter([
     'count' => $this->comments_count,
-], fn($value) => !is_null($value)));
+], fn($value) => null !== $value));
 ```
 
 ## Requests
@@ -325,5 +332,5 @@ field in your `posts` schema. Use the `dontCountInRelationship()` method.
 For example:
 
 ```php
-HasMany::make('comments')->dontCountInRelationship();
+HasMany::make('comments')->canCount()->dontCountInRelationship();
 ```

@@ -9,9 +9,17 @@ using the [JSON:API `page` query parameter.](https://jsonapi.org/format/#fetchin
 
 This package supports two approaches to pagination:
 
-- **Page-based**: the default Laravel pagination implementation, using a page
-number and size query parameters.
+- **Page-based**: Laravel's `paginate()` and `simplePaginate()` pagination
+implementations, that use a page number and size query parameters.
 - **Cursor-based**: cursor pagination inspired by Stripe's implementation.
+This implementation pre-dates Laravel's `cursorPaginate()` feature, and
+requires the installation of the `laravel-json-api/cursor-pagination` package.
+
+:::tip
+As Laravel's cursor-based pagination feature is relatively new, we have not
+yet had a chance to add support for it. We hope to add this during the `1.x`
+release cycle.
+:::
 
 You can choose which approach to use for each resource type, so your API
 can use different approaches for different resource types if needed.
@@ -137,6 +145,11 @@ details of the last page and total resources available.
 
 The cursor-based pagination provided by this package is inspired by
 [Stripe's pagination implementation](https://stripe.com/docs/api#pagination).
+Install via Composer:
+
+```bash
+composer require laravel-json-api/cursor-pagination
+```
 
 Cursor-based pagination is based on the paginator being given a context as to
 what results to return next. So rather than an API client saying it wants
@@ -171,7 +184,7 @@ schema's `pagination` method. For example:
 ```php
 namespace App\JsonApi\V1\Posts;
 
-use LaravelJsonApi\Eloquent\Pagination\CursorPagination;
+use LaravelJsonApi\CursorPagination\CursorPagination;
 use LaravelJsonApi\Eloquent\Schema;
 
 class PostSchema extends Schema
