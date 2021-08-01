@@ -75,8 +75,6 @@ to add a validation rule to your
 For example, on our `PostRequest` class we would add:
 
 ```php
-namespace App\JsonApi\V1\Posts;
-
 use LaravelJsonApi\Laravel\Http\Requests\ResourceRequest;
 use LaravelJsonApi\Validation\Rule as JsonApiRule;
 
@@ -174,10 +172,10 @@ Accept: application/vnd.api+json
 ```
 
 This will result in the model being removed from the database. The Eloquent
-`forceDelete` event will fire, as is normal for when force-deleting an
+`forceDeleted` event will fire, as is normal for when force-deleting an
 Eloquent model.
 
-## Soft-Deleting with Booleans
+## Using Booleans Instead of Dates
 
 The Eloquent soft delete implementation works using a date time to indicate
 whether or not a model is soft-deleted. In your API you may prefer to use a
@@ -193,6 +191,13 @@ field:
 ```php
 SoftDelete::make('archived', 'deleted_at')->asBoolean()
 ```
+
+:::tip
+It is important to note that while this changes the value in the JSON from a
+date to a boolean, the underlying storage of the value in the database remains
+a date. If you'd prefer to store a boolean to indicate if a model is soft-deleted,
+see the [Boolean Soft-Deletes section below.](#boolean-soft-deletes)
+:::
 
 The client can now send the following request to soft-delete a resource:
 
@@ -322,7 +327,7 @@ added to the query builder for models that implement soft deleting. Add the
 filter to your schema as follows, providing the JSON:API filter key name:
 
 ```php
-use LaravelJsonApi\Eloquent\Filters\WithTrashed;
+use LaravelJsonApi\Eloquent\Filters\OnlyTrashed;
 
 OnlyTrashed::make('trashed')
 ```
@@ -330,3 +335,128 @@ OnlyTrashed::make('trashed')
 Once this is added, the client can provide a `true` value to receive only
 models that are soft-deleted. Providing `false` means only models that are
 not soft-deleted will be returned.
+
+## Boolean Soft-Deletes
+
+TenantCloud provide an alternative soft-deletes package called
+[tenantcloud/laravel-boolean-softdeletes](https://github.com/tenantcloud/laravel-boolean-softdeletes).
+This uses a boolean database value to indicate a model is soft-deleted. When
+combined with a database index, this provides a more performant soft-deleting
+implementation for high-load applications.
+
+Use of this alternative soft-deleting approach is supported via our
+[laravel-json-api/boolean-softdeletes](https://github.com/laravel-json-api/boolean-softdeletes)
+package.
+
+Install our package via Composer, which will also install the TenantCloud package:
+
+```bash
+composer require laravel-json-api/boolean-soft-deletes
+```
+
+### Implementing Boolean Soft-Deletes
+
+Support boolean soft-deleting for a resource in two simple steps:
+
+1. Add the `LaravelJsonApi\BooleanSoftDeletes\SoftDeletesBoolean` trait to your schema.
+2. Use an **unguarded** `Boolean` field as the attribute on your resource.
+
+For example, our `PostSchema` would look like this:
+
+```php
+use LaravelJsonApi\BooleanSoftDeletes\SoftDeletesBoolean;
+use LaravelJsonApi\Eloquent\Fields\Boolean;
+use LaravelJsonApi\Eloquent\Filters\OnlyTrashed;
+use LaravelJsonApi\Eloquent\Filters\WithTrashed;
+use LaravelJsonApi\Eloquent\Schema;
+
+class PostSchema extends Schema
+{
+
+    use SoftDeletesBoolean;
+
+    // ...
+
+    public function fields(): array
+    {
+        return [
+            ID::make(),
+            Boolean::make('isDeleted')->unguarded(),
+            // ... other fields
+        ];
+    }
+
+    public function filters(): iterable
+    {
+        return [
+            OnlyTrashed::make('trashed'),
+            WithTrashed::make('withTrashed'),
+            // ...other filters
+        ];
+    }
+}
+```
+
+:::tip
+As shown in the above example, both the `OnlyTrashed` and `WithTrashed` filters
+work with the boolean soft-deletes implementation.
+:::
+
+Remember that we only fill validated values - so you will need to add a validation
+rule for the `isDeleted` attribute:
+
+```php
+use LaravelJsonApi\Laravel\Http\Requests\ResourceRequest;
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+class PostRequest extends ResourceRequest
+{
+
+    /**
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            // ...other rules
+            'isDeleted' => 'boolean',
+        ];
+    }
+}
+```
+
+The client can now send the following request to soft-delete a resource:
+
+```http
+PATCH /api/v1/posts/1 HTTP/1.1
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "data": {
+    "type": "posts",
+    "id": "1",
+    "attributes": {
+      "isDeleted": true
+    }
+  }
+}
+```
+
+And this request will restore a soft-deleted resource:
+
+```http
+PATCH /api/v1/posts/1 HTTP/1.1
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "data": {
+    "type": "posts",
+    "id": "1",
+    "attributes": {
+      "isDeleted": false
+    }
+  }
+}
+```
