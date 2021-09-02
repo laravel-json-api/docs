@@ -16,17 +16,7 @@ We also recommend you install our testing package as a development
 dependency. This adds test helpers as described in the
 [Testing Chapter.](../testing/)
 
-Install both packages using [Composer](https://getcomposer.org).
-
-**As we are currently on alpha releases, you will need to set your
-project's minimum stability to `alpha` (or `dev`) before installing
-our packages:**
-
-```bash
-composer config minimum-stability alpha
-```
-
-Then install the packages:
+Install both packages using [Composer](https://getcomposer.org):
 
 ```bash
 composer require laravel-json-api/laravel
