@@ -9,6 +9,13 @@ module.exports = [
     ]),
   },
   {
+    title: 'Tutorial',
+    collapsable: true,
+    children: prefix('tutorial', [
+      '',
+    ]),
+  },
+  {
     title: 'Servers',
     collapsable: false,
     children: prefix('servers', [
