@@ -13,6 +13,9 @@ module.exports = [
     collapsable: true,
     children: prefix('tutorial', [
       '',
+      '01-models',
+      '02-server-and-schemas',
+      '03-relationships',
     ]),
   },
   {
