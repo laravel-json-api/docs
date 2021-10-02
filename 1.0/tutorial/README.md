@@ -1,4 +1,4 @@
-# Getting Started
+# 1. Getting Started
 
 [[toc]]
 
@@ -90,5 +90,5 @@ Laravel Framework 8.61.0
 
 You've create a brand new Laravel application, and are running it locally.
 
-In the [next chapter](./01-models.md) we'll add the database tables and models
+In the [next chapter](./02-models.md) we'll add the database tables and models
 required for our blog application.

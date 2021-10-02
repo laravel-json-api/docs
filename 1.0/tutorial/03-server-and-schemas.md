@@ -1,4 +1,4 @@
-# Servers and Schemas
+# 3. Servers and Schemas
 
 [[toc]]
 
@@ -39,34 +39,58 @@ returns errors in the JSON:API format. To do this, we need to add a few things
 to our application's exception handler.
 
 Open the file `app/Exceptions/Handler.php` and you'll see the default exception
-handler that Laravel created for our application.
+handler that Laravel created for our application. Make the following changes:
 
-Firstly, you need to add the `JsonApiException` class to the `$dontReport`
-property, like so:
+```diff
+ namespace App\Exceptions;
 
-```php
-protected $dontReport = [
-    \LaravelJsonApi\Core\Exceptions\JsonApiException::class,
-];
+ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+ use Throwable;
+
+ class Handler extends ExceptionHandler
+ {
+     /**
+      * A list of the exception types that are not reported.
+      *
+      * @var array
+      */
+     protected $dontReport = [
+-        //
++        \LaravelJsonApi\Core\Exceptions\JsonApiException::class,
+     ];
+
+     /**
+      * A list of the inputs that are never flashed for validation exceptions.
+      *
+      * @var array
+      */
+     protected $dontFlash = [
+         'current_password',
+         'password',
+         'password_confirmation',
+     ];
+
+     /**
+      * Register the exception handling callbacks for the application.
+      *
+      * @return void
+      */
+     public function register()
+     {
+         $this->reportable(function (Throwable $e) {
+             //
+         });
++
++        $this->renderable(
++            \LaravelJsonApi\Exceptions\ExceptionParser::make()->renderable()
++        );
+     }
+ }
 ```
 
-Secondly, in the `register()` method we need to add the JSON:API exception
-renderer. This takes care of converting exceptions to the JSON:API format,
-if the client has requested JSON:API content via the `application/vnd.api+json`
-media type. Update the `register()` method to look like this:
-
-```php
-public function register()
-{
-    $this->reportable(function (Throwable $e) {
-        //
-    });
-
-    $this->renderable(
-        \LaravelJsonApi\Exceptions\ExceptionParser::make()->renderable()
-    );
-}
-```
+The change in the `register()` method takes care of converting exceptions to the
+JSON:API format, if the client has requested JSON:API content via the
+`application/vnd.api+json` media type.
 
 ## Creating a JSON:API Server
 
@@ -167,10 +191,11 @@ return [
 To add our server, we just need to uncomment the line in the `servers` part of
 the configuration. Do that now, so that your configuration looks like this:
 
-```php
-'servers' => [
-    'v1' => \App\JsonApi\V1\Server::class,
-],
+```diff
+ 'servers' => [
+-//  'v1' => \App\JsonApi\V1\Server::class,
++    'v1' => \App\JsonApi\V1\Server::class,
+ ],
 ```
 
 And that's it! We now have a JSON:API server. Next we need to add our first
@@ -273,18 +298,19 @@ Now we've created the schema, we need to tell our JSON:API server that the
 schema exists. To do this, we update the `allSchemas()` method in our
 `app/JsonApi/Server.php` file. Update that to look like this:
 
-```php
-/**
- * Get the server's list of schemas.
- *
- * @return array
- */
-protected function allSchemas(): array
-{
-    return [
-        Posts\PostSchema::class,
-    ];
-}
+```diff
+ /**
+  * Get the server's list of schemas.
+  *
+  * @return array
+  */
+ protected function allSchemas(): array
+ {
+     return [
+-        // @TODO
++        Posts\PostSchema::class,
+     ];
+ }
 ```
 
 ### Schema Fields
@@ -297,25 +323,71 @@ dates that are standard on an Eloquent model.
 Our `Post` model has a few more attributes than that. Hopefully you remember
 that the database table had `content`, `published_at`, `slug` and `title`
 columns. We want to add these to our `PostSchema` as these values should be
-shown in our API. To do that, we update the fields method to look like this:
+shown in our API. To do that, we make the following changes to our class:
 
-```php
-use LaravelJsonApi\Eloquent\Fields\DateTime;
-use LaravelJsonApi\Eloquent\Fields\ID;
-use LaravelJsonApi\Eloquent\Fields\Str;
+```diff
+ namespace App\JsonApi\V1\Posts;
 
-public function fields(): array
-{
-    return [
-        ID::make(),
-        Str::make('content'),
-        DateTime::make('createdAt')->sortable()->readOnly(),
-        DateTime::make('publishedAt')->sortable(),
-        Str::make('slug'),
-        Str::make('title')->sortable(),
-        DateTime::make('updatedAt')->sortable()->readOnly(),
-    ];
-}
+ use App\Models\Post;
+ use LaravelJsonApi\Eloquent\Contracts\Paginator;
++use LaravelJsonApi\Eloquent\Fields\DateTime;
+ use LaravelJsonApi\Eloquent\Fields\ID;
++use LaravelJsonApi\Eloquent\Fields\Str;
+ use LaravelJsonApi\Eloquent\Filters\WhereIdIn;
+ use LaravelJsonApi\Eloquent\Pagination\PagePagination;
+ use LaravelJsonApi\Eloquent\Schema;
+
+ class PostSchema extends Schema
+ {
+
+     /**
+      * The model the schema corresponds to.
+      *
+      * @var string
+      */
+     public static string $model = Post::class;
+
+     /**
+      * Get the resource fields.
+      *
+      * @return array
+      */
+     public function fields(): array
+     {
+         return [
+             ID::make(),
++            Str::make('content'),
+             DateTime::make('createdAt')->sortable()->readOnly(),
++            DateTime::make('publishedAt')->sortable(),
++            Str::make('slug'),
++            Str::make('title')->sortable(),
+             DateTime::make('updatedAt')->sortable()->readOnly(),
+         ];
+     }
+
+     /**
+      * Get the resource filters.
+      *
+      * @return array
+      */
+     public function filters(): array
+     {
+         return [
+             WhereIdIn::make($this),
+         ];
+     }
+
+     /**
+      * Get the resource paginator.
+      *
+      * @return Paginator|null
+      */
+     public function pagination(): ?Paginator
+     {
+         return PagePagination::make();
+     }
+
+ }
 ```
 
 ## Fetching a Post Resource
@@ -346,7 +418,20 @@ Accept: application/vnd.api+json
 Try this now. You should see the following response:
 
 ```http
-@TODO
+HTTP/1.0 404 Not Found
+Content-Type: application/vnd.api+json
+
+{
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "errors": [
+    {
+      "status": "404",
+      "title": "Not Found"
+    }
+  ]
+}
 ```
 
 This is a JSON:API error, with a `404 Not Found` HTTP status - which tells us
@@ -382,18 +467,19 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 To add our JSON:API server's routes, we will use the `JsonApiRoute` facade.
 Update the `routes/api.php` file to look like this:
 
-```php
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
+```diff
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Route;
++use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
++use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
-JsonApiRoute::server('v1')->prefix('v1')->resources(function ($server) {
-    $server->resource('posts')->readOnly();
-});
+ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+     return $request->user();
+ });
++
++JsonApiRoute::server('v1')->prefix('v1')->resources(function ($server) {
++    $server->resource('posts', JsonApiController::class)->readOnly();
++});
 ```
 
 The `JsonApiRoute` facade provides a fluent interface for defining the HTTP
@@ -409,7 +495,7 @@ argument. This is a helper to make it easy to define the resource routes in the
 server. We've added the following:
 
 ```php
-$server->resource('posts')->readOnly();
+$server->resource('posts', JsonApiController::class)->readOnly();
 ```
 
 This adds the following routes:
@@ -432,7 +518,21 @@ Accept: application/vnd.api+json
 This time you'll see the following:
 
 ```http
-@TODO
+HTTP/1.1 401 Unauthorized
+Content-Type: application/vnd.api+json
+
+{
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "errors": [
+    {
+      "detail": "Unauthenticated.",
+      "status": "401",
+      "title": "Unauthorized"
+    }
+  ]
+}
 ```
 
 This time we get a `401 Unauthorized` HTTP status, which tells us that we need
@@ -490,24 +590,26 @@ class PostPolicy
 ```
 
 The `view()` method is where we need to put the logic for who can view a specific
-post in our blog. Edit the `view()` method to look like this:
+post in our blog. Make the following changes to the `view()` method:
 
-```php
-/**
- * Determine whether the user can view the model.
- *
- * @param  \App\Models\User|null  $user
- * @param  \App\Models\Post  $post
- * @return \Illuminate\Auth\Access\Response|bool
- */
-public function view(?User $user, Post $post)
-{
-    if ($post->published_at) {
-        return true;
-    }
-
-    return $user && $user->is($post->author);
-}
+```diff
+ /**
+  * Determine whether the user can view the model.
+  *
+- * @param  \App\Models\User  $user
++ * @param  \App\Models\User|null  $user
+  * @param  \App\Models\Post  $post
+  * @return \Illuminate\Auth\Access\Response|bool
+  */
+ public function view(?User $user, Post $post)
+ {
+-    //
++    if ($post->published_at) {
++        return true;
++    }
++
++    return $user && $user->is($post->author);
+ }
 ```
 
 Notice we've made the `$user` argument nullable. This means the method will be
@@ -532,7 +634,32 @@ Accept: application/vnd.api+json
 Success! This time you'll see the `posts` resource:
 
 ```http
-@TODO
+HTTP/1.1 200 OK
+Content-Type: application/vnd.api+json
+
+{
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "links": {
+    "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+  },
+  "data": {
+    "type": "posts",
+    "id": "1",
+    "attributes": {
+      "content": "In our first blog post, you will learn all about Laravel JSON:API...",
+      "createdAt": "2021-09-19T15:47:49.000000Z",
+      "publishedAt": "2021-09-19T15:47:49.000000Z",
+      "slug": "welcome-to-laravel-jsonapi",
+      "title": "Welcome to Laravel JSON:API",
+      "updatedAt": "2021-09-19T15:47:49.000000Z"
+    },
+    "links": {
+      "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+    }
+  }
+}
 ```
 
 ## In Summary
@@ -541,5 +668,5 @@ In this chapter, we created our JSON:API server and added our first resource
 to it by creating a `PostSchema` class. We also learnt how to register JSON:API
 routes and how authentication works.
 
-In the [next chapter](./03-relationships), we'll add relationships to our
+In the [next chapter](./04-relationships), we'll add relationships to our
 `posts` resource.
