@@ -601,7 +601,8 @@ post in our blog. Make the following changes to the `view()` method:
   * @param  \App\Models\Post  $post
   * @return \Illuminate\Auth\Access\Response|bool
   */
- public function view(?User $user, Post $post)
+-public function view(User $user, Post $post)
++public function view(?User $user, Post $post)
  {
 -    //
 +    if ($post->published_at) {
