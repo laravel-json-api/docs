@@ -16,7 +16,8 @@ module.exports = [
       '02-models',
       '03-server-and-schemas',
       '04-relationships',
-      '05-creating-resources'
+      '05-creating-resources',
+      '06-modifying-resources',
     ]),
   },
   {

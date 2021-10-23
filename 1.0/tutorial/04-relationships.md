@@ -887,7 +887,7 @@ identifies the related author and comments.
 
 The related resources that are referenced by those identifiers are found in the
 top-level `included` member of the JSON document. It's an array, containing
-all the related resources referenced in the document. In JSON:AP this is known
+all the related resources referenced in the document. In JSON:API this is known
 as a *Compound Document*.
 
 This means as well as displaying the post, our frontend would now be able to
