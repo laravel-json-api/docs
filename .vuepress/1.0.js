@@ -18,6 +18,8 @@ module.exports = [
       '04-relationships',
       '05-creating-resources',
       '06-modifying-resources',
+      '07-deleting-resources',
+      '08-fetching-resources',
     ]),
   },
   {
