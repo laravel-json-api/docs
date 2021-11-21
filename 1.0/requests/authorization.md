@@ -136,7 +136,7 @@ The authorization method is invoked on the `PostPolicy`:
 | --- | --- | --- |
 | GET | `/posts/{post}/author` | viewAuthor |
 | GET | `/posts/{post}/relationships/author` | viewAuthor |
-| POST | `/posts/{post}/relationships/author` | updateAuthor |
+| PATCH | `/posts/{post}/relationships/author` | updateAuthor |
 
 The `viewAuthor` authorization method receives the `Post` model that is
 subject of the request. For example:
@@ -223,8 +223,8 @@ The authorization method is invoked on the `PostPolicy`:
 | --- | --- | --- |
 | GET | `/posts/{post}/tags` | viewTags |
 | GET | `/posts/{post}/relationships/tags` | viewTags |
-| POST | `/posts/{post}/relationships/tags` | updateTags |
-| PATCH | `/posts/{post}/relationships/tags` | attachTags |
+| PATCH | `/posts/{post}/relationships/tags` | updateTags |
+| POST | `/posts/{post}/relationships/tags` | attachTags |
 | DELETE | `/posts/{post}/relationships/tags` | detachTags |
 
 The `viewTags` authorization method receives the `Post` model that is
