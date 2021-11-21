@@ -9,6 +9,20 @@ module.exports = [
     ]),
   },
   {
+    title: 'Tutorial',
+    collapsable: true,
+    children: prefix('tutorial', [
+      '',
+      '02-models',
+      '03-server-and-schemas',
+      '04-relationships',
+      '05-creating-resources',
+      '06-modifying-resources',
+      '07-deleting-resources',
+      '08-fetching-resources',
+    ]),
+  },
+  {
     title: 'Servers',
     collapsable: false,
     children: prefix('servers', [
