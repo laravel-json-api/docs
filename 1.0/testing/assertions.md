@@ -528,6 +528,7 @@ member to contain resources:
 
 - [assertIsIncluded](#assertisincluded)
 - [assertIncluded](#assertincluded)
+- [assertDoesntHaveIncluded](#assertdoesnthaveincluded)
 
 ### assertIsIncluded
 
@@ -586,6 +587,28 @@ $response->assertFetchedOne($post)->assertIncluded([
 ]);
 ```
 
+### assertDoesntHaveIncluded
+
+The `assertDoesntHaveIncluded` method asserts that the `included` top-level
+member is not present in the JSON:API document. For example:
+
+```php
+use App\Models\Post;
+
+// post that does not have any tags.
+$post = Post::factory()->create();
+
+$response = $this
+    ->jsonApi()
+    ->expects('posts')
+    ->includePaths('tags')
+    ->get('/api/v1/posts' . $post->getRouteKey());
+
+$response
+    ->assertFetchedOne($post)
+    ->assertDoesntHaveIncluded();
+```
+
 ## Top-Level Meta
 
 You should use the following assertions when you expect top-level `meta`
@@ -595,6 +618,7 @@ in the response:
 - [assertExactMetaWithoutData](#assertexactmetawithoutdata)
 - [assertMeta](#assertmeta)
 - [assertExactMeta](#assertexactmeta)
+- [assertDoesntHaveMeta](#assertdoesnthavemeta)
 
 ### assertMetaWithoutData
 
@@ -619,7 +643,7 @@ $response->assertMetaWithoutData([
 
 ### assertExactMetaWithoutData
 
-The `assertMetaWihoutData` method asserts that:
+The `assertExactMetaWihoutData` method asserts that:
 
 - The response has a `200 OK` response status;
 - The response content type is `application/vnd.api+json`; AND
@@ -660,7 +684,7 @@ $response->assertFetchedMany($expected)->assertMeta([
 
 ### assertExactMeta
 
-The `assertMeta` method asserts that there is a top-level `meta` member
+The `assertExactMeta` method asserts that there is a top-level `meta` member
 in the JSON:API document, and it matches the expected meta.
 
 This method does an exact match when checking if the response `meta`
@@ -678,6 +702,17 @@ $response->assertFetchedMany($expected)->assertExactMeta([
 ]);
 ```
 
+### assertDoesntHaveMeta
+
+The `assertDoesntHaveMeta` method asserts that the top-level `meta` member is not
+present in the JSON:API document. For example:
+
+```php
+$response
+    ->assertFetchedOne($post)
+    ->assertDoesntHaveMeta();
+```
+
 ## Top-Level Links
 
 You should use the following assertions when you expect top-level `links`
@@ -685,6 +720,7 @@ in the response:
 
 - [assertLinks](#assertlinks)
 - [assertExactLinks](#assertexactlinks)
+- [assertDoesntHaveLinks](#assertdoesnthavelinks)
 
 ### assertLinks
 
@@ -720,6 +756,17 @@ $response->assertFetchedOne($expected)->assertExactLinks([
     'self' => 'http://localhost/api/v1/posts/123/relationships/author',
     'related' => 'http://localhost/api/v1/posts/123/author'
 ]);
+```
+
+### assertDoesntHaveLinks
+
+The `assertDoesntHaveLinks` method asserts that the top-level `links` member is
+not present in the JSON:API document. For example:
+
+```php
+$response
+    ->assertFetchedMany($expected)
+    ->assertDoesntHaveLinks();
 ```
 
 ## Errors
