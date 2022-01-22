@@ -525,6 +525,23 @@ the different request types described in this chapter, i.e. creating/updating
 a resource, modifying a relationship and deleting a resource.
 :::
 
+### Validating Booleans
+
+In JSON, a boolean is always `true` or `false`. However Laravel's `boolean`
+validation rule is _loosely typed_ - i.e. it will accept `true`, `false`, `0`,
+`1`, `"0"`, and `"1"` as valid values.
+
+For JSON it is better to by _strictly typed_ for boolean values. Use our
+`boolean` rule to enforce only accepting `true` and `false` as valid values:
+
+```php
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+return [
+    'published' => JsonApiRule::boolean(),
+];
+```
+
 ### Validating Dates
 
 JSON:API
@@ -550,6 +567,34 @@ use LaravelJsonApi\Validation\Rule as JsonApiRule;
 
 return [
     'publishedAt' => ['nullable', JsonApiRule::dateTime()]
+];
+```
+
+### Validating Numbers
+
+Laravel's `integer` and `numeric` rules are _loosely typed_ - that is, they will
+accept integers, floats and string representations of numbers. JSON however
+can be _strictly typed_ - i.e. when JSON decoded we can expect a value to be
+a PHP integer or float.
+
+If you have a field that can accept an integer or float, use our `number`
+validation rule to ensure it is strictly typed:
+
+```php
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+return [
+    'published' => JsonApiRule::number(),
+];
+```
+
+To only accept integers, use the `integer` rule:
+
+```php
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+return [
+    'published' => JsonApiRule::integer(),
 ];
 ```
 

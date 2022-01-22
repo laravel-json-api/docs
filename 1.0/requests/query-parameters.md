@@ -356,12 +356,46 @@ This is to avoid collisions with the `Illuminate\Validation\Rule` class.
 
 The available rules are:
 
+- [Boolean](#boolean)
 - [Field Sets](#field-sets)
 - [Filter](#filter)
 - [Include Paths](#include-paths)
 - [Not Supported](#not-supported)
 - [Page](#page)
 - [Sort](#sort)
+
+### Boolean
+
+As query parameters are taken from the string URL, their values are always
+strings. Our filters classes have an `asBoolean()` helper method that tells the
+filter to parse the string value to a boolean - which internally uses PHP's
+`filter_var` function.
+
+To validate a query parameter string value as a boolean, use our `boolean` rule
+combined with the `asString()` method to tell the rule that you expect the
+boolean to be a string. For example:
+
+```php
+use LaravelJsonApi\Validation\Rule as JsonApiRule;
+
+public function rules(): array
+{
+  return [
+      'filter.published' => JsonApiRule::boolean()->asString(),
+
+      // ...
+  ];
+}
+```
+
+This will allow the client to submit `"true"`, `"false"`, `"0"` and `"1"` as
+the string boolean values.
+
+:::tip
+Laravel does have a `boolean` rule that you could use. However this rule does
+not allow `"true"` and `"false"` as values. Therefore we recommend using our
+boolean rule for this scenario.
+:::
 
 ### Field Sets
 
