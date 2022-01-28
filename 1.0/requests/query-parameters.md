@@ -505,7 +505,7 @@ use LaravelJsonApi\Validation\Rule as JsonApiRule;
 public function rules(): array
 {
   return [
-      'filter' => [
+      'include' => [
         'nullable',
         'string',
         JsonApiRule::includePaths(),
