@@ -774,12 +774,14 @@ $response
 You should use the following assertions when you expect top-level `errors`
 in the response:
 
-- [assertErrorStatus](#asserterrorstatus)
-- [assertExactErrorStatus](#assertexacterrorstatus)
+- [assertErrorStatus / assertError](#asserterrorstatus-asserterror)
+- [assertExactErrorStatus / assertExactError ](#assertexacterrorstatus-assertexacterror)
 - [assertErrors](#asserterrors)
 - [assertExactErrors](#assertexacterrors)
+- [assertHasError](#asserthaserror)
+- [assertHasExactError](#asserthasexacterror)
 
-### assertErrorStatus
+### assertErrorStatus / assertError
 
 The `assertErrorStatus` method asserts that:
 
@@ -803,7 +805,22 @@ $response->assertErrorStatus([
 ]);
 ```
 
-### assertExactErrorStatus
+If you expect the HTTP status code to be different from the `status` member of
+the error object, use `assertError()` instead. In the following example, the
+assertion checks the HTTP status code is `400` and that the `errors` member
+has a single error matching the expected one:
+
+```php
+$expected = [
+  'source' => ['pointer' => '/data/attributes/title'],
+  'status' => '422',
+  'title' => 'Invalid Attribute',
+];
+
+$response->assertError(400, $expected);
+```
+
+### assertExactErrorStatus / assertExactError
 
 The `assertExactErrorStatus` method asserts that:
 
@@ -817,14 +834,29 @@ This method uses exact matching when checking the expected error object.
 
 In the following example, the assertion checks that the response status
 is `400`, as well as checking that `errors` member has a single error
-matching the expected error:
+exactly matching the expected error:
 
 ```php
-$response->assertErrorStatus([
+$response->assertExactErrorStatus([
     'source' => ['parameter' => 'filter'],
     'status' => '400',
     'title' => 'Bad Request',
 ]);
+```
+
+If you expect the HTTP status code to be different from the `status` member of
+the error object, use `assertExactError()` instead. In the following example,
+the assertion checks the HTTP status code is `400` and that the `errors` member
+has a single error exactly matching the expected one:
+
+```php
+$expected = [
+  'source' => ['pointer' => '/data/attributes/title'],
+  'status' => '422',
+  'title' => 'Invalid Attribute',
+];
+
+$response->assertExactError(400, $expected);
 ```
 
 ### assertErrors
@@ -854,7 +886,7 @@ $response->assertErrors(400, [
         'source' => ['parameter' => 'filter'],
         'status' => '400',
     ],
-])
+]);
 ```
 
 ### assertExactErrors
@@ -888,5 +920,53 @@ $response->assertErrors(400, [
         'status' => '400',
         'title' => 'Bad Request',
     ],
-])
+]);
+```
+
+### assertHasError
+
+The `assertHasError` method asserts that:
+
+- The response has a response status matching the provided expected status;
+- The response has a content type of `application/vnd.api+json`; and
+- The response document has a top-level errors member that contains an error
+matching the supplied error.
+
+This is useful when a response document contains multiple errors, but for your
+test you only want to assert that the errors list contains a specific error.
+
+For example:
+
+```php
+$response->assertHasError(400, [
+    'detail' => 'The chosen slug is already taken.',
+    'source' => ['pointer' => '/data/attributes/slug'],
+    'status' => '422',
+    'title' => 'Unprocessable Entity',
+]);
+```
+
+### assertHasExactError
+
+The `assertHasExactError` method asserts that:
+
+- The response has a response status matching the provided expected status;
+- The response has a content type of `application/vnd.api+json`; and
+- The response document has a top-level errors member that contains an error
+matching the supplied error.
+
+This is useful when a response document contains multiple errors, but for your
+test you only want to assert that the errors list contains a specific error.
+
+This method performs exact matching when checking the expected error.
+
+For example:
+
+```php
+$response->assertHasExactError(400, [
+    'detail' => 'The chosen slug is already taken.',
+    'source' => ['pointer' => '/data/attributes/slug'],
+    'status' => '422',
+    'title' => 'Unprocessable Entity',
+]);
 ```

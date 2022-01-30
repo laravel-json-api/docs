@@ -121,6 +121,19 @@ GET /api/v1/posts?filter[published]=true HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
+If you provide models as filter values, these will be converted to their route
+keys. For example:
+
+```php
+$posts = Post::factory()->count(3)->create();
+
+$response = $this
+    ->jsonApi()
+    ->expects('posts')
+    ->filter(['id' => $posts])
+    ->get('/api/v1/posts');
+```
+
 ### Sort
 
 The `sort` method allows you to fluently set the `sort` query parameter:
@@ -162,6 +175,19 @@ This is equivalent to the following request:
 ```http
 GET /api/v1/posts?page[number]=1&page[size]=10 HTTP/1.1
 Accept: application/vnd.api+json
+```
+
+If you provide models as page values, these will be converted to their route
+keys. For example:
+
+```php
+$posts = Post::factory()->count(3)->create();
+
+$response = $this
+    ->jsonApi()
+    ->expects('posts')
+    ->page(['after' => $posts[0]])
+    ->get('/api/v1/posts');
 ```
 
 ## Request Body and Headers
