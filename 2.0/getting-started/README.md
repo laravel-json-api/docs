@@ -19,8 +19,8 @@ dependency. This adds test helpers as described in the
 Install both packages using [Composer](https://getcomposer.org):
 
 ```bash
-composer require laravel-json-api/laravel:^2.0
-composer require --dev laravel-json-api/testing:^1.1
+composer require laravel-json-api/laravel
+composer require --dev laravel-json-api/testing
 ```
 
 The `LaravelJsonApi\Laravel\ServiceProvider` is auto-discovered and registered

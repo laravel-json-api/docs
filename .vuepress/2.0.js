@@ -4,6 +4,7 @@ module.exports = [
     collapsable: false,
     children: prefix('getting-started', [
       '',
+      'upgrade',
       'core-concepts',
       'directory-structure',
     ]),

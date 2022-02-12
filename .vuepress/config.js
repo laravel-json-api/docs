@@ -41,13 +41,13 @@ module.exports = {
         link: "/",
         items: [
           {
+            text: "2.0",
+            link: "/2.0/"
+          },
+          {
             text: "1.0",
             link: "/1.0/"
           },
-          {
-            text: "2.0",
-            link: "/2.0/"
-          }
         ],
       }
     ],
