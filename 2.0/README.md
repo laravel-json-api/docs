@@ -6,11 +6,11 @@ specification-compliant APIs to your Laravel applications.
 Full details of the JSON:API specification can be found on their
 [website](https://jsonapi.org).
 
-## Laravel JSON:API Features
+## Features
 
-This package provides all the capabilities you need to add JSON:API compliant
-APIs to your Laravel application. We have extensive support for the full
-specification, including:
+Laravel JSON:API provides all the capabilities you need to add JSON:API
+compliant APIs to your Laravel application. We have extensive support for the
+full specification, including:
 
 - Content negotiation
 - Fetching resources
@@ -38,3 +38,10 @@ with features such as:
 
 And finally, we have an extensive range of test helpers: to make
 test driven development a breeze.
+
+## Get Started
+
+Get start by heading to the [installation guide.](./getting-started)
+
+Or if you're new to JSON:API or want a great intro the Laravel JSON:API, then
+try our [tutorial.](./tutorial)
