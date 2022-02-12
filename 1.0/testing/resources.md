@@ -141,10 +141,10 @@ public function test(): void
         'id' => (string) $post->getRouteKey(),
         'attributes' => [
             'content' => $post->content,
-            'createdAt' => $post->created_at->jsonSerialize(),
+            'createdAt' => $post->created_at,
             'slug' => $post->slug,
             'title' => $post->title,
-            'updatedAt' => $post->updated_at->jsonSerialize(),
+            'updatedAt' => $post->updated_at,
         ],
         'relationships' => [
             'author' => [
