@@ -19,8 +19,8 @@ To start, we'll need to install the Laravel JSON:API package into our applicatio
 via Composer. Run the following commands:
 
 ```bash
-composer require laravel-json-api/laravel:^1.1
-composer require --dev laravel-json-api/testing:^1.1
+composer require laravel-json-api/laravel
+composer require --dev laravel-json-api/testing
 ```
 
 We then need to publish the Laravel JSON:API configuration file, using the

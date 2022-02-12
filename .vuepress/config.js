@@ -39,11 +39,21 @@ module.exports = {
       {
         text: "Version",
         link: "/",
-        items: [{ text: "1.0", link: "/1.0/" }],
+        items: [
+          {
+            text: "2.0",
+            link: "/2.0/"
+          },
+          {
+            text: "1.0",
+            link: "/1.0/"
+          },
+        ],
       }
     ],
     sidebar: {
       "/1.0/": require("./1.0"),
+      "/2.0/": require("./2.0"),
     },
   },
 
