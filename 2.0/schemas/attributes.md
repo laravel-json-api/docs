@@ -449,6 +449,25 @@ use LaravelJsonApi\Eloquent\Fields\Number;
 Number::make('failures', 'failure_count')
 ```
 
+By default our `Number` field only accepts integers or floats. This is because
+JSON has a number type, which decodes to a PHP integer or float. However, there
+is a _gotcha_ with this. Laravel's `integer` and `numeric` validation rules are
+loosely-typed: i.e. they will accept a numeric string.
+
+We therefore recommend using our `number` or `integer` validation rules, as
+described in the
+[Validating Numbers](../requests/resources.md#validating-numbers)
+section.
+
+If however you do want to accept numeric strings, call the `acceptStrings()`
+method on the `Number` field:
+
+```php
+use LaravelJsonApi\Eloquent\Fields\Number;
+
+Number::make('failures')->acceptStrings();
+```
+
 ### String Field
 
 The `Str` (string) field may be used to represent an attribute that is
