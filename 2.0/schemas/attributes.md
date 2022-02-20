@@ -346,6 +346,15 @@ use LaravelJsonApi\Eloquent\Fields\Boolean;
 Boolean::make('active')
 ```
 
+:::tip
+When validating a boolean field, we recommend using our `boolean` rule instead
+of Laravel's `boolean` rule. This is because the Laravel rule is loosely-typed,
+i.e. it will accept string values as booleans. However, our `boolean` rule
+ensures the JSON value is a _real_ boolean. See the
+[Validating Booleans](../requests/resources.md#validating-booleans)
+section for more information.
+:::
+
 ### DateTime Field
 
 The `DateTime` field may be used to represent an attribute that is a string
@@ -447,6 +456,25 @@ schema like so:
 use LaravelJsonApi\Eloquent\Fields\Number;
 
 Number::make('failures', 'failure_count')
+```
+
+By default our `Number` field only accepts integers or floats. This is because
+JSON has a number type, which decodes to a PHP integer or float. However, there
+is a _gotcha_ with this. Laravel's `integer` and `numeric` validation rules are
+loosely-typed: i.e. they will accept a numeric string.
+
+We therefore recommend using our `number` or `integer` validation rules, as
+described in the
+[Validating Numbers](../requests/resources.md#validating-numbers)
+section.
+
+If however you do want to accept numeric strings, call the `acceptStrings()`
+method on the `Number` field:
+
+```php
+use LaravelJsonApi\Eloquent\Fields\Number;
+
+Number::make('failures')->acceptStrings();
 ```
 
 ### String Field
