@@ -346,6 +346,15 @@ use LaravelJsonApi\Eloquent\Fields\Boolean;
 Boolean::make('active')
 ```
 
+:::tip
+When validating a boolean field, we recommend using our `boolean` rule instead
+of Laravel's `boolean` rule. This is because the Laravel rule is loosely-typed,
+i.e. it will accept string values as booleans. However, our `boolean` rule
+ensures the JSON value is a _real_ boolean. See the
+[Validating Booleans](../requests/resources.md#validating-booleans)
+section for more information.
+:::
+
 ### DateTime Field
 
 The `DateTime` field may be used to represent an attribute that is a string
