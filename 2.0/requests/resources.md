@@ -815,6 +815,34 @@ data that was validated for a resource create or update request.
 For relationship requests, you should use the `validatedForRelation`
 method to retrieve the validated value.
 
+## Accessing Related Models
+
+For requests that modify a relationship, it is possible to access the related
+model (for a to-one relationship) or models (for a to-many relationship). These
+are the models that are referenced in the `data` member of the request JSON.
+
+:::warning
+As the request JSON is _untrusted_ input, you should only access the related
+model or models _after_ validation has successfully completed.
+:::
+
+For to-one relationships, use the `toOne()` method. This method returns either
+the related model or `null`, depending on what is in the request JSON. For
+example:
+
+```php
+/** @var \App\Models\User|null $author */
+$author = $request->toOne();
+```
+
+For to-many relationships, use the `toMany()` method. This method returns a
+collection of the related models referenced in the request JSON. For example:
+
+```php
+/** @var \Illuminate\Support\Collection $tags */
+$tags = $request->toMany();
+```
+
 ## Deleting Resources
 
 It is possible to add validation rules for deleting resources. This is useful

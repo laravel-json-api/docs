@@ -627,6 +627,9 @@ public function updatingAuthor(
 ): void
 {
   // do something...
+  // to access the author use:
+  /** @var \App\Models\User|null $author */
+  $author = $request->toOne();
 }
 
 public function updatingTags(
@@ -636,6 +639,9 @@ public function updatingTags(
 ): void
 {
   // do something...
+  // to access the tags, use:
+  /** @var \Illuminate\Support\Collection $tags */
+  $tags = $request->toMany();
 }
 ```
 
@@ -672,6 +678,9 @@ public function updatedAuthor(
 ): void
 {
   // do something...
+  // to access the author use:
+  /** @var \App\Models\User|null $author */
+  $author = $request->toOne();
 }
 
 public function updatedTags(
@@ -682,6 +691,9 @@ public function updatedTags(
 ): void
 {
   // do something...
+  // to access the tags, use:
+  /** @var \Illuminate\Support\Collection $tags */
+  $tags = $request->toMany();
 }
 ```
 
@@ -719,6 +731,9 @@ public function attachingTags(
 ): void
 {
   // do something...
+  // to access the tags, use:
+  /** @var \Illuminate\Support\Collection $tags */
+  $tags = $request->toMany();
 }
 ```
 
@@ -751,6 +766,9 @@ public function attachedTags(
 ): void
 {
   // do something...
+  // to access the tags, use:
+  /** @var \Illuminate\Support\Collection $tags */
+  $tags = $request->toMany();
 }
 ```
 
@@ -788,6 +806,9 @@ public function detachingTags(
 ): void
 {
   // do something...
+  // to access the tags, use:
+  /** @var \Illuminate\Support\Collection $tags */
+  $tags = $request->toMany();
 }
 ```
 
@@ -820,6 +841,9 @@ public function detachedTags(
 ): void
 {
   // do something...
+  // to access the tags, use:
+  /** @var \Illuminate\Support\Collection $tags */
+  $tags = $request->toMany();
 }
 ```
 
