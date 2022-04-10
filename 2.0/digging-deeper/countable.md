@@ -5,7 +5,7 @@
 ## Introduction
 
 :::danger
-Although included in the `1.0` release, the countable relationship feature
+Although included in the `2.0` release, the countable relationship feature
 **is experimental and is not considered ready for production use.** We will be
 making changes to this feature that will be breaking from the perspective of an
 API client.

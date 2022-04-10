@@ -669,5 +669,5 @@ In this chapter, we created our JSON:API server and added our first resource
 to it by creating a `PostSchema` class. We also learnt how to register JSON:API
 routes and how authentication works.
 
-In the [next chapter](./04-relationships), we'll add relationships to our
+In the [next chapter](./04-relationships.md), we'll add relationships to our
 `posts` resource.
