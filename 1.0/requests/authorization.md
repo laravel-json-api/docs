@@ -499,7 +499,7 @@ class Server extends BaseServer
     {
         Post::addGlobalScope(new PostScope());
 
-        Post::creating(static function (Post $post) {
+        Post::creating(static function (Post $post): void {
             $post->author()->associate(Auth::user());
         });
     }

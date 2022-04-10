@@ -165,7 +165,7 @@ Open the `app/JsonApi/V1/Server.php` class, and update it as follows:
      public function serving(): void
      {
 -       // no-op
-+       Post::creating(static function (Post $post) {
++       Post::creating(static function (Post $post): void {
 +.           $post->author()->associate(Auth::user());
 +       });
      }
@@ -328,7 +328,7 @@ the `serving()` method:
  {
 +    Auth::shouldUse('sanctum');
 +
-     Post::creating(static function(Post $post) {
+     Post::creating(static function(Post $post): void {
          $post->author()->associate(Auth::user());
      });
  }
