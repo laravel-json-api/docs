@@ -228,7 +228,7 @@ public function test(): void
         ->expects('posts')
         ->includePaths('tags')
         ->withData($data)
-        ->patch('/api/v1/posts' . $post->getRouteKey());
+        ->patch('/api/v1/posts/' . $post->getRouteKey());
 
     $response->assertFetchedOne($expected);
 
@@ -278,7 +278,7 @@ public function test(): void
     $response = $this
         ->actingAs($post->author)
         ->jsonApi()
-        ->delete('/api/v1/posts' . $post->getRouteKey());
+        ->delete('/api/v1/posts/' . $post->getRouteKey());
 
     $response->assertNoContent();
 
