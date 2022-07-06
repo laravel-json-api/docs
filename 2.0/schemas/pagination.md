@@ -198,10 +198,17 @@ class PostSchema extends Schema
      */
     public function pagination(): CursorPagination
     {
-        return CursorPagination::make();
+        return CursorPagination::make($this->id());
     }
 }
 ```
+
+:::tip
+Note that we inject the schema's ID field into the cursor pagination instance.
+This is required so the cursor pagination can encode and decode resource ids, if
+encoding/decoding is implemented by your resource.
+:::
+
 
 This means the following request:
 
@@ -249,7 +256,7 @@ For example:
 ```php
 public function pagination(): CursorPagination
 {
-    return CursorPagination::make()
+    return CursorPagination::make($this->id())
         ->withLimitKey('size')
         ->withAfterKey('starting-after')
         ->withBeforeKey('ending-before');
@@ -279,7 +286,7 @@ method. If you prefer your list to be in ascending order, use the
 ```php
 public function pagination(): CursorPagination
 {
-    return CursorPagination::make()
+    return CursorPagination::make($this->id())
         ->withCursorColumn('published_at')
         ->withAscending();
 }
