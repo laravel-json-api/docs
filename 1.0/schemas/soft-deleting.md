@@ -351,7 +351,7 @@ package.
 Install our package via Composer, which will also install the TenantCloud package:
 
 ```bash
-composer require laravel-json-api/boolean-soft-deletes
+composer require laravel-json-api/boolean-softdeletes
 ```
 
 ### Implementing Boolean Soft-Deletes
