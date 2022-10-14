@@ -268,7 +268,7 @@ have a `UserFactory.php` file that helps us create `User` models.
 Add a factory for our `Post` model using the following command:
 
 ```bash
-vendor/bin/sail make:factory PostFactory
+vendor/bin/sail artisan make:factory PostFactory
 ```
 
 That will create the `database/factories/PostFactory.php` file. Open that up
