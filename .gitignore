@@ -1,5 +1,3 @@
 /node_modules
 /.vuepress/dist
 /yarn-error.log
-/.idea
-/.vscode
