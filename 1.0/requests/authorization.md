@@ -641,7 +641,7 @@ we can register it for multiple resource types as follows:
 
 ```php
 use App\JsonApi\Authorizers\BlogAuthorizer;
-use LaravelJsonApi\LaravelJsonApi;
+use LaravelJsonApi\Laravel\LaravelJsonApi;
 
 public function register(): void
 {
@@ -668,7 +668,7 @@ To register your default implementation, use the `register` method of your
 
 ```php
 use App\JsonApi\Authorizers\DefaultAuthorizer;
-use LaravelJsonApi\LaravelJsonApi;
+use LaravelJsonApi\Laravel\LaravelJsonApi;
 
 public function register(): void
 {
