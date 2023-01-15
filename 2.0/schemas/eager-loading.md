@@ -131,6 +131,26 @@ As this relationship endpoint returns `comments` resources, the allowed
 include paths are determined by the `CommentSchema` class.
 :::
 
+### Conditionally Disabling on Specific Relations
+
+If you need to conditionally disable eager-loading on a relationship, use
+the `canEagerLoad()` method. You can provide a boolean, for example:
+
+```php
+HasMany::make('comments')->canEagerLoad(
+    Gate::allows('viewComments', Post::class),
+)
+```
+
+Alternatively, you can provide a callback to determine if eager loading is
+allowed:
+
+```php
+HasMany::make('comments')->canEagerLoad(
+    fn() => Gate::allows('viewComments', Post::class),
+)
+```
+
 ## Disabling On A Resource Type
 
 To disable eager loading for a resource type, set the `$maxDepth` property
