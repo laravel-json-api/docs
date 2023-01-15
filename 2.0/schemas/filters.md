@@ -243,6 +243,7 @@ Laravel JSON:API ships with the following filters:
 - [WhereIdNotIn](#whereidnotin)
 - [WhereIn](#wherein)
 - [WhereNotIn](#wherenotin)
+- [WhereNull / WhereNotNull](#wherenull-wherenotnull)
 - [WherePivot](#wherepivot)
 - [WherePivotIn](#wherepivotin)
 - [WherePivotNotIn](#wherepivotnotin)
@@ -644,6 +645,40 @@ string values if a delimiter is set:
 ```php
 WhereNotIn('not-category', 'category')->delimiter(',')
 ```
+
+### WhereNull / WhereNotNull
+
+The `WhereNull` and `WhereNotNull` filters can be used to filter resources
+by a column that supports `null` values. The use of these two filters is
+best explained using an example.
+
+Imagine a scenario where a `Post` model has a `published_at` column. The
+value in this column indicates whether the blog post has been published.
+If it holds `null`, the blog post is not published (aka is a draft post).
+If it holds a date time, the blog post is published.
+
+In this scenario, you would use the `WhereNull` filter like this:
+
+```php
+WhereNull::make('draft', 'published_at')
+```
+
+In this case, if the client provided `true` as the `draft` filter value,
+the response would contain resources where the column value is `null` -
+i.e. the blog posts are draft posts. Providing `false` as the filter
+value would result in blog posts that are not draft, i.e. published.
+
+Alternatively, you could use the `WhereNotNull` filter like this:
+
+```php
+WhereNotNull::make('published', 'published_at')
+```
+
+In this case, if the client provided `true` as the `published` filter
+value, the response would contain resources where the column value is
+a date time - i.e. the blog posts are published. Providing `false`
+as the filter value would result in blog posts that are not published,
+i.e. are draft and have a `null` value for the column.
 
 ### WherePivot
 
