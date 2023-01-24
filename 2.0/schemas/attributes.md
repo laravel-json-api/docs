@@ -296,14 +296,14 @@ If you want the array to always be sorted by its keys, use the
 `sortKeys()` method:
 
 ```php
-ArrHash::make('options')->sortKeys()
+ArrayHash::make('options')->sortKeys()
 ```
 
 Alternatively, if you want the array to always be sorted by its
 values, use the `sorted()` method:
 
 ```php
-ArrHash::make('options')->sorted()
+ArrayHash::make('options')->sorted()
 ```
 
 When working with associative arrays, you may find you need to convert
