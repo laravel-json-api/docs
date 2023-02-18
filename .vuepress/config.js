@@ -46,7 +46,7 @@ module.exports = {
           },
           {
             text: "2.x",
-            link: "/2./"
+            link: "/2.0/"
           },
           {
             text: "1.x",
