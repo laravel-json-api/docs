@@ -4,8 +4,8 @@
 
 ## Requirements
 
-- PHP - `^7.4` or `^8.0`.
-- Laravel - `^8.76` or `^9.0`.
+- PHP - `^8.1`
+- Laravel - `^10.0`
 
 ## Installation
 
@@ -19,8 +19,8 @@ dependency. This adds test helpers as described in the
 Install both packages using [Composer](https://getcomposer.org):
 
 ```bash
-composer require laravel-json-api/laravel:^2.6
-composer require --dev laravel-json-api/testing:^1.1
+composer require laravel-json-api/laravel
+composer require --dev laravel-json-api/testing
 ```
 
 The `LaravelJsonApi\Laravel\ServiceProvider` is auto-discovered and registered
