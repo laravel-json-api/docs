@@ -41,11 +41,15 @@ module.exports = {
         link: "/",
         items: [
           {
-            text: "2.0",
-            link: "/2.0/"
+            text: "3.x",
+            link: "/3.0/"
           },
           {
-            text: "1.0",
+            text: "2.x",
+            link: "/2./"
+          },
+          {
+            text: "1.x",
             link: "/1.0/"
           },
         ],
@@ -54,6 +58,7 @@ module.exports = {
     sidebar: {
       "/1.0/": require("./1.0"),
       "/2.0/": require("./2.0"),
+      "/3.0/": require("./3.0"),
     },
   },
 
