@@ -15,14 +15,11 @@ implementations, that use a page number and size query parameters.
 This implementation pre-dates Laravel's `cursorPaginate()` feature, and
 requires the installation of the `laravel-json-api/cursor-pagination` package.
 
-:::tip
-As Laravel's cursor-based pagination feature is relatively new, we have not
-yet had a chance to add support for it. We hope to add this during the `1.x`
-release cycle.
-:::
-
 You can choose which approach to use for each resource type, so your API
-can use different approaches for different resource types if needed.
+can use different approaches for different resource types if needed. If you
+want to allow clients to use either of the two approaches, you can use our
+[multi-paginator implementation](#multi-pagination) that is described later
+in this chapter.
 
 ## Page-Based Pagination
 
@@ -775,3 +772,49 @@ class PostSchema extends Schema
     }
 }
 ```
+
+## Multi-Pagination
+
+If you would like clients to have the option of using either
+page-based or cursor-based pagination, you can use our
+`MultiPagination` class. For example:
+
+```php
+namespace App\JsonApi\V1\Posts;
+
+use LaravelJsonApi\CursorPagination\CursorPagination;
+use LaravelJsonApi\Eloquent\Pagination\MultiPagination;
+use LaravelJsonApi\Eloquent\Pagination\PagePagination;
+use LaravelJsonApi\Eloquent\Schema;
+
+class PostSchema extends Schema
+{
+    // ...
+
+    /**
+     * Get the resource paginator.
+     *
+     * @return PagePagination
+     */
+    public function pagination(): PagePagination
+    {
+        return new MultiPagination(
+            PagePagination::make(),
+            CursorPagination::make(),
+        );
+    }
+}
+```
+
+:::tip
+If you need to customise either the page pagination or the
+cursor pagination (as described in this chapter), then just
+call methods on the page- or cursor-paginator when passing
+them into the `MultiPagination` constructor.
+:::
+
+The multi-pagination will use the page parameters supplied
+by the client to decide which paginator to use for the
+request. This means you must have at least one unique page
+parameter per paginator you provide to the `MultiPagination`
+class.
