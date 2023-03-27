@@ -430,11 +430,22 @@ now.
 Update your `/routes/api.php` to add the following:
 
 ```diff
- JsonApiRoute::server('v1')->prefix('v1')->resources(function ($server) {
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Route;
+ use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
+ use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+ use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
++use LaravelJsonApi\Laravel\Routing\Relationships;
+
+ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+     return $request->user();
+ });
+
+ JsonApiRoute::server('v1')->prefix('v1')->resources(function (ResourceRegistrar $server) {
 -    $server->resource('posts', JsonApiController::class)->readOnly();
 +    $server->resource('posts', JsonApiController::class)
 +        ->readOnly()
-+        ->relationships(function ($relations) {
++        ->relationships(function (Relationships $relations) {
 +            $relations->hasOne('author')->readOnly();
 +            $relations->hasMany('comments')->readOnly();
 +            $relations->hasMany('tags')->readOnly();
