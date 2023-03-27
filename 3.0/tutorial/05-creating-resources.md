@@ -247,11 +247,11 @@ routes.
 Open the `app/routes/api.php` file and make the following changes:
 
 ```diff
- JsonApiRoute::server('v1')->prefix('v1')->resources(function ($server) {
+ JsonApiRoute::server('v1')->prefix('v1')->resources(function (ResourceRegistrar $server) {
      $server->resource('posts', JsonApiController::class)
 -        ->readOnly()
 +        ->only('index', 'show', 'store')
-         ->relationships(function ($relations) {
+         ->relationships(function (Relationships $relations) {
              $relations->hasOne('author')->readOnly();
              $relations->hasMany('comments')->readOnly();
              $relations->hasMany('tags')->readOnly();
