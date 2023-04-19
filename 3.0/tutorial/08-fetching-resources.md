@@ -1407,7 +1407,7 @@ is in the `PostSchema` class - e.g. ensuring that a provided `sort` parameter
 is a field that is actually marked as sortable.
 
 We can improve the validation to ensure there are some more specific rules,
-e.g. ensuring the the `author` filter only receives integer ids.
+e.g. ensuring the `author` filter only receives integer ids.
 
 Run the following command:
 
