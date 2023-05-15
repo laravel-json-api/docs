@@ -45,19 +45,20 @@ handler that Laravel created for our application. Make the following changes:
  namespace App\Exceptions;
 
  use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
++use LaravelJsonApi\Core\Exceptions\JsonApiException;
++use LaravelJsonApi\Exceptions\ExceptionParser;
  use Throwable;
 
  class Handler extends ExceptionHandler
  {
-     /**
-      * A list of the exception types that are not reported.
-      *
-      * @var array
-      */
-     protected $dontReport = [
--        //
-+        \LaravelJsonApi\Core\Exceptions\JsonApiException::class,
-     ];
++    /**
++     * A list of the exception types that are not reported.
++     *
++     * @var array
++     */
++    protected $dontReport = [
++       JsonApiException::class,
++    ];
 
      /**
       * A list of the inputs that are never flashed for validation exceptions.
@@ -82,7 +83,7 @@ handler that Laravel created for our application. Make the following changes:
          });
 +
 +        $this->renderable(
-+            \LaravelJsonApi\Exceptions\ExceptionParser::make()->renderable()
++            ExceptionParser::make()->renderable()
 +        );
      }
  }
