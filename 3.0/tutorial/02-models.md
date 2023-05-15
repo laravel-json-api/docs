@@ -37,8 +37,9 @@ vendor/bin/sail artisan make:model Comment --migration
 You'll see output like the following:
 
 ```
-Model created successfully.
-Created Migration: 2021_09_19_143633_create_posts_table
+ INFO  Model [app/Models/Post.php] created successfully.  
+
+   INFO  Migration [database/migrations/2023_05_15_023525_create_posts_table.php] created successfully.
 ```
 
 These generator commands created a number of files; let's take a look at a few
@@ -180,21 +181,19 @@ You should see output like the following, which includes a few standard
 Laravel migrations and the migrations we have added:
 
 ```
-Migration table created successfully.
-Migrating: 2014_10_12_000000_create_users_table
-Migrated:  2014_10_12_000000_create_users_table (174.44ms)
-Migrating: 2014_10_12_100000_create_password_resets_table
-Migrated:  2014_10_12_100000_create_password_resets_table (156.44ms)
-Migrating: 2019_08_19_000000_create_failed_jobs_table
-Migrated:  2019_08_19_000000_create_failed_jobs_table (253.59ms)
-Migrating: 2019_12_14_000001_create_personal_access_tokens_table
-Migrated:  2019_12_14_000001_create_personal_access_tokens_table (326.63ms)
-Migrating: 2021_09_19_143633_create_posts_table
-Migrated:  2021_09_19_143633_create_posts_table (416.23ms)
-Migrating: 2021_09_19_143646_create_tags_table
-Migrated:  2021_09_19_143646_create_tags_table (904.06ms)
-Migrating: 2021_09_19_143701_create_comments_table
-Migrated:  2021_09_19_143701_create_comments_table (326.90ms)
+ INFO  Preparing database.  
+
+  Creating migration table .............................. 54ms DONE
+
+   INFO  Running migrations.  
+
+  2014_10_12_000000_create_users_table .................. 80ms DONE
+  2014_10_12_100000_create_password_reset_tokens_table .. 159ms DONE
+  2019_08_19_000000_create_failed_jobs_table ............ 142ms DONE
+  2019_12_14_000001_create_personal_access_tokens_table . 239ms DONE
+  2023_05_15_023525_create_posts_table .................. 279ms DONE
+  2023_05_15_023535_create_tags_table ................... 586ms DONE
+  2023_05_15_023543_create_comments_table ............... 372ms DONE
 ```
 
 Now we can look at the model classes. Take a look at the `/app/Models/Post.php`
