@@ -52,7 +52,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePostsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -113,7 +113,7 @@ were created: the `_create_tags_table` and the `_create_comments_table` migratio
 In the `_create_tags_table` migration, we will add the following:
 
 ```diff
- class CreateTagsTable extends Migration
+ return new class extends Migration
  {
      /**
       * Run the migrations.
