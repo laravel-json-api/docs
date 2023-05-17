@@ -166,7 +166,7 @@ Open the `app/JsonApi/V1/Server.php` class, and update it as follows:
      {
 -       // no-op
 +       Post::creating(static function (Post $post): void {
-+.           $post->author()->associate(Auth::user());
++           $post->author()->associate(Auth::user());
 +       });
      }
 
