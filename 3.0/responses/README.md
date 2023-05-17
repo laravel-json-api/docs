@@ -72,7 +72,7 @@ constructor, or the static `make` method if you need to chain any of our
 helper methods. For example:
 
 ```php
-use LaravelJsonApi\Core\Response\DataResponse;
+use LaravelJsonApi\Core\Responses\DataResponse;
 
 return new DataResponse($model);
 // or
@@ -117,7 +117,7 @@ To create a related response, you need to provide three arguments:
 For example, given a `post` model, with a `tags` relationship:
 
 ```php
-use LaravelJsonApi\Core\Response\RelatedResponse;
+use LaravelJsonApi\Core\Responses\RelatedResponse;
 
 return new RelatedResponse($post, 'tags', $post->tags);
 // or
@@ -156,7 +156,7 @@ To create a relationship response, you need to provide three arguments:
 For example, given a `post` model, with a `tags` relationship:
 
 ```php
-use LaravelJsonApi\Core\Response\RelationshipResponse;
+use LaravelJsonApi\Core\Responses\RelationshipResponse;
 
 return new RelationshipResponse($post, 'tags', $post->tags);
 // or
@@ -187,7 +187,7 @@ a Laravel collection.
 For example:
 
 ```php
-use LaravelJsonApi\Core\Response\MetaResponse;
+use LaravelJsonApi\Core\Responses\MetaResponse;
 
 return new MetaResponse(['foo' => 'bar']);
 // or
