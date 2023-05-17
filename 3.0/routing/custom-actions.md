@@ -23,7 +23,9 @@ resource routes. For example, we can add our *purge* and *publish* actions
 to our `posts` resource as follows:
 
 ```php
-$server->resource('posts')->actions('-actions', function ($actions) {
+use LaravelJsonApi\Laravel\Routing\ActionRegistrar;
+
+$server->resource('posts')->actions('-actions', function (ActionRegistrar $actions) {
     $actions->delete('purge');
     $actions->withId()->post('publish');
 });
@@ -67,7 +69,7 @@ As the above example shows, the `actions()` method was provided with a URL
 prefix and a callback. The prefix is optional, for example:
 
 ```php
-$server->resource('posts')->actions(function ($actions) {
+$server->resource('posts')->actions(function (ActionRegistrar $actions) {
     $actions->delete('purge');
     $actions->withId()->post('publish');
 });
@@ -89,7 +91,7 @@ a `me` action for the `users` resource. This would return the current signed-in
 user, and the routing would look like this:
 
 ```php
-$server->resource('users')->actions(function ($actions) {
+$server->resource('users')->actions(function (ActionRegistrar $actions) {
     $actions->get('me');
 });
 ```
@@ -201,12 +203,12 @@ Firstly we will register the action in our routing:
 ```php
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class)
-            ->relationships(function ($relationships) {
+            ->relationships(function (Relationships $relationships) {
                 $relationships->hasOne('author')->readOnly();
                 $relationships->hasMany('tags');
-            })->actions('-actions', function ($actions) {
+            })->actions('-actions', function (ActionRegistrar $actions) {
                 $actions->delete('purge');
             });
 
@@ -296,12 +298,12 @@ to indicate that the URL relates to a specific resource:
 ```php
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class)
-            ->relationships(function ($relationships) {
+            ->relationships(function (Relationships $relationships) {
                 $relationships->hasOne('author')->readOnly();
                 $relationships->hasMany('tags');
-            })->actions('-actions', function ($actions) {
+            })->actions('-actions', function (ActionRegistrar $actions) {
                 $actions->withId()->post('purge');
             });
 

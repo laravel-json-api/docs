@@ -62,7 +62,7 @@ JsonApiRoute::server('v1')
     ->prefix('v1')
     ->resources(function ($server) {
         $server->resource('posts', PostController::class);
-        $server->resources('tags', TagController::class);
+        $server->resource('tags', TagController::class);
     });
 ```
 
@@ -76,7 +76,7 @@ JsonApiRoute::server('v1')
     ->prefix('v1')
     ->resources(function ($server) {
         $server->resource('posts', JsonApiController::class);
-        $server->resources('tags', JsonApiController::class);
+        $server->resource('tags', JsonApiController::class);
     });
 ```
 
