@@ -166,7 +166,7 @@ Open the `app/JsonApi/V1/Server.php` class, and update it as follows:
      {
 -       // no-op
 +       Post::creating(static function (Post $post): void {
-+.           $post->author()->associate(Auth::user());
++           $post->author()->associate(Auth::user());
 +       });
      }
 
@@ -247,11 +247,11 @@ routes.
 Open the `app/routes/api.php` file and make the following changes:
 
 ```diff
- JsonApiRoute::server('v1')->prefix('v1')->resources(function ($server) {
+ JsonApiRoute::server('v1')->prefix('v1')->resources(function (ResourceRegistrar $server) {
      $server->resource('posts', JsonApiController::class)
 -        ->readOnly()
 +        ->only('index', 'show', 'store')
-         ->relationships(function ($relations) {
+         ->relationships(function (Relationships $relations) {
              $relations->hasOne('author')->readOnly();
              $relations->hasMany('comments')->readOnly();
              $relations->hasMany('tags')->readOnly();

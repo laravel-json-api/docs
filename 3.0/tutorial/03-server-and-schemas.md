@@ -19,8 +19,8 @@ To start, we'll need to install the Laravel JSON:API package into our applicatio
 via Composer. Run the following commands:
 
 ```bash
-composer require laravel-json-api/laravel
-composer require --dev laravel-json-api/testing
+vendor/bin/sail composer require laravel-json-api/laravel
+vendor/bin/sail composer require --dev laravel-json-api/testing
 ```
 
 We then need to publish the Laravel JSON:API configuration file, using the
@@ -45,19 +45,20 @@ handler that Laravel created for our application. Make the following changes:
  namespace App\Exceptions;
 
  use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
++use LaravelJsonApi\Core\Exceptions\JsonApiException;
++use LaravelJsonApi\Exceptions\ExceptionParser;
  use Throwable;
 
  class Handler extends ExceptionHandler
  {
-     /**
-      * A list of the exception types that are not reported.
-      *
-      * @var array
-      */
-     protected $dontReport = [
--        //
-+        \LaravelJsonApi\Core\Exceptions\JsonApiException::class,
-     ];
++    /**
++     * A list of the exception types that are not reported.
++     *
++     * @var array
++     */
++    protected $dontReport = [
++       JsonApiException::class,
++    ];
 
      /**
       * A list of the inputs that are never flashed for validation exceptions.
@@ -82,7 +83,7 @@ handler that Laravel created for our application. Make the following changes:
          });
 +
 +        $this->renderable(
-+            \LaravelJsonApi\Exceptions\ExceptionParser::make()->renderable()
++            ExceptionParser::make()->renderable()
 +        );
      }
  }
@@ -472,12 +473,13 @@ Update the `routes/api.php` file to look like this:
  use Illuminate\Support\Facades\Route;
 +use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 +use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
++use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
  Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
      return $request->user();
  });
 +
-+JsonApiRoute::server('v1')->prefix('v1')->resources(function ($server) {
++JsonApiRoute::server('v1')->prefix('v1')->resources(function (ResourceRegistrar $server) {
 +    $server->resource('posts', JsonApiController::class)->readOnly();
 +});
 ```

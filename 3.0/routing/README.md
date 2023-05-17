@@ -23,10 +23,12 @@ your `routes/api.php` file as follows:
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\TagController;
 use App\Http\Controllers\Api\V1\UserController;
+use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
+use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
         $server->resource('tags', TagController::class);
         $server->resource('users', UserController::class);
@@ -57,12 +59,14 @@ routes. For example:
 ```php
 use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\TagController;
+use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
+use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
-        $server->resources('tags', TagController::class);
+        $server->resource('tags', TagController::class);
     });
 ```
 
@@ -70,19 +74,21 @@ As controllers are optional, it is also possible to use the default
 `JsonApiController`. For example:
 
 ```php
+use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', JsonApiController::class);
-        $server->resources('tags', JsonApiController::class);
+        $server->resource('tags', JsonApiController::class);
     });
 ```
 
 Both the above examples work if the `$namespace` property of your application's
 `RouteServiceProvider` is **not** set. This is the case in a fresh installation
-of a Laravel 8 application.
+of a Laravel >=8 application.
 
 Traditionally, Laravel's route groups have allowed controller namespaces
 to be set via groups. This works if the `$namespace` property on your
@@ -100,7 +106,7 @@ the `App\Http\Controllers\Api\V1` namespace:
 JsonApiRoute::server('v1')
     ->prefix('v1')
     ->namespace('Api\V1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         // Expects controller to be `App\Http\Api\V1\PostController`
         $server->resource('posts');
     });
@@ -117,7 +123,7 @@ controller name as the second argument to the `resource()` method:
 JsonApiRoute::server('v1')
     ->prefix('v1')
     ->namespace('Api\V1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         // Controller is `App\Http\Api\V1\BlogPostController`
         $server->resource('posts', 'BlogPostController');
     });
@@ -128,12 +134,14 @@ When using controller namespacing, if you want to use the generic
 `resource()` method. For example:
 
 ```php
+use LaravelJsonApi\Laravel\Facades\JsonApiRoute;
 use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
+use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
 JsonApiRoute::server('v1')
     ->prefix('v1')
     ->namespace('Api\V1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', '\\' . JsonApiController::class);
     });
 ```
@@ -146,7 +154,7 @@ For example:
 ```php
 JsonApiRoute::server('v1')
     ->domain('api.myapp.com')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
         $server->resource('tags', TagController::class);
         $server->resource('users', UserController::class);
@@ -158,7 +166,7 @@ Or if you had wildcard sub-domains:
 ```php
 JsonApiRoute::server('v1')
     ->domain('{account}.myapp.com')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
         $server->resource('tags', TagController::class);
         $server->resource('users', UserController::class);
@@ -181,7 +189,7 @@ In this example:
 JsonApiRoute::server('v1')
     ->middleware('my-middleware1', 'my-middleware2')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
     });
 ```
@@ -200,7 +208,7 @@ Route::middleware('my-middleware1')->group(function () {
     JsonApiRoute::server('v1')
       ->middleware('my-middleware2')
       ->prefix('v1')
-      ->resources(function ($server) {
+      ->resources(function (ResourceRegistrar $server) {
           $server->resource('posts', PostController::class);
       });
 });
@@ -225,7 +233,7 @@ In the following example, we override the default route name of `v1` to
 JsonApiRoute::server('v1')
     ->name('api:v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
     });
 ```
@@ -241,7 +249,7 @@ For example, the following registers routes for the `posts`, `tags` and
 ```php
 JsonApiRoute::server('v1')
     ->prefix('v1')
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
         $server->resource('tags', TagController::class);
         $server->resource('users', UserController::class);
@@ -348,7 +356,9 @@ For example, if we want to register routes for a `posts` resource's
 `author`, `comments` and `tags` relationships:
 
 ```php
-$server->resource('posts')->relationships(function ($relationships) {
+use LaravelJsonApi\Laravel\Routing\Relationships;
+
+$server->resource('posts')->relationships(function (Relationships $relationships) {
   $relationships->hasOne('author');
   $relationships->hasMany('comments');
   $relationships->hasMany('tags');
@@ -417,7 +427,8 @@ Use our short-hands of `related`, `show`, `update`, `attach` and `detach`
 for the actions:
 
 ```php
-$relationships->hasOne('author')
+$relationships
+  ->hasOne('author')
   ->name('related', 'author.related')
   ->name('show', 'author.relationships.show');
 // is identical to...
@@ -475,7 +486,7 @@ JSON:API routes:
 JsonApiRoute::server('v1')
     ->prefix('v1')
     ->withoutMiddleware(\Illuminate\Routing\Middleware\SubstituteBindings::class)
-    ->resources(function ($server) {
+    ->resources(function (ResourceRegistrar $server) {
         $server->resource('posts', PostController::class);
     });
 ```
