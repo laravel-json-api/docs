@@ -55,6 +55,13 @@ field:
 ID::make()->uuid()
 ```
 
+If your model uses ULID, call the `ulid()` method when registering the `ID`
+field:
+
+```php
+ID::make()->ulid()
+```
+
 To use a custom pattern, call the `matchAs` method:
 
 ```php
