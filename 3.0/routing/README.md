@@ -490,3 +490,10 @@ JsonApiRoute::server('v1')
         $server->resource('posts', PostController::class);
     });
 ```
+
+## writing regular Laravel routes
+
+if you need to create some routes and actions without using the JSON:API Framework, you can just create an endpoint in exactly the way you would when using Laravel - i.e. register a route, write a controller.
+
+If you want to return a JSON:API response from the controller, you can use one of the package's response classes:
+https://laraveljsonapi.io/docs/3.0/responses/
