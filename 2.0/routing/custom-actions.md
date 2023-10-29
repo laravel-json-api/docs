@@ -302,7 +302,7 @@ JsonApiRoute::server('v1')
                 $relationships->hasOne('author')->readOnly();
                 $relationships->hasMany('tags');
             })->actions('-actions', function ($actions) {
-                $actions->withId()->post('purge');
+                $actions->withId()->post('publish');
             });
 
         // ...other resources
