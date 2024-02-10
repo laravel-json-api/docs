@@ -7,7 +7,7 @@
 Your Laravel application can have any number of JSON:API compliant
 APIs. We refer to each API as a **Server**.
 
-You may not use multiple servers: a simple application
+You may opt to not use multiple servers: a simple application
 may only have one server. However, there are a number of use cases where
 you may decide to implement multiple servers. For example:
 
