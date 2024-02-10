@@ -340,10 +340,20 @@ use the `middleware` method:
 $server->resource('posts')->middleware('my_middleware1', 'my_middleware2');
 ```
 
-:::tip
-If you want to add middleware to specific resource actions, you should
-use [Controller middleware.](https://laravel.com/docs/controllers#controller-middleware)
-:::
+Alternatively, you can specify middleware per resource action. To do that,
+provide an array to the `middleware()` method. Middleware that applies to
+every action should use the `"*"` key. Middleware for a specific action
+should be keyed by that action.
+
+For example:
+
+```php
+$server->resource('posts')->middleware([
+    '*' => 'my_middleware1', // applies to all actions
+    'show' => 'my_middleware2', // apples to just the "show" action
+    'store' => ['my_middleware3', 'my_middleware4'], // use arrays for multiple
+]);
+```
 
 ## Defining Relationships
 
@@ -447,6 +457,22 @@ The following example adds middleware to our `tags` relationship routes:
 
 ```php
 $relationships->hasMany('tags')->middleware('my_middleware1', 'my_middleware2');
+```
+
+Alternatively, you can specify middleware per relationship action. To do that,
+provide an array to the `middleware()` method. Middleware that applies to
+every relationship action should use the `"*"` key. Middleware for a specific
+action should be keyed by that action. Use our short-hands of `related`,
+`show`, `update`, `attach` and `detach` for the actions:
+
+For example:
+
+```php
+$relationships->hasMany('tags')->middleware([
+    '*' => 'my_middleware1', // applies to all actions
+    'show' => 'my_middleware2', // apples to just the "show" action
+    'update' => ['my_middleware3', 'my_middleware4'], // use arrays for multiple
+]);
 ```
 
 ## Route Model Binding
