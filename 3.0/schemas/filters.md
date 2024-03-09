@@ -21,7 +21,7 @@ to send for a particular resource type. To add a filter to a schema, we
 can simply add it to the schema's `filters` method.
 
 To create a filter, we use the static `make` method, providing the
-the key that is expected in the `filter` query parameter. For example,
+key that is expected in the `filter` query parameter. For example,
 if our `posts` resource type allowed `id` and `slug` filters:
 
 ```php
