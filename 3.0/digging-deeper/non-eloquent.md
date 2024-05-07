@@ -639,8 +639,8 @@ class SiteRepository extends AbstractRepository implements QueriesAll
     public function queryAll(): Capabilities\QuerySites
     {
         return Capabilities\QuerySites::make()
-            ->withServer($this->server)
-            ->withSchema($this->schema);
+            ->withServer($this->server())
+            ->withSchema($this->schema());
     }
 
 }
