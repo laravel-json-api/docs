@@ -33,7 +33,7 @@ create, update or delete a specific resource. Our `PostRequest`:
 - authorizes requests to create, update or destroy a `posts` resource;
 - ensures the `Content-Type` of the request is acceptable;
 - parses the JSON content of the request to ensure it complies with the
-JSON:API specification; and
+JSON:API specification;
 - validates the JSON content according to your application's validation rules.
 
 To generate a resource request, use the `jsonapi:request` Artisan
