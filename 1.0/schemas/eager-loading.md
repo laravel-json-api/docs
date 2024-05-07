@@ -48,7 +48,7 @@ public function fields(): array
 }
 ```
 
-With a default depth of `1`, the client will be allowed to to request
+With a default depth of `1`, the client will be allowed to request
 the following include paths:
 
 - `user`
