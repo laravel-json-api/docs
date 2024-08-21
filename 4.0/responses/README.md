@@ -366,11 +366,20 @@ return DataResponse::make($model)->withHeader('X-Foo', 'Bar');
 
 #### withHeaders
 
-The `withHeaders` method allows you to set multiple headers on the response:
+The `withHeaders` method allows you to set multiple headers on the response. These headers are merged with any existing
+headers.
 
 ```php
 return DataResponse::make($model)->withHeaders([
   'X-Foo' => 'Bar',
   'X-Baz' => 'Bat',
 ]);
+```
+
+#### withoutHeaders
+
+The `withoutHeaders` method allows you to remove headers from the response:
+
+```php
+return DataResponse::make($model)->withoutHeaders('X-Foo', 'X-Bar');
 ```
