@@ -41,6 +41,10 @@ module.exports = {
         link: "/",
         items: [
           {
+            text: "4.x",
+            link: "/4.0/"
+          },
+          {
             text: "3.x",
             link: "/3.0/"
           },
@@ -59,6 +63,7 @@ module.exports = {
       "/1.0/": require("./1.0"),
       "/2.0/": require("./2.0"),
       "/3.0/": require("./3.0"),
+      "/4.0/": require("./4.0"),
     },
   },
 
