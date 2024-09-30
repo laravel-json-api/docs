@@ -29,17 +29,17 @@ need to add our other three models.
 To do this, we will run the following commands:
 
 ```bash
-vendor/bin/sail artisan make:model Post --migration
-vendor/bin/sail artisan make:model Tag --migration
-vendor/bin/sail artisan make:model Comment --migration
+herd php artisan make:model Post --migration
+herd php artisan make:model Tag --migration
+herd php artisan make:model Comment --migration
 ```
 
 You'll see output like the following:
 
 ```
- INFO  Model [app/Models/Post.php] created successfully.  
+INFO  Model [app/Models/Post.php] created successfully.
 
-   INFO  Migration [database/migrations/2023_05_15_023525_create_posts_table.php] created successfully.
+INFO  Migration [database/migrations/2024_09_30_171953_create_posts_table.php] created successfully.
 ```
 
 These generator commands created a number of files; let's take a look at a few
@@ -56,10 +56,8 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
@@ -69,14 +67,12 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('posts');
     }
-}
+};
 ```
 
 This file contains a *migration*, a class that tells Laravel how to make a change
@@ -117,10 +113,8 @@ In the `_create_tags_table` migration, we will add the following:
  {
      /**
       * Run the migrations.
-      *
-      * @return void
       */
-     public function up()
+     public function up(): void
      {
          Schema::create('tags', function (Blueprint $table) {
              $table->id();
@@ -137,15 +131,13 @@ In the `_create_tags_table` migration, we will add the following:
 
      /**
       * Reverse the migrations.
-      *
-      * @return void
       */
-     public function down()
+     public function down(): void
      {
 +        Schema::dropIfExists('post_tag');
          Schema::dropIfExists('tags');
      }
- }
+ };
 ```
 
 Notice we've added the `name` column to the `tags` table. Then we also create
@@ -174,26 +166,18 @@ Now that we've updated all the migrations, we can run them to create our
 database tables:
 
 ```bash
-vendor/bin/sail artisan migrate
+herd php artisan migrate
 ```
 
 You should see output like the following, which includes a few standard
 Laravel migrations and the migrations we have added:
 
 ```
- INFO  Preparing database.  
+INFO  Running migrations.
 
-  Creating migration table .............................. 54ms DONE
-
-   INFO  Running migrations.  
-
-  2014_10_12_000000_create_users_table .................. 80ms DONE
-  2014_10_12_100000_create_password_reset_tokens_table .. 159ms DONE
-  2019_08_19_000000_create_failed_jobs_table ............ 142ms DONE
-  2019_12_14_000001_create_personal_access_tokens_table . 239ms DONE
-  2023_05_15_023525_create_posts_table .................. 279ms DONE
-  2023_05_15_023535_create_tags_table ................... 586ms DONE
-  2023_05_15_023543_create_comments_table ............... 372ms DONE
+2024_09_30_171953_create_posts_table ......................... 2.00ms DONE
+2024_09_30_171959_create_tags_table .......................... 1.73ms DONE
+2024_09_30_172006_create_comments_table ...................... 0.35ms DONE
 ```
 
 Now we can look at the model classes. Take a look at the `/app/Models/Post.php`
@@ -352,7 +336,7 @@ populated into the database.
 Generate a seeder file using the following command:
 
 ```bash
-vendor/bin/sail artisan make:seeder PostSeeder
+herd php artisan make:seeder PostSeeder
 ```
 
 This will create a file `PostSeeder.php` in the `/database/seeders` folder.
@@ -366,16 +350,15 @@ seeder so it looks like this:
 +use App\Models\Post;
 +use App\Models\Tag;
 +use App\Models\User;
+-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
  use Illuminate\Database\Seeder;
 
  class PostSeeder extends Seeder
  {
      /**
       * Run the database seeds.
-      *
-      * @return void
       */
-     public function run()
+     public function run(): void
      {
 -        //
 +        $author = User::create([
@@ -438,12 +421,15 @@ in the same directory:
  {
      /**
       * Seed the application's database.
-      *
-      * @return void
       */
-     public function run()
+     public function run(): void
      {
--        // \App\Models\User::factory(10)->create();
+-        // User::factory(10)->create();
+-
+-        User::factory()->create([
+-            'name' => 'Test User',
+-            'email' => 'test@example.com',
+-        ]);
 +        $this->call(PostSeeder::class);
      }
  }
@@ -452,7 +438,7 @@ in the same directory:
 Then all we need to do is run the seed command to populate the database:
 
 ```bash
-vendor/bin/sail artisan db:seed
+herd php artisan db:seed
 ```
 
 ## In Summary

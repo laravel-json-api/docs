@@ -23,7 +23,7 @@ Putting this all together, our request to create a new post in our blog
 application will look like this:
 
 ```http
-POST http://localhost/api/v1/posts?include=author,tags HTTP/1.1
+POST http://jsonapi-tutorial.test/api/v1/posts?include=author,tags HTTP/1.1
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
@@ -69,7 +69,7 @@ resource.
 Generate the request class by running the following command:
 
 ```bash
-vendor/bin/sail artisan jsonapi:request posts
+herd php artisan jsonapi:request posts
 ```
 
 This will generate the `app/JsonApi/V1/Posts/PostRequest.php` file, which looks
@@ -125,7 +125,7 @@ we just use `tags`.
 And that's all we need to do to setup our validator. It's worth mentioning that
 in Laravel JSON:API you **must always** create validation rules for any
 resource that can be created or modified. This is because only validated data
-will be filled into the model - which is standard good practice for any
+will be filled into the model - which is standard best practice for any
 Laravel application.
 
 ## The Author Relationship
@@ -192,7 +192,7 @@ Open the `app/JsonApi/V1/Server.php` class, and update it as follows:
 Let's give the request a go:
 
 ```http
-POST http://localhost/api/v1/posts?include=author,tags HTTP/1.1
+POST http://jsonapi-tutorial.test/api/v1/posts?include=author,tags HTTP/1.1
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
@@ -231,7 +231,7 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
-      "detail": "The POST method is not supported for this route. Supported methods: GET, HEAD.",
+      "detail": "The POST method is not supported for route api\/v1\/posts. Supported methods: GET, HEAD.",
       "status": "405",
       "title": "Method Not Allowed"
     }
@@ -295,11 +295,8 @@ the `create()` method:
 ```diff
  /**
   * Determine whether the user can create models.
-  *
-  * @param  \App\Models\User  $user
-  * @return \Illuminate\Auth\Access\Response|bool
   */
- public function create(User $user)
+ public function create(User $user): bool
  {
 -    //
 +    return true;
@@ -341,16 +338,34 @@ that middleware we need to tell Laravel to use `sanctum` as the default guard
 for our API requests - which is what the above change does.
 :::
 
+Now we need to update our `User` model so that it can issue Laravel Sanctum tokens. Make the following change in your
+`app/Models/User.php` file:
+
+```diff
+ use Illuminate\Database\Eloquent\Factories\HasFactory;
+ use Illuminate\Foundation\Auth\User as Authenticatable;
+ use Illuminate\Notifications\Notifiable;
++use Laravel\Sanctum\HasApiTokens;
+
+ class User extends Authenticatable
+ {
+-    use HasFactory, Notifiable;
++    use HasFactory, Notifiable, HasApiTokens;
+ 
+     // ...other code   
+ }
+```
+
 To get a token, run the following command:
 
 ```bash
-vendor/bin/sail artisan tinker
-Psy Shell v0.10.8 (PHP 8.0.12 — cli) by Justin Hileman
->>> $user = User::find(1);
->>> $token = $user->createToken('Test');
->>> $token->plainTextToken
-=> "1|dl21xEBuPevtoMzi0Yy1eQhrV91ENvoJypFDAHdt"
->>> exit
+herd php artisan tinker
+Psy Shell v0.12.4 (PHP 8.3.12 — cli) by Justin Hileman
+> $user = User::find(1);
+> $token = $user->createToken('Test');
+> $token->plainTextToken
+= "1|f6rQIIeVZ3sWhxtFNzOIKVWDIpEpXp8Kqq4WVrXBcaa5e592"
+> exit
 ```
 
 Your `plainTextToken` will look different to the above, as it is a randomly
@@ -364,8 +379,8 @@ We're now ready to create our resource. Add the token to the request as a
 generated string, our request will look like this:
 
 ```http
-POST http://localhost/api/v1/posts?include=author,tags HTTP/1.1
-Authorization: Bearer 1|dl21xEBuPevtoMzi0Yy1eQhrV91ENvoJypFDAHdt
+POST http://jsonapi-tutorial.test/api/v1/posts?include=author,tags HTTP/1.1
+Authorization: Bearer 1|f6rQIIeVZ3sWhxtFNzOIKVWDIpEpXp8Kqq4WVrXBcaa5e592
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
@@ -398,31 +413,31 @@ You should see the following response:
 ```http
 HTTP/1.1 201 Created
 Content-Type: application/vnd.api+json
-Location: http://localhost/api/v1/posts/2
+Location: http://jsonapi-tutorial.test/api/v1/posts/2
 
 {
   "jsonapi": {
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/2"
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2"
   },
   "data": {
     "type": "posts",
     "id": "2",
     "attributes": {
       "content": "In our second blog post, you will learn how to create resources using the JSON:API specification.",
-      "createdAt": "2021-10-23T08:47:57.000000Z",
+      "createdAt": "2024-09-30T19:27:24.000000Z",
       "publishedAt": null,
       "slug": "creating-jsonapi-resources",
       "title": "How to Create JSON:API Resources",
-      "updatedAt": "2021-10-23T08:47:57.000000Z"
+      "updatedAt": "2024-09-30T19:27:24.000000Z"
     },
     "relationships": {
       "author": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/2\/author",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/author"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/author",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/author"
         },
         "data": {
           "type": "users",
@@ -431,14 +446,14 @@ Location: http://localhost/api/v1/posts/2
       },
       "comments": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/2\/comments",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/comments"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/comments",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/comments"
         }
       },
       "tags": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/2\/tags",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/tags"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/tags",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/tags"
         },
         "data": [
           {
@@ -449,7 +464,7 @@ Location: http://localhost/api/v1/posts/2
       }
     },
     "links": {
-      "self": "http:\/\/localhost\/api\/v1\/posts\/2"
+      "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2"
     }
   },
   "included": [
@@ -457,24 +472,24 @@ Location: http://localhost/api/v1/posts/2
       "type": "users",
       "id": "1",
       "attributes": {
-        "createdAt": "2021-10-23T08:45:26.000000Z",
+        "createdAt": "2024-09-30T17:36:59.000000Z",
         "name": "Artie Shaw",
-        "updatedAt": "2021-10-23T08:45:26.000000Z"
+        "updatedAt": "2024-09-30T17:36:59.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/1"
       }
     },
     {
       "type": "tags",
       "id": "2",
       "attributes": {
-        "createdAt": "2021-10-23T08:45:26.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
         "name": "JSON:API",
-        "updatedAt": "2021-10-23T08:45:26.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/tags\/2"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/tags\/2"
       }
     }
   ]

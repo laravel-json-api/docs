@@ -19,15 +19,15 @@ To start, we'll need to install the Laravel JSON:API package into our applicatio
 via Composer. Run the following commands:
 
 ```bash
-vendor/bin/sail composer require laravel-json-api/laravel
-vendor/bin/sail composer require --dev laravel-json-api/testing
+herd composer require laravel-json-api/laravel
+herd composer require --dev laravel-json-api/testing
 ```
 
 We then need to publish the Laravel JSON:API configuration file, using the
 following command:
 
 ```bash
-vendor/bin/sail artisan vendor:publish --provider="LaravelJsonApi\Laravel\ServiceProvider"
+herd php artisan vendor:publish --provider="LaravelJsonApi\Laravel\ServiceProvider"
 ```
 
 This will create a `config/jsonapi.php` file.
@@ -38,60 +38,21 @@ There's one final setup step. Laravel JSON:API needs to ensure that your API
 returns errors in the JSON:API format. To do this, we need to add a few things
 to our application's exception handler.
 
-Open the file `app/Exceptions/Handler.php` and you'll see the default exception
-handler that Laravel created for our application. Make the following changes:
+Open the `bootstrap/app.php` file and you'll see the exception handler is configured in the `withExceptions()` call. Make the following changes to this file:
 
 ```diff
- namespace App\Exceptions;
-
- use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-+use LaravelJsonApi\Core\Exceptions\JsonApiException;
-+use LaravelJsonApi\Exceptions\ExceptionParser;
- use Throwable;
-
- class Handler extends ExceptionHandler
- {
-+    /**
-+     * A list of the exception types that are not reported.
-+     *
-+     * @var array
-+     */
-+    protected $dontReport = [
-+       JsonApiException::class,
-+    ];
-
-     /**
-      * A list of the inputs that are never flashed for validation exceptions.
-      *
-      * @var array
-      */
-     protected $dontFlash = [
-         'current_password',
-         'password',
-         'password_confirmation',
-     ];
-
-     /**
-      * Register the exception handling callbacks for the application.
-      *
-      * @return void
-      */
-     public function register()
-     {
-         $this->reportable(function (Throwable $e) {
-             //
-         });
-+
-+        $this->renderable(
-+            ExceptionParser::make()->renderable()
+     ->withExceptions(function (Exceptions $exceptions) {
+-        //
++        $exceptions->dontReport(
++            \LaravelJsonApi\Core\Exceptions\JsonApiException::class,
 +        );
-     }
- }
++        $exceptions->render(
++            \LaravelJsonApi\Exceptions\ExceptionParser::renderer(),
++        );
+     })->create();
 ```
 
-The change in the `register()` method takes care of converting exceptions to the
-JSON:API format, if the client has requested JSON:API content via the
-`application/vnd.api+json` media type.
+The renderer takes care of converting exceptions to the JSON:API format, if the client has requested JSON:API content via the `application/vnd.api+json` media type.
 
 ## Creating a JSON:API Server
 
@@ -102,7 +63,7 @@ we'll call `v1`.
 Run the following command to create your first server:
 
 ```bash
-vendor/bin/sail artisan jsonapi:server v1
+herd php artisan jsonapi:server v1
 ```
 
 This creates a new file in your application: `app/JsonApi/V1/Server.php`.
@@ -150,7 +111,7 @@ class Server extends BaseServer
 
 It's worth noting at this point that the `$baseUri` property is set to
 `/api/v1`. This means all the HTTP requests we send to our API will start with
-`http://localhost/api/v1/`.
+`http://jsonapi-tutorial.test/api/v1/`.
 
 There's one thing we need to do at this point: we need to tell Laravel JSON:API
 that we have a `v1` server. To do that, we need to edit our `config/jsonapi.php`
@@ -225,7 +186,7 @@ read the resource from our API to check it's working.
 To create our schema, run the following command:
 
 ```bash
-vendor/bin/sail artisan jsonapi:schema posts
+herd php artisan jsonapi:schema posts
 ```
 
 This creates a new file, `app/JsonApi/V1/Posts/PostSchema.php`, which looks
@@ -331,7 +292,7 @@ shown in our API. To do that, we make the following changes to our class:
 
  use App\Models\Post;
  use LaravelJsonApi\Eloquent\Contracts\Paginator;
-+use LaravelJsonApi\Eloquent\Fields\DateTime;
+ use LaravelJsonApi\Eloquent\Fields\DateTime;
  use LaravelJsonApi\Eloquent\Fields\ID;
 +use LaravelJsonApi\Eloquent\Fields\Str;
  use LaravelJsonApi\Eloquent\Filters\WhereIdIn;
@@ -405,14 +366,14 @@ the post in our API. The URL to do this will follow this format:
 
 That means we can fetch our first post using the following URL:
 
-`http://localhost/api/v1/posts/1`
+`http://jsonapi-tutorial.test/api/v1/posts/1`
 
 When running this request, we need to specify the JSON:API media type in the
 `Accept` header - the media type is `application/vnd.api+json`. This means our
 HTTP request will look like this:
 
 ```http
-GET http://localhost/api/v1/posts/1 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -428,6 +389,7 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
+      "detail": "The route api\/v1\/posts\/1 could not be found.",
       "status": "404",
       "title": "Not Found"
     }
@@ -449,20 +411,9 @@ file. If you open that file now, you will see:
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::get('/user', function (Request $request) {
     return $request->user();
-});
+})->middleware('auth:sanctum');
 ```
 
 To add our JSON:API server's routes, we will use the `JsonApiRoute` facade.
@@ -475,9 +426,9 @@ Update the `routes/api.php` file to look like this:
 +use LaravelJsonApi\Laravel\Http\Controllers\JsonApiController;
 +use LaravelJsonApi\Laravel\Routing\ResourceRegistrar;
 
- Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+ Route::get('/user', function (Request $request) {
      return $request->user();
- });
+ })->middleware('auth:sanctum');
 +
 +JsonApiRoute::server('v1')->prefix('v1')->resources(function (ResourceRegistrar $server) {
 +    $server->resource('posts', JsonApiController::class)->readOnly();
@@ -513,7 +464,7 @@ the tutorial we'll add routes to create, update and delete post resources.
 Try the HTTP request again:
 
 ```http
-GET http://localhost/api/v1/posts/1 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -548,7 +499,7 @@ the API. This means for our posts resource we need to create a `PostPolicy`.
 You can do this using the following Laravel command:
 
 ```bash
-vendor/bin/sail artisan make:policy PostPolicy --model Post
+herd php artisan make:policy PostPolicy --model Post
 ```
 
 This will create a `app/Policies/PostPolicy.php` file, which looks like this:
@@ -558,31 +509,22 @@ namespace App\Policies;
 
 use App\Models\Post;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class PostPolicy
 {
-    use HandlesAuthorization;
-
     /**
      * Determine whether the user can view any models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user): bool
     {
         //
     }
 
     /**
      * Determine whether the user can view the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Post  $post
-     * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Post $post)
+    public function view(User $user, Post $post): bool
     {
         //
     }
@@ -597,11 +539,6 @@ post in our blog. Make the following changes to the `view()` method:
 ```diff
  /**
   * Determine whether the user can view the model.
-  *
-- * @param  \App\Models\User  $user
-+ * @param  \App\Models\User|null  $user
-  * @param  \App\Models\Post  $post
-  * @return \Illuminate\Auth\Access\Response|bool
   */
 -public function view(User $user, Post $post)
 +public function view(?User $user, Post $post)
@@ -630,7 +567,7 @@ published posts, but draft posts should only be visible to the author.
 Now we added our authorization logic, we can retry our request:
 
 ```http
-GET http://localhost/api/v1/posts/1 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -645,21 +582,21 @@ Content-Type: application/vnd.api+json
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
   },
   "data": {
     "type": "posts",
     "id": "1",
     "attributes": {
       "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-      "createdAt": "2021-09-19T15:47:49.000000Z",
-      "publishedAt": "2021-09-19T15:47:49.000000Z",
+      "createdAt": "2024-09-30T17:37:00.000000Z",
+      "publishedAt": "2024-09-30T17:37:00.000000Z",
       "slug": "welcome-to-laravel-jsonapi",
       "title": "Welcome to Laravel JSON:API",
-      "updatedAt": "2021-09-19T15:47:49.000000Z"
+      "updatedAt": "2024-09-30T17:37:00.000000Z"
     },
     "links": {
-      "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+      "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
     }
   }
 }

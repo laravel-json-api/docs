@@ -107,9 +107,9 @@ JSON:API resources.
 Create the schemas by running the following commands:
 
 ```bash
-vendor/bin/sail artisan jsonapi:schema comments
-vendor/bin/sail artisan jsonapi:schema tags
-vendor/bin/sail artisan jsonapi:schema user
+herd php artisan jsonapi:schema comments
+herd php artisan jsonapi:schema tags
+herd php artisan jsonapi:schema user
 ```
 
 This will create the following three files:
@@ -337,7 +337,7 @@ expect to see the relationships when we request the `posts` resource. Give that
 a go now with same request you used in the previous chapter:
 
 ```http
-GET http://localhost/api/v1/posts/1 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -349,41 +349,41 @@ The response JSON now looks like this:
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
   },
   "data": {
     "type": "posts",
     "id": "1",
     "attributes": {
       "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-      "createdAt": "2021-09-19T15:47:49.000000Z",
-      "publishedAt": "2021-09-19T15:47:49.000000Z",
+      "createdAt": "2024-09-30T17:37:00.000000Z",
+      "publishedAt": "2024-09-30T17:37:00.000000Z",
       "slug": "welcome-to-laravel-jsonapi",
       "title": "Welcome to Laravel JSON:API",
-      "updatedAt": "2021-09-19T15:47:49.000000Z"
+      "updatedAt": "2024-09-30T17:37:00.000000Z"
     },
     "relationships": {
       "author": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
         }
       },
       "comments": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/1\/comments",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/comments"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/comments",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/comments"
         }
       },
       "tags": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/1\/tags",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/tags"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/tags",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/tags"
         }
       }
     },
     "links": {
-      "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+      "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
     }
   }
 }
@@ -399,7 +399,7 @@ to obtain the related resources.
 Let's try the `related` link for the `author` relationship, using this request:
 
 ```http
-GET http://localhost/api/v1/posts/1/author HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1/author HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -415,6 +415,7 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
+      "detail": "The route api\/v1\/posts\/1\/author could not be found.",
       "status": "404",
       "title": "Not Found"
     }
@@ -467,7 +468,7 @@ The first one of those is the `GET` request we previously tried. Let's try it
 again:
 
 ```http
-GET http://localhost/api/v1/posts/1/author HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1/author HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -503,12 +504,8 @@ that by adding the following methods after the existing `view()` method:
 ```diff
  /**
   * Determine whether the user can view the model.
-  *
-  * @param  \App\Models\User|null  $user
-  * @param  \App\Models\Post  $post
-  * @return \Illuminate\Auth\Access\Response|bool
   */
- public function view(?User $user, Post $post)
+ public function view(?User $user, Post $post): bool
  {
      if ($post->published_at) {
          return true;
@@ -519,36 +516,24 @@ that by adding the following methods after the existing `view()` method:
 
 +/**
 + * Determine whether the user can view the post's author.
-+ *
-+ * @param  \App\Models\User|null  $user
-+ * @param  \App\Models\Post  $post
-+ * @return \Illuminate\Auth\Access\Response|bool
 + */
-+public function viewAuthor(?User $user, Post $post)
++public function viewAuthor(?User $user, Post $post): bool
 +{
 +    return $this->view($user, $post);
 +}
 
 +/**
 + * Determine whether the user can view the post's comments.
-+ *
-+ * @param  \App\Models\User|null  $user
-+ * @param  \App\Models\Post  $post
-+ * @return \Illuminate\Auth\Access\Response|bool
 + */
-+public function viewComments(?User $user, Post $post)
++public function viewComments(?User $user, Post $post): bool
 +{
 +    return $this->view($user, $post);
 +}
 
 +/**
 + * Determine whether the user can view the post's tags.
-+ *
-+ * @param  \App\Models\User|null  $user
-+ * @param  \App\Models\Post  $post
-+ * @return \Illuminate\Auth\Access\Response|bool
 + */
-+public function viewTags(?User $user, Post $post)
++public function viewTags(?User $user, Post $post): bool
 +{
 +    return $this->view($user, $post);
 +}
@@ -568,7 +553,7 @@ to be identical to the logic for viewing a specific post.
 Now we've updated the authorization logic, try the request again:
 
 ```http
-GET http://localhost/api/v1/posts/1/author HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1/author HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -582,16 +567,19 @@ Content-Type: application/vnd.api+json
   "jsonapi": {
     "version": "1.0"
   },
+  "links": {
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author"
+  },
   "data": {
     "type": "users",
     "id": "1",
     "attributes": {
-      "createdAt": "2021-09-19T15:47:48.000000Z",
+      "createdAt": "2024-09-30T17:36:59.000000Z",
       "name": "Artie Shaw",
-      "updatedAt": "2021-09-19T15:47:48.000000Z"
+      "updatedAt": "2024-09-30T17:36:59.000000Z"
     },
     "links": {
-      "self": "http:\/\/localhost\/api\/v1\/users\/1"
+      "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/1"
     }
   }
 }
@@ -612,7 +600,7 @@ which you could see in our `posts` resource earlier in the chapter. Let's
 try that endpoint with this request:
 
 ```http
-GET http://localhost/api/v1/posts/1/relationships/author HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1/relationships/author HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -627,8 +615,8 @@ Content-Type: application/vnd.api+json
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author",
-    "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author"
+    "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
   },
   "data": {
     "type": "users",
@@ -650,7 +638,7 @@ relationships.
 ## Including Related Resources
 
 While these relationships are useful, what happens if our API client wanted to
-retrieve a post and it's related resources? If we had to use the relationship
+retrieve a post and its related resources? If we had to use the relationship
 endpoints, the client would end up needing to send multiple HTTP requests to
 assemble all the data it needed.
 
@@ -669,7 +657,7 @@ its comments and each user attached to each comment.
 Try that in the following request:
 
 ```http
-GET http://localhost/api/v1/posts/1?include=author,comments.user HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts/1?include=author,comments.user HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -790,24 +778,24 @@ Content-Type: application/vnd.api+json
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
   },
   "data": {
     "type": "posts",
     "id": "1",
     "attributes": {
       "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-      "createdAt": "2021-09-19T15:47:49.000000Z",
-      "publishedAt": "2021-09-19T15:47:49.000000Z",
+      "createdAt": "2024-09-30T17:37:00.000000Z",
+      "publishedAt": "2024-09-30T17:37:00.000000Z",
       "slug": "welcome-to-laravel-jsonapi",
       "title": "Welcome to Laravel JSON:API",
-      "updatedAt": "2021-09-19T15:47:49.000000Z"
+      "updatedAt": "2024-09-30T17:37:00.000000Z"
     },
     "relationships": {
       "author": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
         },
         "data": {
           "type": "users",
@@ -816,8 +804,8 @@ Content-Type: application/vnd.api+json
       },
       "comments": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/1\/comments",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/comments"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/comments",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/comments"
         },
         "data": [
           {
@@ -828,13 +816,13 @@ Content-Type: application/vnd.api+json
       },
       "tags": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/1\/tags",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/tags"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/tags",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/tags"
         }
       }
     },
     "links": {
-      "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+      "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
     }
   },
   "included": [
@@ -842,12 +830,12 @@ Content-Type: application/vnd.api+json
       "type": "users",
       "id": "1",
       "attributes": {
-        "createdAt": "2021-09-19T15:47:48.000000Z",
+        "createdAt": "2024-09-30T17:36:59.000000Z",
         "name": "Artie Shaw",
-        "updatedAt": "2021-09-19T15:47:48.000000Z"
+        "updatedAt": "2024-09-30T17:36:59.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/1"
       }
     },
     {
@@ -855,14 +843,14 @@ Content-Type: application/vnd.api+json
       "id": "1",
       "attributes": {
         "content": "Wow! Great first blog article. Looking forward to more!",
-        "createdAt": "2021-09-19T15:47:49.000000Z",
-        "updatedAt": "2021-09-19T15:47:49.000000Z"
+        "createdAt": "2024-09-30T17:37:00.000000Z",
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "relationships": {
         "user": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/comments\/1\/user",
-            "self": "http:\/\/localhost\/api\/v1\/comments\/1\/relationships\/user"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/comments\/1\/user",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/comments\/1\/relationships\/user"
           },
           "data": {
             "type": "users",
@@ -871,19 +859,19 @@ Content-Type: application/vnd.api+json
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/comments\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/comments\/1"
       }
     },
     {
       "type": "users",
       "id": "2",
       "attributes": {
-        "createdAt": "2021-09-19T15:47:48.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
         "name": "Benny Goodman",
-        "updatedAt": "2021-09-19T15:47:48.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/2"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/2"
       }
     }
   ]

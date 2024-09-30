@@ -19,15 +19,12 @@ our blog application.
 
 ## Requirements
 
-To follow this tutorial, you'll need the following:
+This tutorial assumes you are using [Laravel Herd](https://laravel.com/docs/installation#local-installation-using-herd)
+to run your application.
 
-- Composer
-- Docker
-
-This tutorial assumes you are using Laravel Sail to run your application in
-Docker. There are other ways of running Laravel - e.g. Homestead. If you want
-to use an alternative method then make sure you follow the relevant Laravel
-documentation on how to setup an application.
+There are other ways of running Laravel -
+e.g. [Laravel Sail](https://laravel.com/docs/installation#docker-installation-using-sail). If you want to use an
+alternative method then make sure you follow the relevant Laravel documentation on how to setup an application.
 
 You'll also need a method of submitting AJAX requests to your application. For
 example, Postman, PHPStorm HTTP requests, or cURL. The tutorial shows the HTTP
@@ -45,50 +42,72 @@ repository.
 
 ## Installation
 
-To get started, we'll need to create our new Laravel application. To do this,
-we'll follow the [Your First Laravel Project](https://laravel.com/docs/8.x#your-first-laravel-project)
-instructions. This contains information on creating your first project and
-running it using Docker - there's instructions for MacOS, Windows and Linux.
-
-Assuming you have Docker installed and running, on Linux we create our
-application by running the following command:
-
-```bash
-curl -s https://laravel.build/jsonapi-tutorial | bash
-```
-
-Once this has finished running, we'll use Laravel Sail to start our new
-application:
-
-```bash
-cd jsonapi-tutorial && ./vendor/bin/sail up
-```
-
-To check your application is running, go to [http://localhost/](http://localhost)
-in your browser. You should see a default Laravel page.
+To get started, we'll need to create our new Laravel application. To do this, we'll follow
+the [Local Installation Using Laravel Herd](https://laravel.com/docs/installation#local-installation-using-herd)
+instructions. This contains information on creating your first project and running it using Herd - there's instructions
+for MacOS and Windows.
 
 :::tip
-As this tutorial is about JSON:API, we haven't included extensive information
-on starting the project for the first time. Refer to the Laravel installation
-documentation for more details.
+If you're using Linux, we suggest you follow
+the [Laravel Sail](https://laravel.com/docs/installation#docker-installation-using-sail) instructions.
 :::
 
-For this tutorial, you'll also need to run Artisan commands. Check that Artisan
-is working by running:
+Run the following commands to set up your new Laravel application. When prompted, select:
+
+- No starter kit
+- PHPUnit as your testing framework (to match the examples in this tutorial)
+- SQLite as your database
+- Run the default migrations
 
 ```bash
-vendor/bin/sail artisan -V
+cd ~/Herd
+laravel new jsonapi-tutorial
+cd jsonapi-tutorial
+herd open
+```
+
+Once this has finished running:
+
+```bash
+cd jsonapi-tutorial
+herd open
+```
+
+This will open [jsonapi-tutorial.test](http://jsonapi-tutorial.test/) in your browser, and you should see the default
+Laravel welcome page.
+
+:::tip
+As this tutorial is about JSON:API, we haven't included extensive information on starting the project for the first
+time. Refer to the Laravel installation documentation for more details.
+:::
+
+For this tutorial, you'll also need to run Artisan commands. Check that Artisan is working by running:
+
+```bash
+herd php artisan -V
 ```
 
 That command should output the Laravel version, for example:
 
 ```
-Laravel Framework 8.61.0
+Laravel Framework 11.25.0
 ```
+
+## API Routing
+
+As our application is going to be an API, we need to install
+the [Laravel API starter kit.](https://laravel.com/docs/routing#api-routes)
+
+Run the following command:
+
+```bash
+herd php artisan install:api
+```
+
+This will install Sanctum, which we'll use for API authentication, and an API routes file.
 
 ## In Summary
 
-You've create a brand new Laravel application, and are running it locally.
+You've created a new Laravel application, are running it locally, and have set it up for API routing.
 
-In the [next chapter](./02-models.md) we'll add the database tables and models
-required for our blog application.
+In the [next chapter](./02-models.md) we'll add the database tables and models required for our blog application.
