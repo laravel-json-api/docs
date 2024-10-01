@@ -23,8 +23,8 @@ against the resource index. For example, we can retrieve many blog posts using
 the following request:
 
 ```http
-GET http://localhost/api/v1/posts HTTP/1.1
-Content-Type: application/vnd.api+json
+GET http://jsonapi-tutorial.test/api/v1/posts HTTP/1.1
+Accept: application/vnd.api+json
 ```
 
 Give this request a go, and you should see the following response:
@@ -57,13 +57,9 @@ the `viewAny()` method:
 ```diff
  /**
   * Determine whether the user can view any models.
-  *
-- * @param  \App\Models\User  $user
-+ * @param  \App\Models\User|null  $user
-  * @return \Illuminate\Auth\Access\Response|bool
   */
--public function viewAny(User $user)
-+public function viewAny(?User $user)
+-public function viewAny(User $user): bool
++public function viewAny(?User $user): bool
  {
 -    //
 +    return true;
@@ -87,8 +83,8 @@ and make the following changes:
  namespace App\JsonApi\V1\Posts;
 
  use App\Models\Post;
- use Illuminate\Database\Eloquent\Builder;
- use Illuminate\Http\Request;
++use Illuminate\Database\Eloquent\Builder;
++use Illuminate\Http\Request;
  use LaravelJsonApi\Eloquent\Contracts\Paginator;
  use LaravelJsonApi\Eloquent\Fields\DateTime;
  use LaravelJsonApi\Eloquent\Fields\ID;
@@ -177,7 +173,6 @@ and make the following changes:
 +
 +        return $query->whereNotNull('published_at');
 +    }
-
 }
 ```
 
@@ -195,8 +190,8 @@ will be returned.
 Let's try our HTTP request again:
 
 ```http
-GET http://localhost/api/v1/posts HTTP/1.1
-Content-Type: application/vnd.api+json
+GET http://jsonapi-tutorial.test/api/v1/posts HTTP/1.1
+Accpet: application/vnd.api+json
 ```
 
 This time we should see a success response, containing the one post that is
@@ -216,34 +211,34 @@ Content-Type: application/vnd.api+json
       "id": "1",
       "attributes": {
         "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-        "createdAt": "2021-11-04T17:30:52.000000Z",
-        "publishedAt": "2021-11-04T17:30:52.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
+        "publishedAt": "2024-09-30T17:37:00.000000Z",
         "slug": "welcome-to-laravel-jsonapi",
         "title": "Welcome to Laravel JSON:API",
-        "updatedAt": "2021-11-04T17:30:52.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
       }
     }
   ]
@@ -268,7 +263,7 @@ have a `UserFactory.php` file that helps us create `User` models.
 Add a factory for our `Post` model using the following command:
 
 ```bash
-vendor/bin/sail artisan make:factory PostFactory
+herd php artisan make:factory PostFactory
 ```
 
 That will create the `database/factories/PostFactory.php` file. Open that up
@@ -281,21 +276,17 @@ and make the following changes:
 +use App\Models\User;
  use Illuminate\Database\Eloquent\Factories\Factory;
 
+ /**
+  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Post>
+  */
  class PostFactory extends Factory
  {
      /**
-      * The name of the factory's corresponding model.
-      *
-      * @var string
-      */
-     protected $model = Post::class;
-
-     /**
       * Define the model's default state.
       *
-      * @return array
+      * @return array<string, mixed>
       */
-     public function definition()
+     public function definition(): array
      {
          return [
 -            //
@@ -316,7 +307,7 @@ We then need to create a database seed that will use this factory to fill our
 `posts` database table with data. Run the following command:
 
 ```bash
-vendor/bin/sail artisan make:seed PostsSeeder
+herd php artisan make:seed PostsSeeder
 ```
 
 This will create the `database/seeders/PostsSeeder.php` class. Open it and make
@@ -333,10 +324,8 @@ the following changes:
  {
      /**
       * Run the database seeds.
-      *
-      * @return void
       */
-     public function run()
+     public function run(): void
      {
 -        //
 +       $users = User::factory()->count(5)->create();
@@ -352,14 +341,14 @@ This creates 100 `Post` models, assigned to five different authors. Run the seed
 now:
 
 ```bash
-vendor/bin/sail artisan db:seed --class PostsSeeder
+herd php artisan db:seed --class PostsSeeder
 ```
 
 Once you've done this, try the HTTP request again:
 
 ```http
-GET http://localhost/api/v1/posts HTTP/1.1
-Content-Type: application/vnd.api+json
+GET http://jsonapi-tutorial.test/api/v1/posts HTTP/1.1
+Accept: application/vnd.api+json
 ```
 
 You should now see that the top-level `data` member of the response JSON contains
@@ -379,7 +368,7 @@ Say we wanted to retrieve the first page, with only 5 posts per-page, we
 would use the following request:
 
 ```http
-GET http://localhost/api/v1/posts?page[number]=1&page[size]=5 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts?page[number]=1&page[size]=5 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -394,19 +383,19 @@ Content-Type: application/vnd.api+json
     "page": {
       "currentPage": 1,
       "from": 1,
-      "lastPage": 16,
+      "lastPage": 15,
       "perPage": 5,
       "to": 5,
-      "total": 76
+      "total": 72
     }
   },
   "jsonapi": {
     "version": "1.0"
   },
   "links": {
-    "first": "http:\/\/localhost\/api\/v1\/posts?page%5Bnumber%5D=1&page%5Bsize%5D=5",
-    "last": "http:\/\/localhost\/api\/v1\/posts?page%5Bnumber%5D=16&page%5Bsize%5D=5",
-    "next": "http:\/\/localhost\/api\/v1\/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5"
+    "first": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?page%5Bnumber%5D=1&page%5Bsize%5D=5",
+    "last": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?page%5Bnumber%5D=15&page%5Bsize%5D=5",
+    "next": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?page%5Bnumber%5D=2&page%5Bsize%5D=5"
   },
   "data": [
     {
@@ -414,174 +403,174 @@ Content-Type: application/vnd.api+json
       "id": "1",
       "attributes": {
         "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-        "createdAt": "2021-11-04T17:30:52.000000Z",
-        "publishedAt": "2021-11-04T17:30:52.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
+        "publishedAt": "2024-09-30T17:37:00.000000Z",
         "slug": "welcome-to-laravel-jsonapi",
         "title": "Welcome to Laravel JSON:API",
-        "updatedAt": "2021-11-04T17:30:52.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
       }
     },
     {
       "type": "posts",
       "id": "3",
       "attributes": {
-        "content": "Ullam nihil perferendis impedit ratione in eum. Tempora qui ab quasi ipsam esse cumque officia. Quia quia ut ducimus sapiente harum qui expedita. Eos quisquam aliquam commodi qui aut et.\n\nEveniet ut assumenda qui dolores pariatur nemo. Dolor et voluptatibus officiis eius molestias voluptate adipisci. Molestiae quia voluptatem reiciendis ipsam ipsum praesentium quisquam. Et esse odio aliquid nisi optio reiciendis et. Voluptatem repellat est harum.\n\nVoluptas consectetur fugit eligendi numquam blanditiis error delectus. Iste deserunt repellat voluptate. Cupiditate vero doloremque id. Ut facilis qui sint vero. Laborum est occaecati numquam veritatis.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1994-04-23T14:16:56.000000Z",
-        "slug": "et-et-praesentium-quis",
-        "title": "sed impedit error et non",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Aliquam nihil ipsum ut et ipsa et. Repellat dolore in quod quia accusamus consequatur labore. Optio rerum debitis odio impedit minima minus optio. Omnis ut sed itaque eum delectus.\n\nNumquam enim eius non dolorum. Enim provident et nulla totam. Aut dignissimos minus nihil consectetur cupiditate harum est.\n\nNemo maiores ut eligendi repellat distinctio impedit aspernatur. Possimus est et voluptate facilis harum iure sapiente. Autem et qui delectus voluptatem veritatis minima. Ea velit enim aut.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "1992-07-18T17:26:43.000000Z",
+        "slug": "sequi-qui-sit-aut-corporis",
+        "title": "quo ut expedita dignissimos est",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/3"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3"
       }
     },
     {
       "type": "posts",
-      "id": "5",
+      "id": "6",
       "attributes": {
-        "content": "Eos repudiandae tenetur architecto voluptatem. Velit vero error ut libero animi vitae rerum. Quidem provident molestias dolorem aut in consequatur molestias. Sed recusandae voluptas facere est nobis dolores dicta.\n\nQuos similique sit dicta odit. Ab suscipit eos rerum blanditiis. Dolorem aut odit alias quo laudantium perferendis quo. Quos laudantium omnis voluptatem illo vitae ea quod repellat.\n\nArchitecto quis enim impedit vel adipisci. A quia quia dolore. Magni dolores quas et velit delectus facere. Incidunt aperiam vel impedit laboriosam.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1993-01-18T02:55:30.000000Z",
-        "slug": "voluptatem-excepturi-non-impedit-in-et-voluptas",
-        "title": "repudiandae impedit et facere sint",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Accusantium tempore excepturi et unde unde non dolorum. Sed ut et et. Illum corporis quis et debitis dignissimos aut assumenda. Ut unde sint consequatur autem.\n\nNon ex et asperiores soluta est possimus. Aliquam similique nam rerum vel veritatis est qui. In laudantium in reiciendis minus nobis consequatur non. Iusto omnis aut natus dignissimos.\n\nVelit dicta qui hic et quo. Molestias est maiores libero architecto nostrum tempore. Consequatur culpa et quasi.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "1982-06-06T12:25:15.000000Z",
+        "slug": "et-dolores-expedita-id-quia-dolorem-rem",
+        "title": "itaque possimus eos optio dolor",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/5"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6"
       }
     },
     {
       "type": "posts",
       "id": "7",
       "attributes": {
-        "content": "Optio aut nemo quis eius rem sint molestias eaque. Sequi quam ut doloribus et. Blanditiis ad minus voluptas amet nostrum commodi. Excepturi cupiditate explicabo nam velit fugit occaecati iure in.\n\nDelectus autem nostrum rerum rem. Optio voluptas officiis quidem ratione. Quo omnis et in qui facere aut ad. Quas a ullam occaecati hic ullam.\n\nNon ducimus similique est est nulla excepturi. Voluptatem in vel cumque incidunt sed. Officia alias pariatur repellendus sit rerum.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1985-07-15T01:17:17.000000Z",
-        "slug": "autem-itaque-et-aut-harum-et-laudantium",
-        "title": "omnis est quis atque ipsum",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Beatae voluptas fuga asperiores sint molestiae dignissimos rem. Qui labore atque cumque tenetur sit natus quis. Reprehenderit qui quis quis voluptas dolor hic voluptas. Ipsum quos libero assumenda vel.\n\nEnim sunt aut velit voluptatem veritatis. Id quae voluptatem exercitationem eum. Quam eos ut incidunt sed rerum dolorem ullam.\n\nMagnam magni est ratione dolor. Vel dolor et eligendi qui. Est asperiores optio eos architecto est accusantium sequi et.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "2008-02-25T11:55:21.000000Z",
+        "slug": "atque-harum-mollitia-repellendus-molestiae",
+        "title": "et reprehenderit aliquam modi quidem",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/7"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7"
       }
     },
     {
       "type": "posts",
       "id": "9",
       "attributes": {
-        "content": "Qui autem non non aspernatur eligendi. Impedit et sit inventore facilis est. Ut minus provident iure qui. Dolores ab ratione dolorem nulla quod.\n\nSimilique quasi et nihil provident dolores. Expedita quia fugit blanditiis impedit vel quidem quis eos. Minima dolores esse nisi error architecto. Sed amet culpa id architecto consectetur sint qui.\n\nOccaecati minima voluptas placeat voluptas est est consequatur. Facilis repellat velit voluptas. Odio iure quia sed quia nesciunt eum aut.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1984-05-29T14:26:49.000000Z",
-        "slug": "consequatur-harum-optio-laboriosam-cumque",
-        "title": "earum provident sit tenetur sint",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Sint in ut omnis ratione. Voluptas voluptatum tempore quas voluptate a aut eum distinctio. Repudiandae quae deleniti praesentium nihil quia ut maxime quia.\n\nVitae ad asperiores quisquam quo aperiam nesciunt explicabo est. Debitis quo nam hic vero. Aut nemo neque quia dicta ducimus tenetur praesentium dolorem. Odit ipsam aut ipsa consequuntur culpa beatae.\n\nQuaerat laboriosam sapiente aut cupiditate veritatis quod. Voluptates ipsam aut laboriosam id non quia. Eum consectetur asperiores fugiat. Est commodi repudiandae sit corrupti itaque eaque.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "2014-09-03T17:22:09.000000Z",
+        "slug": "consectetur-eius-soluta-soluta-id",
+        "title": "totam officiis est repudiandae sit",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/9\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/9\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/9\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/9\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/9\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/9\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/9"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9"
       }
     }
   ]
@@ -628,7 +617,7 @@ specified resource id. For example, if a client wanted to retrieve the `posts`
 resources with ids `1`, `3` and `5`, it can use the following request:
 
 ```http
-GET http://localhost/api/v1/posts?filter[id][]=1&filter[id][]=3&filter[id][]=5 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts?filter[id][]=1&filter[id][]=3&filter[id][]=6 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -648,109 +637,115 @@ Content-Type: application/vnd.api+json
       "id": "1",
       "attributes": {
         "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-        "createdAt": "2021-11-04T17:30:52.000000Z",
-        "publishedAt": "2021-11-04T17:30:52.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
+        "publishedAt": "2024-09-30T17:37:00.000000Z",
         "slug": "welcome-to-laravel-jsonapi",
         "title": "Welcome to Laravel JSON:API",
-        "updatedAt": "2021-11-04T17:30:52.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
       }
     },
     {
       "type": "posts",
       "id": "3",
       "attributes": {
-        "content": "Ullam nihil perferendis impedit ratione in eum. Tempora qui ab quasi ipsam esse cumque officia. Quia quia ut ducimus sapiente harum qui expedita. Eos quisquam aliquam commodi qui aut et.\n\nEveniet ut assumenda qui dolores pariatur nemo. Dolor et voluptatibus officiis eius molestias voluptate adipisci. Molestiae quia voluptatem reiciendis ipsam ipsum praesentium quisquam. Et esse odio aliquid nisi optio reiciendis et. Voluptatem repellat est harum.\n\nVoluptas consectetur fugit eligendi numquam blanditiis error delectus. Iste deserunt repellat voluptate. Cupiditate vero doloremque id. Ut facilis qui sint vero. Laborum est occaecati numquam veritatis.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1994-04-23T14:16:56.000000Z",
-        "slug": "et-et-praesentium-quis",
-        "title": "sed impedit error et non",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Aliquam nihil ipsum ut et ipsa et. Repellat dolore in quod quia accusamus consequatur labore. Optio rerum debitis odio impedit minima minus optio. Omnis ut sed itaque eum delectus.\n\nNumquam enim eius non dolorum. Enim provident et nulla totam. Aut dignissimos minus nihil consectetur cupiditate harum est.\n\nNemo maiores ut eligendi repellat distinctio impedit aspernatur. Possimus est et voluptate facilis harum iure sapiente. Autem et qui delectus voluptatem veritatis minima. Ea velit enim aut.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "1992-07-18T17:26:43.000000Z",
+        "slug": "sequi-qui-sit-aut-corporis",
+        "title": "quo ut expedita dignissimos est",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/3"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3"
       }
     },
     {
       "type": "posts",
-      "id": "5",
+      "id": "6",
       "attributes": {
-        "content": "Eos repudiandae tenetur architecto voluptatem. Velit vero error ut libero animi vitae rerum. Quidem provident molestias dolorem aut in consequatur molestias. Sed recusandae voluptas facere est nobis dolores dicta.\n\nQuos similique sit dicta odit. Ab suscipit eos rerum blanditiis. Dolorem aut odit alias quo laudantium perferendis quo. Quos laudantium omnis voluptatem illo vitae ea quod repellat.\n\nArchitecto quis enim impedit vel adipisci. A quia quia dolore. Magni dolores quas et velit delectus facere. Incidunt aperiam vel impedit laboriosam.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1993-01-18T02:55:30.000000Z",
-        "slug": "voluptatem-excepturi-non-impedit-in-et-voluptas",
-        "title": "repudiandae impedit et facere sint",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Accusantium tempore excepturi et unde unde non dolorum. Sed ut et et. Illum corporis quis et debitis dignissimos aut assumenda. Ut unde sint consequatur autem.\n\nNon ex et asperiores soluta est possimus. Aliquam similique nam rerum vel veritatis est qui. In laudantium in reiciendis minus nobis consequatur non. Iusto omnis aut natus dignissimos.\n\nVelit dicta qui hic et quo. Molestias est maiores libero architecto nostrum tempore. Consequatur culpa et quasi.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "1982-06-06T12:25:15.000000Z",
+        "slug": "et-dolores-expedita-id-quia-dolorem-rem",
+        "title": "itaque possimus eos optio dolor",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/author"
           }
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/5"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6"
       }
     }
   ]
 }
 ```
+
+:::tip
+If you do not see all three posts in the response, remember we have set up our API to only return posts that are
+published. As our seeder randomly decided whether a post was published or not, any missing posts from the response will
+be in an _unpublished_ state, and therefore not shown as we are connecting to the API as a guest.
+:::
 
 ### Implementing Filters
 
@@ -861,12 +856,12 @@ class:
  }
 ```
 
-Here we have add a filter called `author`, which will be applied to the `author_id`
+Here we have added a filter called `author`, which will be applied to the `author_id`
 column. Now if our client wants to retrieve `posts` that were written by authors
 `1` and `3`, it can send the following request:
 
 ```http
-GET http://localhost/api/v1/posts?filter[author][]=1&filter[author][]=3&include=author&page[number]=1&page[size]=5 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts?filter[author][]=1&filter[author][]=3&include=author&page[number]=1&page[size]=5 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -896,9 +891,9 @@ Content-Type: application/vnd.api+json
     "version": "1.0"
   },
   "links": {
-    "first": "http:\/\/localhost\/api\/v1\/posts?filter%5Bauthor%5D%5B0%5D=1&filter%5Bauthor%5D%5B1%5D=3&include=author&page%5Bnumber%5D=1&page%5Bsize%5D=5",
-    "last": "http:\/\/localhost\/api\/v1\/posts?filter%5Bauthor%5D%5B0%5D=1&filter%5Bauthor%5D%5B1%5D=3&include=author&page%5Bnumber%5D=3&page%5Bsize%5D=5",
-    "next": "http:\/\/localhost\/api\/v1\/posts?filter%5Bauthor%5D%5B0%5D=1&filter%5Bauthor%5D%5B1%5D=3&include=author&page%5Bnumber%5D=2&page%5Bsize%5D=5"
+    "first": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?filter%5Bauthor%5D%5B0%5D=1&filter%5Bauthor%5D%5B1%5D=3&include=author&page%5Bnumber%5D=1&page%5Bsize%5D=5",
+    "last": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?filter%5Bauthor%5D%5B0%5D=1&filter%5Bauthor%5D%5B1%5D=3&include=author&page%5Bnumber%5D=3&page%5Bsize%5D=5",
+    "next": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?filter%5Bauthor%5D%5B0%5D=1&filter%5Bauthor%5D%5B1%5D=3&include=author&page%5Bnumber%5D=2&page%5Bsize%5D=5"
   },
   "data": [
     {
@@ -906,17 +901,17 @@ Content-Type: application/vnd.api+json
       "id": "1",
       "attributes": {
         "content": "In our first blog post, you will learn all about Laravel JSON:API...",
-        "createdAt": "2021-11-04T17:30:52.000000Z",
-        "publishedAt": "2021-11-04T17:30:52.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
+        "publishedAt": "2024-09-30T17:37:00.000000Z",
         "slug": "welcome-to-laravel-jsonapi",
         "title": "Welcome to Laravel JSON:API",
-        "updatedAt": "2021-11-04T17:30:52.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -925,37 +920,37 @@ Content-Type: application/vnd.api+json
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
       }
     },
     {
       "type": "posts",
-      "id": "7",
+      "id": "9",
       "attributes": {
-        "content": "Optio aut nemo quis eius rem sint molestias eaque. Sequi quam ut doloribus et. Blanditiis ad minus voluptas amet nostrum commodi. Excepturi cupiditate explicabo nam velit fugit occaecati iure in.\n\nDelectus autem nostrum rerum rem. Optio voluptas officiis quidem ratione. Quo omnis et in qui facere aut ad. Quas a ullam occaecati hic ullam.\n\nNon ducimus similique est est nulla excepturi. Voluptatem in vel cumque incidunt sed. Officia alias pariatur repellendus sit rerum.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "1985-07-15T01:17:17.000000Z",
-        "slug": "autem-itaque-et-aut-harum-et-laudantium",
-        "title": "omnis est quis atque ipsum",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Sint in ut omnis ratione. Voluptas voluptatum tempore quas voluptate a aut eum distinctio. Repudiandae quae deleniti praesentium nihil quia ut maxime quia.\n\nVitae ad asperiores quisquam quo aperiam nesciunt explicabo est. Debitis quo nam hic vero. Aut nemo neque quia dicta ducimus tenetur praesentium dolorem. Odit ipsam aut ipsa consequuntur culpa beatae.\n\nQuaerat laboriosam sapiente aut cupiditate veritatis quod. Voluptates ipsam aut laboriosam id non quia. Eum consectetur asperiores fugiat. Est commodi repudiandae sit corrupti itaque eaque.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "2014-09-03T17:22:09.000000Z",
+        "slug": "consectetur-eius-soluta-soluta-id",
+        "title": "totam officiis est repudiandae sit",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -964,37 +959,37 @@ Content-Type: application/vnd.api+json
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/7"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9"
       }
     },
     {
       "type": "posts",
       "id": "12",
       "attributes": {
-        "content": "Omnis quis deserunt consectetur ullam fugit sunt cumque voluptatum. Eaque qui consequuntur ducimus est voluptatem id minus. Rerum quia fuga recusandae id beatae non dolorem ullam.\n\nVelit omnis ut nihil. Recusandae delectus perspiciatis quia aut. Eos at est veritatis. Quisquam qui distinctio blanditiis sint cupiditate accusantium a et. Aut id autem maxime minus aliquam repellendus quidem.\n\nDolorum delectus eum quisquam molestiae perspiciatis numquam. Eveniet aut natus ullam sunt et voluptas omnis pariatur. Porro non qui nihil illo et atque explicabo ut.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "2015-10-01T17:30:17.000000Z",
-        "slug": "qui-quisquam-consectetur-molestiae-laboriosam-perferendis-earum-repellat",
-        "title": "quis accusantium molestiae tenetur quis",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Necessitatibus hic dolorem aliquid similique. Omnis aperiam hic sequi est quas. Odit molestiae hic sit aut. Doloribus velit aut error delectus. Odit laborum qui consequatur doloribus ipsum.\n\nTempore consequatur tempore quia quia quam officia. Id facilis blanditiis quia officia. Qui nihil officiis beatae. Velit sunt quas distinctio. Ut aut corrupti amet est aut recusandae.\n\nCupiditate sunt ut praesentium nulla. Enim sunt deserunt quae quia et voluptatem ut molestiae. Eius porro ratione molestiae omnis. Facilis quo eveniet consequatur modi nulla commodi qui.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "1983-03-14T06:45:17.000000Z",
+        "slug": "eum-ut-unde-quis-est-saepe-voluptate",
+        "title": "odio iure non perferendis veniam",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/12\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/12\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -1003,37 +998,37 @@ Content-Type: application/vnd.api+json
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/12\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/12\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/12\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/12\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/12"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/12"
       }
     },
     {
       "type": "posts",
-      "id": "15",
+      "id": "17",
       "attributes": {
-        "content": "Minus libero debitis corrupti reiciendis excepturi qui laborum. Amet repellat expedita quasi ut eius impedit et dolor. Odio atque nihil perferendis sunt et aperiam. Aperiam quas ab nam quis in dolorem. Maxime ratione iusto cupiditate rerum ea.\n\nFugiat veritatis fugiat nobis quisquam et consequuntur magnam. Eligendi asperiores ex sequi expedita. Aut impedit est beatae voluptas ducimus eveniet debitis.\n\nAtque eum fugiat laborum velit vel dolores. Ut culpa adipisci rem porro nisi. Aut consectetur architecto sint aut ratione sed. Consequatur ut dicta officiis.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "2004-03-25T15:52:19.000000Z",
-        "slug": "facilis-explicabo-minus-sunt-enim-architecto-recusandae",
-        "title": "culpa vel quidem quia modi",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Maiores aut ea et voluptas placeat. Velit quisquam eum ut delectus sapiente accusamus unde sit.\n\nAut qui ut dignissimos autem. Ullam officia provident inventore doloremque ratione. Tenetur assumenda sed itaque aut quo. Quia quisquam porro est qui labore.\n\nVoluptas cumque a velit voluptate perspiciatis sit ullam. Sed et velit beatae veniam eum. Voluptas quam in non nulla laudantium autem commodi. Modi fugiat est qui inventore.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "2021-10-04T16:30:48.000000Z",
+        "slug": "et-delectus-ad-sit-velit",
+        "title": "quo sunt at modi quos",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/15\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/15\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -1042,37 +1037,37 @@ Content-Type: application/vnd.api+json
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/15\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/15\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/15\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/15\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/15"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/17"
       }
     },
     {
       "type": "posts",
-      "id": "19",
+      "id": "29",
       "attributes": {
-        "content": "Molestiae recusandae provident est nobis accusamus expedita. Nam minus veniam quis ad repellat cupiditate. Adipisci repellat consectetur ipsam aliquam. Rerum deleniti est repudiandae alias quaerat.\n\nVeritatis qui nulla eos quos est non voluptas. Expedita voluptatem a eos quia. Aut sint rem optio consequuntur velit est. Id fugit labore a dolore sapiente repellat.\n\nUnde quia odio aperiam distinctio aliquid quasi. Quos non error atque aut. Ipsum saepe officia et iste eveniet veniam fugit cupiditate. Ab dolorem in totam ea. Id sed quia nobis quae quae et.",
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "publishedAt": "2014-10-16T00:22:02.000000Z",
-        "slug": "officia-molestias-omnis-accusantium-praesentium-quidem-numquam-hic",
-        "title": "atque nostrum at commodi ex",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "content": "Veniam impedit quisquam corporis. Quia accusantium sunt id fugit corporis sed et. Alias adipisci fugiat dolor expedita eum sint corrupti cum. Vitae rerum quam delectus consequatur suscipit repellendus.\n\nConsequatur facilis molestias pariatur consequatur placeat. Saepe et id molestiae et sint ut. Enim voluptas voluptates dolores et expedita nihil delectus. Saepe hic quo temporibus neque.\n\nIllum praesentium sed veniam. Eum architecto doloremque dicta minus dicta. Architecto earum sequi sed.",
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "publishedAt": "1992-05-05T03:48:05.000000Z",
+        "slug": "et-porro-nam-cum-repellat-natus",
+        "title": "eum voluptatibus nam in ratione",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/19\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/19\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -1081,19 +1076,19 @@ Content-Type: application/vnd.api+json
         },
         "comments": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/19\/comments",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/19\/relationships\/comments"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29\/comments",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29\/relationships\/comments"
           }
         },
         "tags": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/19\/tags",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/19\/relationships\/tags"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29\/tags",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29\/relationships\/tags"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/19"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/29"
       }
     }
   ],
@@ -1102,24 +1097,24 @@ Content-Type: application/vnd.api+json
       "type": "users",
       "id": "1",
       "attributes": {
-        "createdAt": "2021-11-04T17:30:52.000000Z",
+        "createdAt": "2024-09-30T17:36:59.000000Z",
         "name": "Artie Shaw",
-        "updatedAt": "2021-11-04T17:30:52.000000Z"
+        "updatedAt": "2024-09-30T17:36:59.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/1"
       }
     },
     {
       "type": "users",
       "id": "3",
       "attributes": {
-        "createdAt": "2021-11-04T19:19:00.000000Z",
-        "name": "Joel Buckridge IV",
-        "updatedAt": "2021-11-04T19:19:00.000000Z"
+        "createdAt": "2024-10-01T18:06:04.000000Z",
+        "name": "Zola Wilderman",
+        "updatedAt": "2024-10-01T18:06:04.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/3"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/3"
       }
     }
   ]
@@ -1164,7 +1159,7 @@ this `sort` query parameter with the `page` query parameter.
 Our request looks like this:
 
 ```http
-GET http://localhost/api/v1/posts?sort=-publishedAt&page[number]=1&page[size]=3 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts?sort=-publishedAt&page[number]=1&page[size]=3 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -1198,7 +1193,7 @@ As we want the author to be included in the response, we will need to use the
 at once. Putting these together, our request looks like this:
 
 ```http
-GET http://localhost/api/v1/posts?fields[posts]=author,publishedAt,title&fields[users]=name&include=author&page[number]=1&page[size]=5 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts?fields[posts]=author,publishedAt,title&fields[users]=name&include=author&page[number]=1&page[size]=5 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -1213,33 +1208,33 @@ Content-Type: application/vnd.api+json
     "page": {
       "currentPage": 1,
       "from": 1,
-      "lastPage": 16,
+      "lastPage": 15,
       "perPage": 5,
       "to": 5,
-      "total": 76
+      "total": 72
     }
   },
   "jsonapi": {
     "version": "1.0"
   },
   "links": {
-    "first": "http:\/\/localhost\/api\/v1\/posts?include=author&page%5Bnumber%5D=1&page%5Bsize%5D=5",
-    "last": "http:\/\/localhost\/api\/v1\/posts?include=author&page%5Bnumber%5D=16&page%5Bsize%5D=5",
-    "next": "http:\/\/localhost\/api\/v1\/posts?include=author&page%5Bnumber%5D=2&page%5Bsize%5D=5"
+    "first": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?fields%5Bposts%5D=author%2CpublishedAt%2Ctitle&fields%5Busers%5D=name&include=author&page%5Bnumber%5D=1&page%5Bsize%5D=5",
+    "last": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?fields%5Bposts%5D=author%2CpublishedAt%2Ctitle&fields%5Busers%5D=name&include=author&page%5Bnumber%5D=15&page%5Bsize%5D=5",
+    "next": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts?fields%5Bposts%5D=author%2CpublishedAt%2Ctitle&fields%5Busers%5D=name&include=author&page%5Bnumber%5D=2&page%5Bsize%5D=5"
   },
   "data": [
     {
       "type": "posts",
       "id": "1",
       "attributes": {
-        "publishedAt": "2021-11-04T17:30:52.000000Z",
+        "publishedAt": "2024-09-30T17:37:00.000000Z",
         "title": "Welcome to Laravel JSON:API"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/1\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/1\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -1248,44 +1243,67 @@ Content-Type: application/vnd.api+json
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/1"
       }
     },
     {
       "type": "posts",
       "id": "3",
       "attributes": {
-        "publishedAt": "1994-04-23T14:16:56.000000Z",
-        "title": "sed impedit error et non"
+        "publishedAt": "1992-07-18T17:26:43.000000Z",
+        "title": "quo ut expedita dignissimos est"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/3\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/3\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3\/relationships\/author"
           },
           "data": {
             "type": "users",
-            "id": "6"
+            "id": "7"
           }
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/3"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/3"
       }
     },
     {
       "type": "posts",
-      "id": "5",
+      "id": "6",
       "attributes": {
-        "publishedAt": "1993-01-18T02:55:30.000000Z",
-        "title": "repudiandae impedit et facere sint"
+        "publishedAt": "1982-06-06T12:25:15.000000Z",
+        "title": "itaque possimus eos optio dolor"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/5\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/5\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6\/relationships\/author"
+          },
+          "data": {
+            "type": "users",
+            "id": "5"
+          }
+        }
+      },
+      "links": {
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/6"
+      }
+    },
+    {
+      "type": "posts",
+      "id": "7",
+      "attributes": {
+        "publishedAt": "2008-02-25T11:55:21.000000Z",
+        "title": "et reprehenderit aliquam modi quidem"
+      },
+      "relationships": {
+        "author": {
+          "links": {
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -1294,21 +1312,21 @@ Content-Type: application/vnd.api+json
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/5"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/7"
       }
     },
     {
       "type": "posts",
-      "id": "7",
+      "id": "9",
       "attributes": {
-        "publishedAt": "1985-07-15T01:17:17.000000Z",
-        "title": "omnis est quis atque ipsum"
+        "publishedAt": "2014-09-03T17:22:09.000000Z",
+        "title": "totam officiis est repudiandae sit"
       },
       "relationships": {
         "author": {
           "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/7\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/7\/relationships\/author"
+            "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/author",
+            "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9\/relationships\/author"
           },
           "data": {
             "type": "users",
@@ -1317,30 +1335,7 @@ Content-Type: application/vnd.api+json
         }
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/7"
-      }
-    },
-    {
-      "type": "posts",
-      "id": "9",
-      "attributes": {
-        "publishedAt": "1984-05-29T14:26:49.000000Z",
-        "title": "earum provident sit tenetur sint"
-      },
-      "relationships": {
-        "author": {
-          "links": {
-            "related": "http:\/\/localhost\/api\/v1\/posts\/9\/author",
-            "self": "http:\/\/localhost\/api\/v1\/posts\/9\/relationships\/author"
-          },
-          "data": {
-            "type": "users",
-            "id": "6"
-          }
-        }
-      },
-      "links": {
-        "self": "http:\/\/localhost\/api\/v1\/posts\/9"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/9"
       }
     }
   ],
@@ -1352,37 +1347,47 @@ Content-Type: application/vnd.api+json
         "name": "Artie Shaw"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/1"
       }
     },
     {
       "type": "users",
-      "id": "6",
+      "id": "7",
       "attributes": {
-        "name": "Araceli Kertzmann DDS"
+        "name": "Frederique Block IV"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/6"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/7"
+      }
+    },
+    {
+      "type": "users",
+      "id": "5",
+      "attributes": {
+        "name": "Dalton Kreiger Jr."
+      },
+      "links": {
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/5"
       }
     },
     {
       "type": "users",
       "id": "4",
       "attributes": {
-        "name": "Dr. Sasha Boehm II"
+        "name": "Hester Beer"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/4"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/4"
       }
     },
     {
       "type": "users",
       "id": "3",
       "attributes": {
-        "name": "Joel Buckridge IV"
+        "name": "Zola Wilderman"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/users\/3"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/users\/3"
       }
     }
   ]
@@ -1412,7 +1417,7 @@ e.g. ensuring the `author` filter only receives integer ids.
 Run the following command:
 
 ```bash
-vendor/bin/sail artisan jsonapi:query posts --collection
+herd php artisan jsonapi:query posts --collection
 ```
 
 This will generate the `app/JsonApi/V1/Posts/PostCollectionQuery.php` file. This
@@ -1489,7 +1494,7 @@ Here we have done a number of things:
 The following request now has an invalid page size:
 
 ```http
-GET http://localhost/api/v1/posts?page[number]=1&page[size]=150 HTTP/1.1
+GET http://jsonapi-tutorial.test/api/v1/posts?page[number]=1&page[size]=150 HTTP/1.1
 Accept: application/vnd.api+json
 ```
 
@@ -1505,7 +1510,7 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
-      "detail": "The page.size must be between 1 and 100.",
+      "detail": "The page.size field must be between 1 and 100.",
       "source": {
         "parameter": "page.size"
       },

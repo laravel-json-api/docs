@@ -25,37 +25,36 @@ We now want to modify this resource - to change its `title`, `publishedAt` date
 and the `tags` associated to it. Our request will look like this:
 
 ```http
-PATCH http://localhost/api/v1/posts/2?include=tags
+PATCH http://jsonapi-tutorial.test/api/v1/posts/2?include=tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": {
-        "type": "posts",
-        "id": "2",
-        "attributes": {
-            "publishedAt": "2021-10-23T11:55:00.000000Z",
-            "title": "How to Create and Update JSON:API Resources"
-        },
-        "relationships": {
-            "tags": {
-                "data": [
-                    {
-                        "type": "tags",
-                        "id": "1"
-                    },
-                    {
-                        "type": "tags",
-                        "id": "2"
-                    }
-                ]
-            }
-        }
+  "data": {
+    "type": "posts",
+    "id": "2",
+    "attributes": {
+      "publishedAt": "2024-10-01T18:39:00.000000Z",
+      "title": "How to Create and Update JSON:API Resources"
+    },
+    "relationships": {
+      "tags": {
+        "data": [
+          {
+            "type": "tags",
+            "id": "1"
+          },
+          {
+            "type": "tags",
+            "id": "2"
+          }
+        ]
+      }
     }
+  }
 }
 ```
-
 
 One important concept is that we do not need to send all the resource's fields
 when doing an update request. If we omit any fields, the JSON:API specification
@@ -135,7 +134,7 @@ Notice that we do not make any changes to the `required` rules for an update
 request, even though our request may not contain the values. This is because
 Laravel JSON:API follows the specification in assuming that omitted fields
 have the current values of those fields. When validating an update request,
-Laravel JSON:API's validator will add the existing values of any omitted
+the JSON:API validator will add the existing values of any omitted
 fields to the data that is validated. This means the `required` rule will still
 pass, even if the client has omitted that field.
 
@@ -145,34 +144,34 @@ Let's give the update request a go. (Remember to add your authentication token
 to the `Authorization` header!)
 
 ```http
-PATCH http://localhost/api/v1/posts/2?include=tags
+PATCH http://jsonapi-tutorial.test/api/v1/posts/2?include=tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": {
-        "type": "posts",
-        "id": "2",
-        "attributes": {
-            "publishedAt": "2021-10-23T11:55:00.000000Z",
-            "title": "How to Create and Update JSON:API Resources"
-        },
-        "relationships": {
-            "tags": {
-                "data": [
-                    {
-                        "type": "tags",
-                        "id": "1"
-                    },
-                    {
-                        "type": "tags",
-                        "id": "2"
-                    }
-                ]
-            }
-        }
+  "data": {
+    "type": "posts",
+    "id": "2",
+    "attributes": {
+      "publishedAt": "2024-10-01T18:39:00.000000Z",
+      "title": "How to Create and Update JSON:API Resources"
+    },
+    "relationships": {
+      "tags": {
+        "data": [
+          {
+            "type": "tags",
+            "id": "1"
+          },
+          {
+            "type": "tags",
+            "id": "2"
+          }
+        ]
+      }
     }
+  }
 }
 ```
 
@@ -188,7 +187,7 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
-      "detail": "The PATCH method is not supported for this route. Supported methods: GET, HEAD.",
+      "detail": "The PATCH method is not supported for route api\/v1\/posts\/2. Supported methods: GET, HEAD.",
       "status": "405",
       "title": "Method Not Allowed"
     }
@@ -221,7 +220,7 @@ This adds the update action for the `posts` resource.
 Retry your request, and you should now see the following response:
 
 ```http
-HTTP/1.1 403 Forbidden
+HTTP/1.1 500 Internal Server Error
 Content-Type: application/vnd.api+json
 
 {
@@ -230,17 +229,22 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
-      "detail": "This action is unauthorized.",
-      "status": "403",
-      "title": "Forbidden"
+      "detail": "App\\Policies\\PostPolicy::update(): Return value must be of type bool, none returned",
+      "meta": {
+        "exception": "TypeError",
+        "file": "\/Users\/Christopher\/Herd\/jsonapi-tutorial\/app\/Policies\/PostPolicy.php",
+        "line": 69,
+        "trace": [],
+      },
+      "status": "500",
+      "title": "Internal Server Error"
     }
   ]
 }
 ```
 
-Although we sent an API token in the `Authorization` header, the request has
-been rejected with a `403 Forbidden`. This tells us we need to update our
-authentication logic. Let's do that now.
+When we generated our `PostPolicy`, Laravel added an `update()` method but without adding any logic to it. This method
+has been called to authorise the update request, so we now need to add some logic to that method.
 
 ### Authentication
 
@@ -250,12 +254,8 @@ the `update()` method:
 ```diff
  /**
   * Determine whether the user can update the model.
-  *
-  * @param  \App\Models\User  $user
-  * @param  \App\Models\Post  $post
-  * @return \Illuminate\Auth\Access\Response|bool
   */
- public function update(User $user, Post $post)
+ public function update(User $user, Post $post): bool
  {
 -    //
 +    return $user->is($post->author);
@@ -279,36 +279,36 @@ Content-Type: application/vnd.api+json
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/2"
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2"
   },
   "data": {
     "type": "posts",
     "id": "2",
     "attributes": {
       "content": "In our second blog post, you will learn how to create resources using the JSON:API specification.",
-      "createdAt": "2021-10-23T08:47:57.000000Z",
-      "publishedAt": "2021-10-23T11:55:00.000000Z",
+      "createdAt": "2024-09-30T19:27:24.000000Z",
+      "publishedAt": "2024-10-01T18:39:00.000000Z",
       "slug": "creating-jsonapi-resources",
       "title": "How to Create and Update JSON:API Resources",
-      "updatedAt": "2021-10-23T10:55:14.000000Z"
+      "updatedAt": "2024-10-01T17:41:18.000000Z"
     },
     "relationships": {
       "author": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/2\/author",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/author"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/author",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/author"
         }
       },
       "comments": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/2\/comments",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/comments"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/comments",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/comments"
         }
       },
       "tags": {
         "links": {
-          "related": "http:\/\/localhost\/api\/v1\/posts\/2\/tags",
-          "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/tags"
+          "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/tags",
+          "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/tags"
         },
         "data": [
           {
@@ -323,7 +323,7 @@ Content-Type: application/vnd.api+json
       }
     },
     "links": {
-      "self": "http:\/\/localhost\/api\/v1\/posts\/2"
+      "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2"
     }
   },
   "included": [
@@ -331,24 +331,24 @@ Content-Type: application/vnd.api+json
       "type": "tags",
       "id": "1",
       "attributes": {
-        "createdAt": "2021-10-23T08:45:26.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
         "name": "Laravel",
-        "updatedAt": "2021-10-23T08:45:26.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/tags\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/tags\/1"
       }
     },
     {
       "type": "tags",
       "id": "2",
       "attributes": {
-        "createdAt": "2021-10-23T08:45:26.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
         "name": "JSON:API",
-        "updatedAt": "2021-10-23T08:45:26.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/tags\/2"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/tags\/2"
       }
     }
   ]
@@ -380,13 +380,13 @@ the provided `data` - in this case, as it is an empty array, the `tags`
 relationship would be emptied:
 
 ```http
-PATCH http://localhost/api/v1/posts/2/relationships/tags
+PATCH http://jsonapi-tutorial.test/api/v1/posts/2/relationships/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": []
+  "data": []
 }
 ```
 
@@ -402,7 +402,7 @@ Content-Type: application/vnd.api+json
   },
   "errors": [
     {
-      "detail": "The POST method is not supported for this route. Supported methods: GET, HEAD.",
+      "detail": "The PATCH method is not supported for route api\/v1\/posts\/2\/relationships\/tags. Supported methods: GET, HEAD.",
       "status": "405",
       "title": "Method Not Allowed"
     }
@@ -461,9 +461,9 @@ defines three relationship actions that allow us to modify a to-many relationshi
 
 - update, i.e. completely replace the relationship with the provided data;
 - attach, i.e. add the provided data to the relationships - retaining existing
-related resources; and
+  related resources; and
 - detach, i.e. remove the provided data from the relationship - retaining any
-existing related resources.
+  existing related resources.
 
 You will need to open the `app/Policies/PostPolicy.php` class and make the
 following changes to authorize all three of these relationship actions:
@@ -477,165 +477,114 @@ following changes to authorize all three of these relationship actions:
 
  class PostPolicy
  {
-     use HandlesAuthorization;
+    /**
+     * Determine whether the user can view any models.
+     */
+    public function viewAny(User $user): bool
+    {
+        //
+    }
 
-     /**
-      * Determine whether the user can view any models.
-      *
-      * @param  \App\Models\User  $user
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function viewAny(User $user)
-     {
-         //
-     }
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function view(?User $user, Post $post): bool
+    {
+        if ($post->published_at) {
+            return true;
+        }
 
-     /**
-      * Determine whether the user can view the model.
-      *
-      * @param  \App\Models\User|null  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function view(?User $user, Post $post)
-     {
-         if ($post->published_at) {
-             return true;
-         }
+        return $user && $user->is($post->author);
+    }
 
-         return $user && $user->is($post->author);
-     }
+    /**
+     * Determine whether the user can view the post's author.
+     */
+    public function viewAuthor(?User $user, Post $post): bool
+    {
+        return $this->view($user, $post);
+    }
 
-     /**
-      * Determine whether the user can view the post's author.
-      *
-      * @param  \App\Models\User|null  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function viewAuthor(?User $user, Post $post)
-     {
-         return $this->view($user, $post);
-     }
+    /**
+     * Determine whether the user can view the post's comments.
+     */
+    public function viewComments(?User $user, Post $post): bool
+    {
+        return $this->view($user, $post);
+    }
 
-     /**
-      * Determine whether the user can view the post's comments.
-      *
-      * @param  \App\Models\User|null  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function viewComments(?User $user, Post $post)
-     {
-         return $this->view($user, $post);
-     }
+    /**
+     * Determine whether the user can view the post's tags.
+     */
+    public function viewTags(?User $user, Post $post): bool
+    {
+        return $this->view($user, $post);
+    }
 
-     /**
-      * Determine whether the user can view the post's tags.
-      *
-      * @param  \App\Models\User|null  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function viewTags(?User $user, Post $post)
-     {
-         return $this->view($user, $post);
-     }
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
+    {
+        return true;
+    }
 
-     /**
-      * Determine whether the user can create models.
-      *
-      * @param  \App\Models\User  $user
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function create(User $user)
-     {
-         return true;
-     }
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, Post $post): bool
+    {
+        return $user->is($post->author);
+    }
 
-     /**
-      * Determine whether the user can update the model.
-      *
-      * @param  \App\Models\User  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function update(User $user, Post $post)
-     {
-         return $user->is($post->author);
-     }
 +
 +    /**
 +     * Determine whether the user can update the model's tags relationship.
-+     *
-+     * @param User $user
-+     * @param Post $post
-+     * @return bool|\Illuminate\Auth\Access\Response
 +     */
-+    public function updateTags(User $user, Post $post)
++    public function updateTags(User $user, Post $post): bool
 +    {
 +        return $this->update($user, $post);
 +    }
 +
 +    /**
 +     * Determine whether the user can attach tags to the model's tags relationship.
-+     *
-+     * @param User $user
-+     * @param Post $post
-+     * @return bool|\Illuminate\Auth\Access\Response
 +     */
-+    public function attachTags(User $user, Post $post)
++    public function attachTags(User $user, Post $post): bool
 +    {
 +        return $this->update($user, $post);
 +    }
 +
 +    /**
 +     * Determine whether the user can detach tags from the model's tags relationship.
-+     *
-+     * @param User $user
-+     * @param Post $post
-+     * @return bool|\Illuminate\Auth\Access\Response
 +     */
-+    public function detachTags(User $user, Post $post)
++    public function detachTags(User $user, Post $post): bool
 +    {
 +        return $this->update($user, $post);
 +    }
 
-     /**
-      * Determine whether the user can delete the model.
-      *
-      * @param  \App\Models\User  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function delete(User $user, Post $post)
-     {
-         //
-     }
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, Post $post): bool
+    {
+        //
+    }
 
-     /**
-      * Determine whether the user can restore the model.
-      *
-      * @param  \App\Models\User  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function restore(User $user, Post $post)
-     {
-         //
-     }
+    /**
+     * Determine whether the user can restore the model.
+     */
+    public function restore(User $user, Post $post): bool
+    {
+        //
+    }
 
-     /**
-      * Determine whether the user can permanently delete the model.
-      *
-      * @param  \App\Models\User  $user
-      * @param  \App\Models\Post  $post
-      * @return \Illuminate\Auth\Access\Response|bool
-      */
-     public function forceDelete(User $user, Post $post)
-     {
-         //
-     }
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, Post $post): bool
+    {
+        //
+    }
  }
 ```
 
@@ -648,13 +597,13 @@ post to set that tags for the blog post.
 Try this request again:
 
 ```http
-PATCH http://localhost/api/v1/posts/2/relationships/tags
+PATCH http://jsonapi-tutorial.test/api/v1/posts/2/relationships/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": []
+  "data": []
 }
 ```
 
@@ -669,8 +618,8 @@ Content-Type: application/vnd.api+json
     "version": "1.0"
   },
   "links": {
-    "self": "http:\/\/localhost\/api\/v1\/posts\/2\/relationships\/tags",
-    "related": "http:\/\/localhost\/api\/v1\/posts\/2\/tags"
+    "related": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/tags",
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/relationships\/tags"
   },
   "data": []
 }
@@ -683,18 +632,18 @@ Before trying the other relationship routes, let's update the relationship so
 that it has a single tag in it. Use the following request:
 
 ```http
-PATCH http://localhost/api/v1/posts/2/relationships/tags
+PATCH http://jsonapi-tutorial.test/api/v1/posts/2/relationships/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": [
-        {
-            "type": "tags",
-            "id": "1"
-        }
-    ]
+  "data": [
+    {
+      "type": "tags",
+      "id": "1"
+    }
+  ]
 }
 ```
 
@@ -708,18 +657,18 @@ existing associated tags. The JSON:API specification allows us to do this using
 the following request:
 
 ```http
-POST http://localhost/api/v1/posts/2/relationships/tags
+POST http://jsonapi-tutorial.test/api/v1/posts/2/relationships/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": [
-        {
-            "type": "tags",
-            "id": "2"
-        }
-    ]
+  "data": [
+    {
+      "type": "tags",
+      "id": "2"
+    }
+  ]
 }
 ```
 
@@ -735,7 +684,7 @@ been attached to the relationship. This means the relationship should now have
 two tags attached. Let's check that using the following request:
 
 ```http
-GET http://localhost/api/v1/posts/2/tags
+GET http://jsonapi-tutorial.test/api/v1/posts/2/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 ```
@@ -750,29 +699,32 @@ Content-Type: application/vnd.api+json
   "jsonapi": {
     "version": "1.0"
   },
+  "links": {
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/tags"
+  },
   "data": [
     {
       "type": "tags",
       "id": "1",
       "attributes": {
-        "createdAt": "2021-10-23T08:45:26.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
         "name": "Laravel",
-        "updatedAt": "2021-10-23T08:45:26.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/tags\/1"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/tags\/1"
       }
     },
     {
       "type": "tags",
       "id": "2",
       "attributes": {
-        "createdAt": "2021-10-23T08:45:26.000000Z",
+        "createdAt": "2024-09-30T17:37:00.000000Z",
         "name": "JSON:API",
-        "updatedAt": "2021-10-23T08:45:26.000000Z"
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
       },
       "links": {
-        "self": "http:\/\/localhost\/api\/v1\/tags\/2"
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/tags\/2"
       }
     }
   ]
@@ -786,18 +738,18 @@ other associated tags. The JSON:API specification allows us to do this using the
 following request:
 
 ```http
-DELETE http://localhost/api/v1/posts/2/relationships/tags
+DELETE http://jsonapi-tutorial.test/api/v1/posts/2/relationships/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 Content-Type: application/vnd.api+json
 
 {
-    "data": [
-        {
-            "type": "tags",
-            "id": "1"
-        }
-    ]
+  "data": [
+    {
+      "type": "tags",
+      "id": "1"
+    }
+  ]
 }
 ```
 
@@ -813,7 +765,7 @@ been detached from the relationship. This means the relationship should now have
 one related tag. Let's check that using the following request:
 
 ```http
-GET http://localhost/api/v1/posts/2/tags
+GET http://jsonapi-tutorial.test/api/v1/posts/2/tags
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 ```
@@ -825,23 +777,26 @@ HTTP/1.1 200 OK
 Content-Type: application/vnd.api+json
 
 {
-    "jsonapi": {
-        "version": "1.0"
-    },
-    "data": [
-        {
-            "type": "tags",
-            "id": "2",
-            "attributes": {
-                "createdAt": "2021-10-23T08:45:26.000000Z",
-                "name": "JSON:API",
-                "updatedAt": "2021-10-23T08:45:26.000000Z"
-            },
-            "links": {
-                "self": "http:\/\/localhost\/api\/v1\/tags\/2"
-            }
-        }
-    ]
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "links": {
+    "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/posts\/2\/tags"
+  },
+  "data": [
+    {
+      "type": "tags",
+      "id": "2",
+      "attributes": {
+        "createdAt": "2024-09-30T17:37:00.000000Z",
+        "name": "JSON:API",
+        "updatedAt": "2024-09-30T17:37:00.000000Z"
+      },
+      "links": {
+        "self": "http:\/\/jsonapi-tutorial.test\/api\/v1\/tags\/2"
+      }
+    }
+  ]
 }
 ```
 

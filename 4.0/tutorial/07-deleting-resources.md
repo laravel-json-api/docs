@@ -13,7 +13,7 @@ we can delete the post resource we created in the previous chapters using the
 following request:
 
 ```http
-DELETE http://localhost/api/v1/posts/2
+DELETE http://jsonapi-tutorial.test/api/v1/posts/2
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 ```
@@ -25,16 +25,16 @@ HTTP/1.0 405 Method Not Allowed
 Content-Type: application/vnd.api+json
 
 {
-    "jsonapi": {
-        "version": "1.0"
-    },
-    "errors": [
-        {
-            "detail": "The DELETE method is not supported for this route. Supported methods: GET, HEAD, PATCH.",
-            "status": "405",
-            "title": "Method Not Allowed"
-        }
-    ]
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "errors": [
+    {
+      "detail": "The DELETE method is not supported for route api\/v1\/posts\/2. Supported methods: GET, HEAD, PATCH.",
+      "status": "405",
+      "title": "Method Not Allowed"
+    }
+  ]
 }
 ```
 
@@ -69,16 +69,22 @@ HTTP/1.1 403 Forbidden
 Content-Type: application/vnd.api+json
 
 {
-    "jsonapi": {
-        "version": "1.0"
-    },
-    "errors": [
-        {
-            "detail": "This action is unauthorized.",
-            "status": "403",
-            "title": "Forbidden"
-        }
-    ]
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "errors": [
+    {
+      "detail": "App\\Policies\\PostPolicy::delete(): Return value must be of type bool, none returned",
+      "meta": {
+        "exception": "TypeError",
+        "file": "\/Users\/Christopher\/Herd\/jsonapi-tutorial\/app\/Policies\/PostPolicy.php",
+        "line": 101,
+        "trace": [],
+      },
+      "status": "500",
+      "title": "Internal Server Error"
+    }
+  ]
 }
 ```
 
@@ -93,12 +99,8 @@ the `delete()` method:
 ```diff
  /**
   * Determine whether the user can delete the model.
-  *
-  * @param  \App\Models\User  $user
-  * @param  \App\Models\Post  $post
-  * @return \Illuminate\Auth\Access\Response|bool
   */
- public function delete(User $user, Post $post)
+ public function delete(User $user, Post $post): bool
  {
 -    //
 +    return $this->update($user, $post);
@@ -114,7 +116,7 @@ also delete it.
 Give this request another go:
 
 ```http
-DELETE http://localhost/api/v1/posts/2
+DELETE http://jsonapi-tutorial.test/api/v1/posts/2
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 ```
@@ -129,7 +131,7 @@ This tells us the resource was successfully deleted. You can check that by
 attempting to retrieve the same resource using the following request:
 
 ```http
-GET http://localhost/api/v1/posts/2
+GET http://jsonapi-tutorial.test/api/v1/posts/2
 Authorization: Bearer <TOKEN>
 Accept: application/vnd.api+json
 ```
@@ -141,15 +143,15 @@ HTTP/1.1 404 Not Found
 Content-Type: application/vnd.api+json
 
 {
-    "jsonapi": {
-        "version": "1.0"
-    },
-    "errors": [
-        {
-            "status": "404",
-            "title": "Not Found"
-        }
-    ]
+  "jsonapi": {
+    "version": "1.0"
+  },
+  "errors": [
+    {
+      "status": "404",
+      "title": "Not Found"
+    }
+  ]
 }
 ```
 
