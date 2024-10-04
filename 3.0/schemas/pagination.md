@@ -794,9 +794,9 @@ class PostSchema extends Schema
     /**
      * Get the resource paginator.
      *
-     * @return PagePagination
+     * @return MultiPagination
      */
-    public function pagination(): PagePagination
+    public function pagination(): MultiPagination
     {
         return new MultiPagination(
             PagePagination::make(),
