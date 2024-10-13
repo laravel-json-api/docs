@@ -1,3 +1,4 @@
 /node_modules
 /.vuepress/dist
-/yarn-error.log
+docs/.vitepress/dist
+docs/.vitepress/cache
