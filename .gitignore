@@ -1,4 +1,3 @@
 /node_modules
-/.vuepress/dist
 docs/.vitepress/dist
 docs/.vitepress/cache

@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "Laravel JSON:API"
-#  text: ""
-  tagline: "Feature-rich JSON:API compliant APIs for Laravel applications. Build your next standards-compliant API today."
+  text: "Build your next standards-compliant API today."
+  tagline: "Feature-rich JSON:API compliant APIs for Laravel applications."
   actions:
     - theme: brand
       text: Read the Docs
