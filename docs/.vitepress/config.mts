@@ -1,5 +1,6 @@
 import {defineConfig} from 'vitepress';
 import v4 from './4.x';
+import v3 from './3.x';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -12,12 +13,14 @@ export default defineConfig({
                 text: 'Version',
                 items: [
                     {text: '4.x', link: '/4.x/'},
+                    {text: '3.x', link: '/3.x/'},
                 ],
             },
         ],
 
         sidebar: {
             '/4.x/': v4('/4.x'),
+            '/3.x/': v4('/3.x'),
         },
 
         socialLinks: [
